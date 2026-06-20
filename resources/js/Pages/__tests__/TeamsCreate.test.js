@@ -8,15 +8,13 @@ vi.mock('@inertiajs/vue3', () => ({
     Head: { template: '<div><slot/></div>' },
 }));
 
-const stubs = { MemberDeck: { props: ['modelValue', 'roleLabel'], template: '<div class="md">{{ roleLabel }}</div>' } };
-
 describe('Teams/Create', () => {
-    it('renders three member decks with role labels', () => {
-        const wrapper = mount(Create, {
-            props: { lines: ['bx'], slots: { bx: ['blade', 'ratchet', 'bit'] } },
-            global: { stubs },
-        });
-        const labels = wrapper.findAll('.md').map((n) => n.text());
-        expect(labels).toEqual(['Capitán', 'Subcapitán', 'Oficial']);
+    it('renders a team name field and three member name fields', () => {
+        const wrapper = mount(Create);
+        // 1 team name + 3 member names = 4 text inputs
+        expect(wrapper.findAll('input[type="text"]')).toHaveLength(4);
+        expect(wrapper.text()).toContain('Capitán');
+        expect(wrapper.text()).toContain('Subcapitán');
+        expect(wrapper.text()).toContain('Oficial');
     });
 });
