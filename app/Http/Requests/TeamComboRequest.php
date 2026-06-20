@@ -4,7 +4,6 @@ namespace App\Http\Requests;
 
 use App\Support\BeybladeLines;
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Validation\Rule;
 
 class TeamComboRequest extends FormRequest
 {
@@ -19,7 +18,7 @@ class TeamComboRequest extends FormRequest
             'members' => ['required', 'array', 'size:3'],
             'members.*.id' => ['required', 'integer'],
             'members.*.beyblades' => ['present', 'array', 'max:3'],
-            'members.*.beyblades.*.line' => ['required', Rule::in(BeybladeLines::lines())],
+            'members.*.beyblades.*.line' => ['nullable', 'string'],
             'members.*.beyblades.*.parts' => ['present', 'array'],
         ];
     }
@@ -46,6 +45,10 @@ class TeamComboRequest extends FormRequest
                     }
                     $line = $beyblade['line'] ?? null;
                     if (! $line || ! in_array($line, BeybladeLines::lines(), true)) {
+                        $validator->errors()->add(
+                            "members.$mi.beyblades.$bi.line",
+                            'Selecciona una línea válida para el combo.'
+                        );
                         continue;
                     }
                     foreach (BeybladeLines::requiredSlotsFor($line) as $slot) {
