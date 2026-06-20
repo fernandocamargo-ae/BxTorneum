@@ -3,9 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\TeamRequest;
-use App\Models\Part;
 use App\Models\Team;
-use App\Support\BeybladeLines;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 
@@ -13,24 +11,24 @@ class TeamController extends Controller
 {
     public function index()
     {
-        $teams = Team::withCount('members')
-            ->orderBy('name')
-            ->get(['id', 'name']);
+        $teams = Team::orderBy('name')->get(['id', 'name'])->map(fn (Team $team) => [
+            'id' => $team->id,
+            'name' => $team->name,
+            'beyblades_count' => $team->beybladesCount(),
+            'is_complete' => $team->isComplete(),
+        ]);
 
         return Inertia::render('Teams/Index', ['teams' => $teams]);
     }
 
     public function create()
     {
-        return Inertia::render('Teams/Create', [
-            'lines' => BeybladeLines::lines(),
-            'slots' => BeybladeLines::SLOTS,
-        ]);
+        return Inertia::render('Teams/Create');
     }
 
     public function store(TeamRequest $request)
     {
-        $team = DB::transaction(fn () => $this->persist(new Team(), $request->validated()));
+        $team = DB::transaction(fn () => $this->persistNames(new Team(), $request->validated()));
 
         return redirect()->route('teams.show', $team)->with('success', 'Equipo registrado.');
     }
@@ -42,19 +40,12 @@ class TeamController extends Controller
 
     public function edit(Team $team)
     {
-        return Inertia::render('Teams/Edit', [
-            'team' => $this->transform($team),
-            'lines' => BeybladeLines::lines(),
-            'slots' => BeybladeLines::SLOTS,
-        ]);
+        return Inertia::render('Teams/Edit', ['team' => $this->transform($team)]);
     }
 
     public function update(TeamRequest $request, Team $team)
     {
-        DB::transaction(function () use ($team, $request) {
-            $team->members()->delete(); // cascade removes beyblades + pivots
-            $this->persist($team, $request->validated());
-        });
+        DB::transaction(fn () => $this->persistNames($team, $request->validated()));
 
         return redirect()->route('teams.show', $team)->with('success', 'Equipo actualizado.');
     }
@@ -66,31 +57,15 @@ class TeamController extends Controller
         return redirect()->route('teams.index')->with('success', 'Equipo eliminado.');
     }
 
-    private function persist(Team $team, array $data): Team
+    private function persistNames(Team $team, array $data): Team
     {
         $team->fill(['name' => $data['name']])->save();
 
         foreach ($data['members'] as $memberData) {
-            $member = $team->members()->create([
-                'role' => $memberData['role'],
-                'name' => $memberData['name'],
-            ]);
-
-            foreach ($memberData['beyblades'] as $i => $beyData) {
-                $beyblade = $member->beyblades()->create([
-                    'line' => $beyData['line'],
-                    'position' => $i + 1,
-                ]);
-
-                foreach (BeybladeLines::slotsFor($beyData['line']) as $slot) {
-                    $name = trim((string) ($beyData['parts'][$slot] ?? ''));
-                    if ($name === '') {
-                        continue; // optional slot left empty
-                    }
-                    $part = Part::firstOrCreate(['type' => $slot, 'name' => $name]);
-                    $beyblade->parts()->attach($part->id, ['slot' => $slot]);
-                }
-            }
+            $team->members()->updateOrCreate(
+                ['role' => $memberData['role']],
+                ['name' => $memberData['name']],
+            );
         }
 
         return $team;
@@ -103,7 +78,9 @@ class TeamController extends Controller
         return [
             'id' => $team->id,
             'name' => $team->name,
-            'members' => $team->members->map(fn ($member) => [
+            'beyblades_count' => $team->beybladesCount(),
+            'is_complete' => $team->isComplete(),
+            'members' => $team->members->sortBy('id')->values()->map(fn ($member) => [
                 'id' => $member->id,
                 'role' => $member->role,
                 'name' => $member->name,
