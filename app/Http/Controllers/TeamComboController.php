@@ -72,6 +72,6 @@ class TeamComboController extends Controller
             }
         });
 
-        return redirect()->route('teams.show', $team)->with('success', 'Combos guardados.');
+        return redirect()->route('teams.show', $team)->with('success', 'Combos registrados.');
     }
 }
