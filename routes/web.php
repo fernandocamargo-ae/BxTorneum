@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\PartController;
+use App\Http\Controllers\ReportController;
 use App\Http\Controllers\TeamComboController;
 use App\Http\Controllers\TeamController;
 use Illuminate\Support\Facades\Route;
@@ -13,3 +14,5 @@ Route::get('/teams/{team}/combos', [TeamComboController::class, 'edit'])->name('
 Route::put('/teams/{team}/combos', [TeamComboController::class, 'update'])->name('combos.update');
 
 Route::get('/parts/search', [PartController::class, 'search'])->name('parts.search');
+
+Route::post('/report/pdf', [ReportController::class, 'download'])->name('report.pdf');

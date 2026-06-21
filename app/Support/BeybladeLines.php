@@ -18,6 +18,36 @@ class BeybladeLines
         'ux_infinity' => ['ratchet'],
     ];
 
+    public const LINE_LABELS = [
+        'bx' => 'BX',
+        'ux' => 'UX',
+        'bx_infinity' => 'BX Infinity',
+        'ux_infinity' => 'UX Infinity',
+        'cx' => 'CX',
+        'cx_infinity' => 'CX Infinity',
+    ];
+
+    public const SLOT_LABELS = [
+        'blade' => 'Blade',
+        'ratchet' => 'Ratchet',
+        'bit' => 'Bit',
+        'lock_chip' => 'Lock Chip',
+        'main_blade' => 'Main Blade',
+        'assist_blade' => 'Assist Blade',
+        'over_blade' => 'Over Blade',
+        'metal_blade' => 'Metal Blade',
+    ];
+
+    public static function lineLabel(string $line): string
+    {
+        return self::LINE_LABELS[$line] ?? $line;
+    }
+
+    public static function slotLabel(string $slot): string
+    {
+        return self::SLOT_LABELS[$slot] ?? $slot;
+    }
+
     public static function lines(): array
     {
         return array_keys(self::SLOTS);
