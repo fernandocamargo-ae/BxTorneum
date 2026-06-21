@@ -46,16 +46,19 @@ class TeamComboController extends Controller
             foreach ($data['members'] as $memberData) {
                 /** @var Member $member */
                 $member = $team->members()->findOrFail($memberData['id']);
-                $member->beyblades()->delete(); // cascade clears pivots
+                $position = (int) $member->beyblades()->max('position'); // 0 when none exist
 
-                $position = 1;
                 foreach ($memberData['beyblades'] as $beyData) {
                     if (TeamComboRequest::isEmptyCombo($beyData)) {
                         continue;
                     }
+                    $position++;
+                    if ($position > 3) {
+                        break; // defensive; request already caps this
+                    }
                     $beyblade = $member->beyblades()->create([
                         'line' => $beyData['line'],
-                        'position' => $position++,
+                        'position' => $position,
                     ]);
                     foreach (BeybladeLines::slotsFor($beyData['line']) as $slot) {
                         $name = trim((string) ($beyData['parts'][$slot] ?? ''));
@@ -69,6 +72,6 @@ class TeamComboController extends Controller
             }
         });
 
-        return redirect()->route('teams.show', $team)->with('success', 'Combos guardados.');
+        return redirect()->route('teams.show', $team)->with('success', 'Combos registrados.');
     }
 }

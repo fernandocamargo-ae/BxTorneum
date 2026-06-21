@@ -35,4 +35,20 @@ describe('MemberDeck', () => {
         });
         expect(wrapper.find('input[type="text"]').attributes('readonly')).toBeDefined();
     });
+
+    it('renders locked combos read-only and forms only for editable slots', () => {
+        const wrapper = mount(MemberDeck, {
+            props: {
+                modelValue: { role: 'captain', name: 'Aoi', beyblades: [{ line: 'bx', parts: {} }, { line: 'bx', parts: {} }] },
+                roleLabel: 'Capitán',
+                errors: {},
+                lockedCombos: [{ line: 'bx', parts: { blade: 'Aero Pegasus', ratchet: '9-60', bit: 'Rush' } }],
+            },
+            global: { stubs },
+        });
+        expect(wrapper.text()).toContain('Aero Pegasus');
+        expect(wrapper.text()).toContain('Registrado');
+        // one locked card + two editable BeybladeForm stubs
+        expect(wrapper.findAll('.bf')).toHaveLength(2);
+    });
 });
