@@ -1,6 +1,7 @@
 <script setup>
 import { Head, Link } from '@inertiajs/vue3';
 import { computed, ref } from 'vue';
+import ReportExport from '../../Components/ReportExport.vue';
 
 const props = defineProps({ teams: { type: Array, default: () => [] } });
 
@@ -15,12 +16,15 @@ const filtered = computed(() =>
 
     <div class="mb-6 flex items-center justify-between gap-4">
         <h1 class="text-3xl font-black"><span class="bx-gradient-text">Equipos</span></h1>
-        <input
-            v-model="query"
-            type="search"
-            placeholder="Buscar equipo…"
-            class="w-56 rounded-md border border-white/10 bg-zinc-900 px-3 py-2 text-sm outline-none focus:border-bx-cyan focus:bx-glow"
-        />
+        <div class="flex items-center gap-3">
+            <input
+                v-model="query"
+                type="search"
+                placeholder="Buscar equipo…"
+                class="w-56 rounded-md border border-white/10 bg-zinc-900 px-3 py-2 text-sm outline-none focus:border-bx-cyan focus:bx-glow"
+            />
+            <ReportExport />
+        </div>
     </div>
 
     <div v-if="filtered.length" class="grid gap-4 sm:grid-cols-2">
