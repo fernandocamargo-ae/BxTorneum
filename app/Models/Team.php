@@ -12,4 +12,14 @@ class Team extends Model
     {
         return $this->hasMany(Member::class);
     }
+
+    public function beybladesCount(): int
+    {
+        return $this->members()->withCount('beyblades')->get()->sum('beyblades_count');
+    }
+
+    public function isComplete(): bool
+    {
+        return $this->beybladesCount() === 9;
+    }
 }

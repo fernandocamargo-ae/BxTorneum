@@ -30,8 +30,21 @@ const filtered = computed(() =>
             :href="`/teams/${team.id}`"
             class="group rounded-xl border border-white/10 bg-zinc-900/50 p-5 transition hover:border-bx-cyan hover:bx-glow"
         >
-            <h2 class="text-lg font-bold group-hover:text-bx-cyan">{{ team.name }}</h2>
-            <p class="mt-1 text-sm text-zinc-400">{{ team.members_count }} miembros</p>
+            <div class="flex items-start justify-between gap-2">
+                <h2 class="text-lg font-bold group-hover:text-bx-cyan">{{ team.name }}</h2>
+                <span
+                    v-if="team.is_complete"
+                    class="shrink-0 rounded-full bg-bx-cyan/15 px-2 py-0.5 text-xs font-bold text-bx-cyan"
+                >
+                    Completo
+                </span>
+                <span
+                    v-else
+                    class="shrink-0 rounded-full bg-bx-orange/15 px-2 py-0.5 text-xs font-bold text-bx-orange"
+                >
+                    Incompleto {{ team.beyblades_count }}/9
+                </span>
+            </div>
         </Link>
     </div>
 

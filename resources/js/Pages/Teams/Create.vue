@@ -1,8 +1,5 @@
 <script setup>
 import { Head, useForm } from '@inertiajs/vue3';
-import MemberDeck from '../../Components/MemberDeck.vue';
-
-defineProps({ lines: Array, slots: Object });
 
 const ROLES = [
     { key: 'captain', label: 'Capitán' },
@@ -10,31 +7,10 @@ const ROLES = [
     { key: 'official', label: 'Oficial' },
 ];
 
-function emptyBeyblade() {
-    return { line: 'bx', parts: {} };
-}
-
 const form = useForm({
     name: '',
-    members: ROLES.map((role) => ({
-        role: role.key,
-        name: '',
-        beyblades: [emptyBeyblade(), emptyBeyblade(), emptyBeyblade()],
-    })),
+    members: ROLES.map((r) => ({ role: r.key, name: '' })),
 });
-
-function updateMember(index, value) {
-    form.members[index] = value;
-}
-
-function errorsFor(memberIndex) {
-    const out = {};
-    const prefix = `members.${memberIndex}.`;
-    for (const [key, msg] of Object.entries(form.errors)) {
-        if (key.startsWith(prefix)) out[key.slice(prefix.length)] = msg;
-    }
-    return out;
-}
 
 function submit() {
     form.post('/teams');
@@ -44,10 +20,10 @@ function submit() {
 <template>
     <Head title="Registrar equipo" />
 
-    <form class="space-y-8" @submit.prevent="submit">
+    <form class="max-w-lg space-y-6" @submit.prevent="submit">
         <div>
             <h1 class="text-3xl font-black"><span class="bx-gradient-text">Registrar equipo</span></h1>
-            <p class="mt-1 text-sm text-zinc-400">3 miembros, cada uno con un deck de 3 combos.</p>
+            <p class="mt-1 text-sm text-zinc-400">Registra los nombres; los combos se agregan después.</p>
         </div>
 
         <div>
@@ -57,21 +33,26 @@ function submit() {
             <input
                 v-model="form.name"
                 type="text"
-                class="w-full max-w-md rounded-md border border-white/10 bg-zinc-900 px-3 py-2 text-sm outline-none focus:border-bx-cyan focus:bx-glow"
+                class="w-full rounded-md border border-white/10 bg-zinc-900 px-3 py-2 text-sm outline-none focus:border-bx-cyan focus:bx-glow"
                 :class="{ 'border-bx-magenta': form.errors.name }"
             />
             <p v-if="form.errors.name" class="mt-1 text-xs text-bx-magenta">{{ form.errors.name }}</p>
-            <p v-if="form.errors.members" class="mt-1 text-xs text-bx-magenta">{{ form.errors.members }}</p>
         </div>
 
-        <MemberDeck
-            v-for="(member, i) in form.members"
-            :key="ROLES[i].key"
-            :model-value="member"
-            :role-label="ROLES[i].label"
-            :errors="errorsFor(i)"
-            @update:model-value="(v) => updateMember(i, v)"
-        />
+        <div v-for="(member, i) in form.members" :key="member.role">
+            <label class="mb-1 block text-xs font-semibold uppercase tracking-wide text-zinc-400">
+                {{ ROLES[i].label }} <span class="text-bx-magenta">*</span>
+            </label>
+            <input
+                v-model="member.name"
+                type="text"
+                class="w-full rounded-md border border-white/10 bg-zinc-900 px-3 py-2 text-sm outline-none focus:border-bx-cyan focus:bx-glow"
+                :class="{ 'border-bx-magenta': form.errors[`members.${i}.name`] }"
+            />
+            <p v-if="form.errors[`members.${i}.name`]" class="mt-1 text-xs text-bx-magenta">
+                {{ form.errors[`members.${i}.name`] }}
+            </p>
+        </div>
 
         <button
             type="submit"

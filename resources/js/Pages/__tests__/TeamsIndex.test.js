@@ -9,14 +9,14 @@ vi.mock('@inertiajs/vue3', () => ({
 
 describe('Teams/Index', () => {
     const teams = [
-        { id: 1, name: 'Storm Riders', members_count: 3 },
-        { id: 2, name: 'Dran Squad', members_count: 3 },
+        { id: 1, name: 'Storm Riders', beyblades_count: 9, is_complete: true },
+        { id: 2, name: 'Dran Squad', beyblades_count: 4, is_complete: false },
     ];
 
-    it('lists all teams', () => {
+    it('shows completeness badges', () => {
         const wrapper = mount(Index, { props: { teams } });
-        expect(wrapper.text()).toContain('Storm Riders');
-        expect(wrapper.text()).toContain('Dran Squad');
+        expect(wrapper.text()).toContain('Completo');
+        expect(wrapper.text()).toContain('Incompleto 4/9');
     });
 
     it('filters by name', async () => {

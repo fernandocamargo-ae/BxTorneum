@@ -8,24 +8,19 @@ vi.mock('@inertiajs/vue3', () => ({
     Link: { props: ['href'], template: '<a :href="href"><slot/></a>' },
 }));
 
-const stubs = { MemberDeck: { props: ['modelValue', 'roleLabel'], template: '<div class="md">{{ modelValue.name }}</div>' } };
-
 describe('Teams/Edit', () => {
     const team = {
         id: 7, name: 'Storm Riders',
         members: [
-            { id: 1, role: 'captain', name: 'Aoi', beyblades: [{ line: 'bx', parts: { blade: 'Dran' } }] },
-            { id: 2, role: 'subcaptain', name: 'Multi', beyblades: [{ line: 'bx', parts: {} }] },
-            { id: 3, role: 'official', name: 'Kazami', beyblades: [{ line: 'bx', parts: {} }] },
+            { id: 1, role: 'captain', name: 'Aoi', beyblades: [] },
+            { id: 2, role: 'subcaptain', name: 'Multi', beyblades: [] },
+            { id: 3, role: 'official', name: 'Kazami', beyblades: [] },
         ],
     };
 
-    it('prefills member names', () => {
-        const wrapper = mount(Edit, {
-            props: { team, lines: ['bx'], slots: { bx: ['blade', 'ratchet', 'bit'] } },
-            global: { stubs },
-        });
-        expect(wrapper.text()).toContain('Aoi');
-        expect(wrapper.text()).toContain('Kazami');
+    it('prefills team and member names', () => {
+        const wrapper = mount(Edit, { props: { team } });
+        const values = wrapper.findAll('input[type="text"]').map((i) => i.element.value);
+        expect(values).toEqual(['Storm Riders', 'Aoi', 'Multi', 'Kazami']);
     });
 });

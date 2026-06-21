@@ -20,17 +20,37 @@ function destroy() {
 <template>
     <Head :title="team.name" />
 
-    <div class="mb-6 flex items-center justify-between gap-4">
+    <div class="mb-6 flex flex-wrap items-center justify-between gap-4">
         <div>
             <Link href="/teams" class="text-sm text-zinc-400 hover:text-bx-cyan">← Equipos</Link>
-            <h1 class="mt-1 text-3xl font-black">{{ team.name }}</h1>
+            <div class="mt-1 flex items-center gap-3">
+                <h1 class="text-3xl font-black">{{ team.name }}</h1>
+                <span
+                    v-if="team.is_complete"
+                    class="rounded-full bg-bx-cyan/15 px-2 py-0.5 text-xs font-bold text-bx-cyan"
+                >
+                    Completo
+                </span>
+                <span
+                    v-else
+                    class="rounded-full bg-bx-orange/15 px-2 py-0.5 text-xs font-bold text-bx-orange"
+                >
+                    Incompleto {{ team.beyblades_count }}/9
+                </span>
+            </div>
         </div>
         <div class="flex gap-2">
+            <Link
+                :href="`/teams/${team.id}/combos`"
+                class="rounded-lg bg-gradient-to-r from-bx-cyan to-bx-magenta px-4 py-2 text-sm font-bold text-zinc-950 transition hover:opacity-90"
+            >
+                Registrar/editar combos
+            </Link>
             <Link
                 :href="`/teams/${team.id}/edit`"
                 class="rounded-lg border border-white/15 px-4 py-2 text-sm font-semibold hover:border-bx-cyan hover:text-bx-cyan"
             >
-                Editar
+                Editar nombres
             </Link>
             <button
                 class="rounded-lg border border-bx-magenta/50 px-4 py-2 text-sm font-semibold text-bx-magenta hover:bg-bx-magenta/10"
@@ -54,7 +74,7 @@ function destroy() {
                 <span class="text-lg font-bold">{{ member.name }}</span>
             </div>
 
-            <div class="grid gap-4 sm:grid-cols-3">
+            <div v-if="member.beyblades.length" class="grid gap-4 sm:grid-cols-3">
                 <div
                     v-for="combo in member.beyblades"
                     :key="combo.id"
@@ -69,6 +89,7 @@ function destroy() {
                     </dl>
                 </div>
             </div>
+            <p v-else class="text-sm text-zinc-500">Pendiente — sin combos registrados.</p>
         </section>
     </div>
 </template>
