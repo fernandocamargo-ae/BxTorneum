@@ -57,6 +57,7 @@ function submit() {
             :model-value="member"
             :role-label="ROLE_LABELS[member.role]"
             :errors="errorsFor(i)"
+            name-readonly
             @update:model-value="(v) => updateMember(i, v)"
         />
 

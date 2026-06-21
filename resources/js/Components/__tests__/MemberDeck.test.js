@@ -27,4 +27,12 @@ describe('MemberDeck', () => {
         await wrapper.find('input[type="text"]').setValue('Aoi');
         expect(wrapper.emitted('update:modelValue').at(-1)[0].name).toBe('Aoi');
     });
+
+    it('marks the name input read-only when nameReadonly is set', () => {
+        const wrapper = mount(MemberDeck, {
+            props: { modelValue: member, roleLabel: 'Capitán', errors: {}, nameReadonly: true },
+            global: { stubs },
+        });
+        expect(wrapper.find('input[type="text"]').attributes('readonly')).toBeDefined();
+    });
 });
