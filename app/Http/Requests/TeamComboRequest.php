@@ -38,11 +38,17 @@ class TeamComboRequest extends FormRequest
     public function withValidator($validator): void
     {
         $validator->after(function ($validator) {
+            $team = $this->route('team');
+
             foreach ($this->input('members', []) as $mi => $member) {
+                $newNonEmpty = 0;
+
                 foreach ($member['beyblades'] ?? [] as $bi => $beyblade) {
                     if (self::isEmptyCombo($beyblade)) {
-                        continue; // partial save: skip empty combos
+                        continue;
                     }
+                    $newNonEmpty++;
+
                     $line = $beyblade['line'] ?? null;
                     if (! $line || ! in_array($line, BeybladeLines::lines(), true)) {
                         $validator->errors()->add(
@@ -51,6 +57,7 @@ class TeamComboRequest extends FormRequest
                         );
                         continue;
                     }
+
                     foreach (BeybladeLines::requiredSlotsFor($line) as $slot) {
                         $value = $beyblade['parts'][$slot] ?? null;
                         if (! is_string($value) || trim($value) === '') {
@@ -60,6 +67,18 @@ class TeamComboRequest extends FormRequest
                             );
                         }
                     }
+                }
+
+                $existing = 0;
+                if ($team && isset($member['id'])) {
+                    $memberModel = $team->members()->find($member['id']);
+                    $existing = $memberModel ? $memberModel->beyblades()->count() : 0;
+                }
+                if ($existing + $newNonEmpty > 3) {
+                    $validator->errors()->add(
+                        "members.$mi.beyblades",
+                        'Este miembro ya tiene todos sus combos registrados o se exceden los 3.'
+                    );
                 }
             }
         });
