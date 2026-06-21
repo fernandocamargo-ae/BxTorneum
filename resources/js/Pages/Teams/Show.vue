@@ -44,7 +44,7 @@ function destroy() {
                 :href="`/teams/${team.id}/combos`"
                 class="rounded-lg bg-gradient-to-r from-bx-cyan to-bx-magenta px-4 py-2 text-sm font-bold text-zinc-950 transition hover:opacity-90"
             >
-                Registrar/editar combos
+                Registrar combos
             </Link>
             <Link
                 :href="`/teams/${team.id}/edit`"
