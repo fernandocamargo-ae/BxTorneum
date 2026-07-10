@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\DeckController;
 use App\Http\Controllers\PartController;
+use App\Http\Controllers\PlayerController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\TeamComboController;
@@ -26,6 +27,9 @@ Route::middleware('auth')->group(function () {
 
     Route::resource('decks', DeckController::class)->except(['show']);
     Route::patch('/decks/{deck}/tournament', [DeckController::class, 'markTournament'])->name('decks.tournament');
+
+    Route::get('/players', [PlayerController::class, 'index'])->name('players.index');
+    Route::get('/players/{user}', [PlayerController::class, 'show'])->name('players.show');
 });
 
 require __DIR__.'/auth.php';
