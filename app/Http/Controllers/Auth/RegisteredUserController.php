@@ -49,6 +49,6 @@ class RegisteredUserController extends Controller
 
         Auth::login($user);
 
-        return redirect(route('teams.index', absolute: false));
+        return redirect(route('decks.index', absolute: false));
     }
 }
