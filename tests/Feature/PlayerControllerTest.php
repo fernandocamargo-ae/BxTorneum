@@ -10,6 +10,17 @@ class PlayerControllerTest extends TestCase
 {
     use RefreshDatabase;
 
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        // Players/Index and Players/Show Vue pages don't exist yet (built in a later
+        // task); disable Inertia's page-existence check for this test class only so
+        // assertInertia() can verify props/component name without requiring the
+        // frontend files to be present.
+        config(['inertia.testing.ensure_pages_exist' => false]);
+    }
+
     public function test_guests_are_redirected_to_login(): void
     {
         $this->get('/players')->assertRedirect('/login');
