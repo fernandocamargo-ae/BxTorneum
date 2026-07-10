@@ -8,6 +8,7 @@
         "test": "vitest run"
     },
     "devDependencies": {
+        "@tailwindcss/forms": "^0.5.3",
         "@tailwindcss/vite": "^4.0.0",
         "@vitejs/plugin-vue": "^6.0.7",
         "@vue/test-utils": "^2.4.11",
