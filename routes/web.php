@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\DeckController;
 use App\Http\Controllers\PartController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ReportController;
@@ -22,6 +23,9 @@ Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+
+    Route::resource('decks', DeckController::class)->except(['show']);
+    Route::patch('/decks/{deck}/tournament', [DeckController::class, 'markTournament'])->name('decks.tournament');
 });
 
 require __DIR__.'/auth.php';
