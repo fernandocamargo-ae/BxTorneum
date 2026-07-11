@@ -12,17 +12,18 @@ use Illuminate\Support\Facades\Route;
 
 Route::get('/', fn () => redirect()->route('teams.index'));
 
-Route::resource('teams', TeamController::class);
-
-Route::get('/teams/{team}/combos', [TeamComboController::class, 'edit'])->name('combos.edit');
-Route::put('/teams/{team}/combos', [TeamComboController::class, 'update'])->name('combos.update');
-
-Route::get('/parts/search', [PartController::class, 'search'])->name('parts.search');
-
-Route::post('/report/pdf', [ReportController::class, 'download'])->middleware('throttle:5,1')->name('report.pdf');
 Route::post('/report/players/pdf', [PlayerReportController::class, 'download'])->middleware('throttle:5,1')->name('report.players.pdf');
 
 Route::middleware('auth')->group(function () {
+    Route::resource('teams', TeamController::class);
+
+    Route::get('/teams/{team}/combos', [TeamComboController::class, 'edit'])->name('combos.edit');
+    Route::put('/teams/{team}/combos', [TeamComboController::class, 'update'])->name('combos.update');
+
+    Route::get('/parts/search', [PartController::class, 'search'])->name('parts.search');
+
+    Route::post('/report/pdf', [ReportController::class, 'download'])->middleware('throttle:5,1')->name('report.pdf');
+
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');

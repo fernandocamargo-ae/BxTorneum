@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\Part;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -16,13 +17,20 @@ class PartSearchTest extends TestCase
         Part::create(['type' => 'ratchet', 'name' => '3-80']);
         Part::create(['type' => 'bit', 'name' => '3-60-bit-noise']);
 
-        $this->getJson('/parts/search?type=ratchet&q=3-6')
+        $this->actingAs(User::factory()->create())
+            ->getJson('/parts/search?type=ratchet&q=3-6')
             ->assertOk()
             ->assertExactJson(['3-60']);
     }
 
     public function test_invalid_type_returns_empty(): void
     {
-        $this->getJson('/parts/search?type=nope&q=x')->assertOk()->assertExactJson([]);
+        $this->actingAs(User::factory()->create())
+            ->getJson('/parts/search?type=nope&q=x')->assertOk()->assertExactJson([]);
+    }
+
+    public function test_requires_login(): void
+    {
+        $this->getJson('/parts/search?type=ratchet&q=3')->assertUnauthorized();
     }
 }

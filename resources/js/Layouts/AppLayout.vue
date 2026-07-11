@@ -17,13 +17,13 @@ const user = computed(() => page.props.auth?.user);
                     <span class="text-sm font-medium text-zinc-400">Torneum</span>
                 </Link>
                 <nav class="flex flex-wrap items-center gap-4">
-                    <Link
-                        href="/teams/create"
-                        class="rounded-lg bg-gradient-to-r from-bx-cyan to-bx-magenta px-4 py-2 text-sm font-bold text-zinc-950 transition hover:opacity-90"
-                    >
-                        + Registrar equipo
-                    </Link>
                     <template v-if="user">
+                        <Link
+                            href="/teams/create"
+                            class="rounded-lg bg-gradient-to-r from-bx-cyan to-bx-magenta px-4 py-2 text-sm font-bold text-zinc-950 transition hover:opacity-90"
+                        >
+                            + Registrar equipo
+                        </Link>
                         <Link href="/decks" class="text-sm font-medium text-zinc-300 transition hover:text-bx-cyan">Mis decks</Link>
                         <Link href="/players" class="text-sm font-medium text-zinc-300 transition hover:text-bx-cyan">Jugadores</Link>
                         <Link href="/profile" class="text-sm font-medium text-zinc-300 transition hover:text-bx-cyan">{{ user.nickname }}</Link>

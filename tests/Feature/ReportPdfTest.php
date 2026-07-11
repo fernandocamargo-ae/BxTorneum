@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\Part;
 use App\Models\Team;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -27,7 +28,8 @@ class ReportPdfTest extends TestCase
         config(['report.password' => 'secret123']);
         $this->seedTeam();
 
-        $response = $this->postJson('/report/pdf', ['password' => 'secret123']);
+        $response = $this->actingAs(User::factory()->create())
+            ->postJson('/report/pdf', ['password' => 'secret123']);
 
         $response->assertOk();
         $this->assertSame('application/pdf', $response->headers->get('content-type'));
@@ -37,20 +39,30 @@ class ReportPdfTest extends TestCase
     {
         config(['report.password' => 'secret123']);
 
-        $this->postJson('/report/pdf', ['password' => 'nope'])->assertForbidden();
+        $this->actingAs(User::factory()->create())
+            ->postJson('/report/pdf', ['password' => 'nope'])->assertForbidden();
     }
 
     public function test_requires_password(): void
     {
         config(['report.password' => 'secret123']);
 
-        $this->postJson('/report/pdf', [])->assertStatus(422);
+        $this->actingAs(User::factory()->create())
+            ->postJson('/report/pdf', [])->assertStatus(422);
     }
 
     public function test_rejects_when_no_password_configured(): void
     {
         config(['report.password' => null]);
 
-        $this->postJson('/report/pdf', ['password' => 'anything'])->assertForbidden();
+        $this->actingAs(User::factory()->create())
+            ->postJson('/report/pdf', ['password' => 'anything'])->assertForbidden();
+    }
+
+    public function test_guests_are_unauthorized(): void
+    {
+        config(['report.password' => 'secret123']);
+
+        $this->postJson('/report/pdf', ['password' => 'secret123'])->assertUnauthorized();
     }
 }

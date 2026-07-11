@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\Team;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -41,11 +42,17 @@ class TeamComboTest extends TestCase
         return ['line' => 'bx', 'parts' => ['blade' => $blade, 'ratchet' => $ratchet, 'bit' => $bit]];
     }
 
+    private function asUser()
+    {
+        return $this->actingAs(User::factory()->create());
+    }
+
     public function test_registers_first_combo(): void
     {
         $team = $this->team();
 
-        $this->put("/teams/{$team->id}/combos", $this->payload($team, [$this->bx('Dran Sword')]))
+        $this->asUser()
+            ->put("/teams/{$team->id}/combos", $this->payload($team, [$this->bx('Dran Sword')]))
             ->assertRedirect();
 
         $this->assertDatabaseCount('beyblades', 1);
@@ -55,13 +62,14 @@ class TeamComboTest extends TestCase
     public function test_existing_combo_is_immutable_and_new_one_is_appended(): void
     {
         $team = $this->team();
+        $user = User::factory()->create();
         // Register combo 1 = "Aero" at position 1.
-        $this->put("/teams/{$team->id}/combos", $this->payload($team, [$this->bx('Aero')]));
+        $this->actingAs($user)->put("/teams/{$team->id}/combos", $this->payload($team, [$this->bx('Aero')]));
         $captain = $team->members->firstWhere('role', 'captain');
         $this->assertSame(1, $captain->beyblades()->count());
 
         // Second submit registers a new combo "Dran" — must NOT touch the existing one.
-        $this->put("/teams/{$team->id}/combos", $this->payload($team, [$this->bx('Dran')]));
+        $this->actingAs($user)->put("/teams/{$team->id}/combos", $this->payload($team, [$this->bx('Dran')]));
 
         $captain->refresh();
         $this->assertSame(2, $captain->beyblades()->count());
@@ -76,7 +84,8 @@ class TeamComboTest extends TestCase
         $team = $this->team();
         $payload = $this->payload($team, [['line' => 'bx', 'parts' => ['blade' => 'Only blade']]]);
 
-        $this->put("/teams/{$team->id}/combos", $payload)
+        $this->asUser()
+            ->put("/teams/{$team->id}/combos", $payload)
             ->assertSessionHasErrors('members.0.beyblades.0.parts.ratchet');
         $this->assertDatabaseCount('beyblades', 0);
     }
@@ -86,21 +95,24 @@ class TeamComboTest extends TestCase
         $team = $this->team();
         $payload = $this->payload($team, [['parts' => []], ['parts' => []], ['parts' => []]]);
 
-        $this->put("/teams/{$team->id}/combos", $payload)->assertRedirect()->assertSessionHasNoErrors();
+        $this->asUser()
+            ->put("/teams/{$team->id}/combos", $payload)->assertRedirect()->assertSessionHasNoErrors();
         $this->assertDatabaseCount('beyblades', 0);
     }
 
     public function test_rejects_exceeding_three_per_member(): void
     {
         $team = $this->team();
+        $user = User::factory()->create();
         // Pre-register 2 combos for the captain.
-        $this->put("/teams/{$team->id}/combos", $this->payload($team, [$this->bx('A')]));
-        $this->put("/teams/{$team->id}/combos", $this->payload($team, [$this->bx('B')]));
+        $this->actingAs($user)->put("/teams/{$team->id}/combos", $this->payload($team, [$this->bx('A')]));
+        $this->actingAs($user)->put("/teams/{$team->id}/combos", $this->payload($team, [$this->bx('B')]));
         $captain = $team->members->firstWhere('role', 'captain');
         $this->assertSame(2, $captain->beyblades()->count());
 
         // Now submit 2 more new combos => existing(2)+new(2)=4 > 3 => rejected, no change.
-        $this->put("/teams/{$team->id}/combos", $this->payload($team, [$this->bx('C'), $this->bx('D')]))
+        $this->actingAs($user)
+            ->put("/teams/{$team->id}/combos", $this->payload($team, [$this->bx('C'), $this->bx('D')]))
             ->assertSessionHasErrors('members.0.beyblades');
         $this->assertSame(2, $captain->fresh()->beyblades()->count());
     }
@@ -108,10 +120,18 @@ class TeamComboTest extends TestCase
     public function test_deleting_team_clears_beyblades(): void
     {
         $team = $this->team();
-        $this->put("/teams/{$team->id}/combos", $this->payload($team, [$this->bx('A')]));
+        $user = User::factory()->create();
+        $this->actingAs($user)->put("/teams/{$team->id}/combos", $this->payload($team, [$this->bx('A')]));
 
-        $this->delete("/teams/{$team->id}")->assertRedirect('/teams');
+        $this->actingAs($user)->delete("/teams/{$team->id}")->assertRedirect('/teams');
         $this->assertDatabaseCount('teams', 0);
         $this->assertDatabaseCount('beyblades', 0);
+    }
+
+    public function test_guests_are_redirected_to_login(): void
+    {
+        $team = $this->team();
+
+        $this->get("/teams/{$team->id}/combos")->assertRedirect('/login');
     }
 }
