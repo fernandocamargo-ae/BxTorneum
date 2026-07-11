@@ -39,4 +39,22 @@ describe('ReportExport', () => {
 
         expect(wrapper.text()).toContain('Contraseña incorrecta');
     });
+
+    it('posts to a custom endpoint and filename when provided', async () => {
+        axios.post.mockResolvedValue({ data: new Blob(['pdf']) });
+        const wrapper = mount(ReportExport, {
+            props: { endpoint: '/report/players/pdf', filename: 'reporte-jugadores.pdf' },
+        });
+
+        await wrapper.find('button').trigger('click');
+        await wrapper.find('input[type="password"]').setValue('secret');
+        await wrapper.findAll('button').at(-1).trigger('click');
+        await flushPromises();
+
+        expect(axios.post).toHaveBeenCalledWith(
+            '/report/players/pdf',
+            { password: 'secret' },
+            { responseType: 'blob' },
+        );
+    });
 });

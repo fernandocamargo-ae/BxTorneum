@@ -1,5 +1,6 @@
 <script setup>
 import { Head, Link } from '@inertiajs/vue3';
+import ReportExport from '../../Components/ReportExport.vue';
 
 defineProps({ players: { type: Array, default: () => [] } });
 </script>
@@ -7,7 +8,10 @@ defineProps({ players: { type: Array, default: () => [] } });
 <template>
     <Head title="Jugadores" />
 
-    <h1 class="mb-6 text-3xl font-black"><span class="bx-gradient-text">Jugadores</span></h1>
+    <div class="mb-6 flex items-center justify-between gap-4">
+        <h1 class="text-3xl font-black"><span class="bx-gradient-text">Jugadores</span></h1>
+        <ReportExport endpoint="/report/players/pdf" filename="reporte-jugadores.pdf" />
+    </div>
 
     <div v-if="players.length" class="grid gap-4 sm:grid-cols-2">
         <Link

@@ -2,6 +2,11 @@
 import axios from 'axios';
 import { ref } from 'vue';
 
+const props = defineProps({
+    endpoint: { type: String, default: '/report/pdf' },
+    filename: { type: String, default: 'reporte-bxtorneum.pdf' },
+});
+
 const open = ref(false);
 const password = ref('');
 const error = ref('');
@@ -21,11 +26,11 @@ async function download() {
     processing.value = true;
     error.value = '';
     try {
-        const res = await axios.post('/report/pdf', { password: password.value }, { responseType: 'blob' });
+        const res = await axios.post(props.endpoint, { password: password.value }, { responseType: 'blob' });
         const url = URL.createObjectURL(res.data);
         const link = document.createElement('a');
         link.href = url;
-        link.download = 'reporte-bxtorneum.pdf';
+        link.download = props.filename;
         document.body.appendChild(link);
         link.click();
         link.remove();

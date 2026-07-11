@@ -3,6 +3,7 @@
 use App\Http\Controllers\DeckController;
 use App\Http\Controllers\PartController;
 use App\Http\Controllers\PlayerController;
+use App\Http\Controllers\PlayerReportController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\TeamComboController;
@@ -19,6 +20,7 @@ Route::put('/teams/{team}/combos', [TeamComboController::class, 'update'])->name
 Route::get('/parts/search', [PartController::class, 'search'])->name('parts.search');
 
 Route::post('/report/pdf', [ReportController::class, 'download'])->name('report.pdf');
+Route::post('/report/players/pdf', [PlayerReportController::class, 'download'])->name('report.players.pdf');
 
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
