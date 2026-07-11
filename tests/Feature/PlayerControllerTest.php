@@ -15,11 +15,28 @@ class PlayerControllerTest extends TestCase
         $this->get('/players')->assertRedirect('/login');
     }
 
-    public function test_index_lists_only_users_with_public_decks(): void
+    public function test_index_lists_any_user_with_a_deck_public_or_private(): void
     {
         $withPublic = User::factory()->create();
         $withPublic->decks()->create(['name' => 'Público', 'visibility' => 'public']);
 
+        $withPrivateOnly = User::factory()->create();
+        $withPrivateOnly->decks()->create(['name' => 'Privado', 'visibility' => 'private']);
+
+        $withNoDecks = User::factory()->create();
+
+        $viewer = User::factory()->create();
+
+        $response = $this->actingAs($viewer)->get('/players');
+
+        $response->assertInertia(fn ($page) => $page
+            ->component('Players/Index')
+            ->has('players', 2)
+        );
+    }
+
+    public function test_index_shows_zero_public_decks_for_a_private_only_player(): void
+    {
         $withPrivateOnly = User::factory()->create();
         $withPrivateOnly->decks()->create(['name' => 'Privado', 'visibility' => 'private']);
 
@@ -29,8 +46,8 @@ class PlayerControllerTest extends TestCase
 
         $response->assertInertia(fn ($page) => $page
             ->component('Players/Index')
-            ->has('players', 1)
-            ->where('players.0.nickname', $withPublic->nickname)
+            ->where('players.0.nickname', $withPrivateOnly->nickname)
+            ->where('players.0.public_decks_count', 0)
         );
     }
 
