@@ -8,7 +8,7 @@ defineProps({ players: { type: Array, default: () => [] } });
 <template>
     <Head title="Jugadores" />
 
-    <div class="mb-6 flex items-center justify-between gap-4">
+    <div class="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <h1 class="text-3xl font-black"><span class="bx-gradient-text">Jugadores</span></h1>
         <ReportExport endpoint="/report/players/pdf" filename="reporte-jugadores.pdf" />
     </div>

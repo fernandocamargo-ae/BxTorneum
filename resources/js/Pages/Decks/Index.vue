@@ -17,11 +17,11 @@ function destroy(deck) {
 <template>
     <Head title="Mis decks" />
 
-    <div class="mb-6 flex items-center justify-between gap-4">
+    <div class="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <h1 class="text-3xl font-black"><span class="bx-gradient-text">Mis decks</span></h1>
         <Link
             href="/decks/create"
-            class="rounded-lg bg-gradient-to-r from-bx-cyan to-bx-magenta px-4 py-2 text-sm font-bold text-zinc-950 transition hover:opacity-90"
+            class="rounded-lg bg-gradient-to-r from-bx-cyan to-bx-magenta px-4 py-2 text-center text-sm font-bold text-zinc-950 transition hover:opacity-90"
         >
             + Crear deck
         </Link>

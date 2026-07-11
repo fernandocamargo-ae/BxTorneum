@@ -14,14 +14,14 @@ const filtered = computed(() =>
 <template>
     <Head title="Equipos" />
 
-    <div class="mb-6 flex items-center justify-between gap-4">
+    <div class="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <h1 class="text-3xl font-black"><span class="bx-gradient-text">Equipos</span></h1>
-        <div class="flex items-center gap-3">
+        <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3">
             <input
                 v-model="query"
                 type="search"
                 placeholder="Buscar equipo…"
-                class="w-56 rounded-md border border-white/10 bg-zinc-900 px-3 py-2 text-sm outline-none focus:border-bx-cyan focus:bx-glow"
+                class="w-full rounded-md border border-white/10 bg-zinc-900 px-3 py-2 text-sm outline-none focus:border-bx-cyan focus:bx-glow sm:w-56"
             />
             <ReportExport />
         </div>
