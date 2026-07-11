@@ -37,7 +37,13 @@ async function download() {
         URL.revokeObjectURL(url);
         open.value = false;
     } catch (e) {
-        error.value = 'Contraseña incorrecta.';
+        if (e.response?.status === 403) {
+            error.value = 'Contraseña incorrecta.';
+        } else if (e.response) {
+            error.value = `Error inesperado (${e.response.status}). Intenta de nuevo.`;
+        } else {
+            error.value = 'No se pudo conectar. Revisa tu conexión e intenta de nuevo.';
+        }
     } finally {
         processing.value = false;
     }

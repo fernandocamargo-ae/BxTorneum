@@ -29,7 +29,7 @@ describe('ReportExport', () => {
     });
 
     it('shows an error when the password is rejected', async () => {
-        axios.post.mockRejectedValue(new Error('403'));
+        axios.post.mockRejectedValue({ response: { status: 403 } });
         const wrapper = mount(ReportExport);
 
         await wrapper.find('button').trigger('click');
@@ -38,6 +38,19 @@ describe('ReportExport', () => {
         await flushPromises();
 
         expect(wrapper.text()).toContain('Contraseña incorrecta');
+    });
+
+    it('shows a distinct message for non-403 errors (e.g. a stale CSRF session)', async () => {
+        axios.post.mockRejectedValue({ response: { status: 419 } });
+        const wrapper = mount(ReportExport);
+
+        await wrapper.find('button').trigger('click');
+        await wrapper.find('input[type="password"]').setValue('secret');
+        await wrapper.findAll('button').at(-1).trigger('click');
+        await flushPromises();
+
+        expect(wrapper.text()).toContain('Error inesperado (419)');
+        expect(wrapper.text()).not.toContain('Contraseña incorrecta');
     });
 
     it('posts to a custom endpoint and filename when provided', async () => {
