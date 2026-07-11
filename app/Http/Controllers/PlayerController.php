@@ -10,7 +10,7 @@ class PlayerController extends Controller
     public function index()
     {
         $players = User::query()
-            ->whereHas('decks')
+            ->whereHas('decks', fn ($q) => $q->where('is_tournament_deck', true))
             ->withCount(['decks as public_decks_count' => fn ($q) => $q->where('visibility', 'public')])
             ->orderBy('nickname')
             ->get(['id', 'name', 'nickname'])
