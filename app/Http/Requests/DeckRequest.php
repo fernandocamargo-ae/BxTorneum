@@ -19,7 +19,7 @@ class DeckRequest extends FormRequest
         return [
             'name' => ['required', 'string', 'max:255'],
             'visibility' => ['required', 'in:public,private'],
-            'beyblades' => ['present', 'array', 'max:3'],
+            'beyblades' => ['present', 'array', 'max:10'],
             'beyblades.*.line' => ['nullable', 'string'],
             'beyblades.*.parts' => ['present', 'array'],
         ];

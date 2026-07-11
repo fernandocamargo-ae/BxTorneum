@@ -31,6 +31,27 @@ class DeckControllerTest extends TestCase
         $this->assertCount(1, $deck->deckBeyblades);
     }
 
+    public function test_user_can_create_a_deck_with_more_than_three_combos(): void
+    {
+        $user = User::factory()->create();
+        $blank = fn (string $blade) => ['line' => 'bx', 'parts' => ['blade' => $blade, 'ratchet' => '3-60', 'bit' => 'Flat']];
+
+        $response = $this->actingAs($user)->post('/decks', [
+            'name' => 'Full ataque',
+            'visibility' => 'private',
+            'beyblades' => [
+                $blank('Dran Sword'),
+                $blank('Wizard Arrow'),
+                $blank('Cobalt Drake'),
+                $blank('Meteor Dragoon'),
+                $blank('Shark Edge'),
+            ],
+        ]);
+
+        $response->assertRedirect('/decks');
+        $this->assertCount(5, Deck::first()->deckBeyblades);
+    }
+
     public function test_user_cannot_touch_another_users_deck(): void
     {
         $owner = User::factory()->create();

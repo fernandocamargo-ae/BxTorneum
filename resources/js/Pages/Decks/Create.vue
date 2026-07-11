@@ -2,6 +2,8 @@
 import { Head, useForm } from '@inertiajs/vue3';
 import BeybladeForm from '../../Components/BeybladeForm.vue';
 
+const MAX_COMBOS = 10;
+
 const form = useForm({
     name: '',
     visibility: 'private',
@@ -14,6 +16,14 @@ const form = useForm({
 
 function updateCombo(index, value) {
     form.beyblades[index] = value;
+}
+
+function addCombo() {
+    form.beyblades.push({ line: 'bx', parts: {} });
+}
+
+function removeCombo(index) {
+    form.beyblades.splice(index, 1);
 }
 
 function errorsFor(index) {
@@ -57,14 +67,32 @@ function submit() {
             </select>
         </div>
 
-        <BeybladeForm
-            v-for="(combo, i) in form.beyblades"
-            :key="i"
-            :model-value="combo"
-            :index="i"
-            :errors="errorsFor(i)"
-            @update:model-value="(v) => updateCombo(i, v)"
-        />
+        <div v-for="(combo, i) in form.beyblades" :key="i" class="space-y-2">
+            <div v-if="form.beyblades.length > 1" class="flex justify-end">
+                <button
+                    type="button"
+                    class="text-xs font-semibold text-bx-magenta hover:underline"
+                    @click="removeCombo(i)"
+                >
+                    Eliminar combo
+                </button>
+            </div>
+            <BeybladeForm
+                :model-value="combo"
+                :index="i"
+                :errors="errorsFor(i)"
+                @update:model-value="(v) => updateCombo(i, v)"
+            />
+        </div>
+
+        <button
+            v-if="form.beyblades.length < MAX_COMBOS"
+            type="button"
+            class="w-full rounded-lg border border-dashed border-white/20 px-4 py-2 text-sm font-semibold text-zinc-300 transition hover:border-bx-cyan hover:text-bx-cyan"
+            @click="addCombo"
+        >
+            + Agregar combo
+        </button>
 
         <button
             type="submit"
