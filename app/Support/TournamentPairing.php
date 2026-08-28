@@ -124,7 +124,7 @@ class TournamentPairing
                     return $entryId;
                 }
             } else {
-                $fallback = $entryId;
+                $fallback ??= $entryId;
             }
         }
 

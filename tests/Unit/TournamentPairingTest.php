@@ -102,4 +102,19 @@ class TournamentPairingTest extends TestCase
             }
         }
     }
+
+    public function test_swiss_round_bye_falls_back_to_lowest_ranked_when_everyone_already_had_a_bye(): void
+    {
+        $standings = [
+            ['entry_id' => 1, 'wins' => 3, 'matches_played' => 3, 'opponent_win_percentage' => 0.6, 'had_bye' => true],
+            ['entry_id' => 2, 'wins' => 2, 'matches_played' => 3, 'opponent_win_percentage' => 0.5, 'had_bye' => true],
+            ['entry_id' => 3, 'wins' => 1, 'matches_played' => 3, 'opponent_win_percentage' => 0.3, 'had_bye' => true],
+        ];
+        $previousMatchups = [1 => [], 2 => [], 3 => []];
+
+        $pairs = TournamentPairing::pairSwissRound($standings, $previousMatchups);
+
+        $byes = collect($pairs)->filter(fn ($pair) => $pair[1] === null)->flatten()->filter();
+        $this->assertSame([3], $byes->values()->all(), 'When everyone has already had a bye, it should go to the lowest-ranked entry (3), not the highest-ranked (1).');
+    }
 }
