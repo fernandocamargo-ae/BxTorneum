@@ -10,6 +10,7 @@ use App\Support\TournamentRoundFactory;
 use App\Support\TournamentStandings;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Inertia\Inertia;
 
 class TournamentController extends Controller
 {
@@ -78,5 +79,67 @@ class TournamentController extends Controller
         TournamentRoundFactory::create($tournament, 'elimination', $pairs);
 
         return redirect()->route('tournament.show')->with('success', 'Corte a eliminatorias generado.');
+    }
+
+    public function show()
+    {
+        $tournament = Tournament::where('status', '!=', 'completed')->latest()->first()
+            ?? Tournament::where('status', 'completed')->latest()->first();
+
+        if (! $tournament) {
+            return Inertia::render('Tournament/Show', ['tournament' => null]);
+        }
+
+        $entries = $tournament->entries()->with('user:id,nickname')->get();
+        $myEntry = $entries->firstWhere('user_id', auth()->id());
+
+        $standings = $tournament->status !== 'registration'
+            ? $this->standingsWithNicknames($tournament, $entries)
+            : [];
+
+        $currentRound = $tournament->rounds()
+            ->where('number', $tournament->current_round)
+            ->with('matches.entryOne.user:id,nickname', 'matches.entryTwo.user:id,nickname')
+            ->first();
+
+        return Inertia::render('Tournament/Show', [
+            'tournament' => [
+                'id' => $tournament->id,
+                'name' => $tournament->name,
+                'status' => $tournament->status,
+                'swiss_rounds' => $tournament->swiss_rounds,
+                'cut_size' => $tournament->cut_size,
+                'current_round' => $tournament->current_round,
+                'champion_nickname' => $tournament->champion?->user?->nickname,
+            ],
+            'has_tournament_deck' => auth()->user()->decks()->where('is_tournament_deck', true)->exists(),
+            'my_entry_id' => $myEntry?->id,
+            'entries' => $entries->map(fn ($entry) => [
+                'id' => $entry->id,
+                'nickname' => $entry->user->nickname,
+            ])->values(),
+            'standings' => $standings,
+            'current_round_matches' => $currentRound
+                ? $currentRound->matches->map(fn ($match) => [
+                    'id' => $match->id,
+                    'entry_one_id' => $match->entry_one_id,
+                    'entry_one_nickname' => $match->entryOne->user->nickname,
+                    'entry_two_id' => $match->entry_two_id,
+                    'entry_two_nickname' => $match->entryTwo?->user->nickname,
+                    'winner_entry_id' => $match->winner_entry_id,
+                    'is_bye' => $match->is_bye,
+                ])->values()
+                : [],
+        ]);
+    }
+
+    private function standingsWithNicknames(Tournament $tournament, $entries): array
+    {
+        $nicknames = $entries->pluck('user.nickname', 'id');
+
+        return collect(TournamentStandings::forTournament($tournament))
+            ->map(fn ($row) => [...$row, 'nickname' => $nicknames[$row['entry_id']] ?? '?'])
+            ->values()
+            ->all();
     }
 }
