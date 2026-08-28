@@ -158,9 +158,22 @@ function opponentNickname(match) {
         </div>
 
         <div v-if="tournament.status === 'registration'" class="rounded-xl border border-white/10 bg-zinc-900/50 p-5">
-            <ul class="mb-4 space-y-1 text-sm text-zinc-300">
-                <li v-for="entry in entries" :key="entry.id">{{ entry.nickname }}</li>
-            </ul>
+            <h3 class="mb-3 text-sm font-semibold text-zinc-400">Jugadores inscritos ({{ entries.length }})</h3>
+            <div v-if="entries.length" class="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">
+                <div
+                    v-for="entry in entries"
+                    :key="entry.id"
+                    class="flex items-center gap-3 rounded-lg border border-white/10 bg-zinc-950/50 px-3 py-2.5 transition hover:border-bx-cyan/50"
+                >
+                    <span
+                        class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-bx-cyan to-bx-magenta text-sm font-bold text-zinc-950"
+                    >
+                        {{ entry.nickname.charAt(0).toUpperCase() }}
+                    </span>
+                    <span class="truncate text-sm font-medium text-zinc-200">{{ entry.nickname }}</span>
+                </div>
+            </div>
+            <p v-else class="mb-6 text-sm text-zinc-500">Todavía no hay inscritos.</p>
             <button
                 v-if="!isRegistered"
                 type="button"
