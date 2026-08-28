@@ -30,4 +30,53 @@ class TournamentPairingTest extends TestCase
         $paired = collect($pairs)->flatten()->filter(fn ($id) => $id !== null)->sort()->values()->all();
         $this->assertSame([1, 2, 3, 4, 5], $paired);
     }
+
+    public function test_swiss_round_avoids_rematches_when_an_alternative_exists(): void
+    {
+        $standings = [
+            ['entry_id' => 1, 'wins' => 2, 'matches_played' => 2, 'opponent_win_percentage' => 0.5, 'had_bye' => false],
+            ['entry_id' => 2, 'wins' => 2, 'matches_played' => 2, 'opponent_win_percentage' => 0.5, 'had_bye' => false],
+            ['entry_id' => 3, 'wins' => 2, 'matches_played' => 2, 'opponent_win_percentage' => 0.4, 'had_bye' => false],
+            ['entry_id' => 4, 'wins' => 2, 'matches_played' => 2, 'opponent_win_percentage' => 0.4, 'had_bye' => false],
+        ];
+        // 1 already played 2 in round 1; pairing again would be a rematch that's avoidable via 3/4.
+        $previousMatchups = [1 => [2], 2 => [1], 3 => [4], 4 => [3]];
+
+        $pairs = TournamentPairing::pairSwissRound($standings, $previousMatchups);
+
+        $this->assertCount(2, $pairs);
+        foreach ($pairs as [$a, $b]) {
+            $this->assertNotContains($b, $previousMatchups[$a] ?? []);
+        }
+        $paired = collect($pairs)->flatten()->sort()->values()->all();
+        $this->assertSame([1, 2, 3, 4], $paired);
+    }
+
+    public function test_swiss_round_allows_a_rematch_when_it_is_unavoidable(): void
+    {
+        $standings = [
+            ['entry_id' => 1, 'wins' => 1, 'matches_played' => 1, 'opponent_win_percentage' => 0.0, 'had_bye' => false],
+            ['entry_id' => 2, 'wins' => 0, 'matches_played' => 1, 'opponent_win_percentage' => 1.0, 'had_bye' => false],
+        ];
+        $previousMatchups = [1 => [2], 2 => [1]];
+
+        $pairs = TournamentPairing::pairSwissRound($standings, $previousMatchups);
+
+        $this->assertSame([[1, 2]], $pairs);
+    }
+
+    public function test_swiss_round_bye_goes_to_the_lowest_ranked_entry_without_a_previous_bye(): void
+    {
+        $standings = [
+            ['entry_id' => 1, 'wins' => 2, 'matches_played' => 2, 'opponent_win_percentage' => 0.5, 'had_bye' => false],
+            ['entry_id' => 2, 'wins' => 1, 'matches_played' => 2, 'opponent_win_percentage' => 0.5, 'had_bye' => false],
+            ['entry_id' => 3, 'wins' => 1, 'matches_played' => 2, 'opponent_win_percentage' => 0.5, 'had_bye' => true],
+        ];
+        $previousMatchups = [1 => [], 2 => [], 3 => []];
+
+        $pairs = TournamentPairing::pairSwissRound($standings, $previousMatchups);
+
+        $byes = collect($pairs)->filter(fn ($pair) => $pair[1] === null)->flatten()->filter();
+        $this->assertSame([2], $byes->values()->all());
+    }
 }
