@@ -37,6 +37,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/players/{user}', [PlayerController::class, 'show'])->name('players.show');
 
     Route::get('/tournament', [TournamentController::class, 'show'])->name('tournament.show');
+    Route::post('/tournament/join', [TournamentController::class, 'join'])->name('tournament.join');
 
     Route::middleware('admin')->group(function () {
         Route::post('/tournament', [TournamentController::class, 'store'])->name('tournament.store');
