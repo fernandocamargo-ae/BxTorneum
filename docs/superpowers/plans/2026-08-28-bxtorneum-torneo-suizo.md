@@ -1304,11 +1304,18 @@ class PairedForRound extends Notification
             ->subject("BxTorneum — Ronda {$this->roundNumber}: te toca contra {$this->opponentNickname}")
             ->greeting("¡Hola {$notifiable->nickname}!")
             ->line("En la ronda {$this->roundNumber} del torneo te toca jugar contra {$this->opponentNickname}.")
-            ->action('Ver torneo', route('tournament.show'))
+            ->action('Ver torneo', '/tournament')
             ->line('¡Mucha suerte!');
     }
 }
 ```
+
+> **Note (post-implementation correction, applied during execution — see the SDD ledger for
+> this plan):** uses the literal path `/tournament` rather than `route('tournament.show')`.
+> This task runs before Task 10 registers that named route, so calling the `route()` helper
+> here throws `RouteNotFoundException` the moment `toMail()` executes (including in this
+> task's own test, which calls `toMail()` directly). The literal path is exactly what that
+> route resolves to anyway, and decouples this notification from route-registration order.
 
 - [ ] **Step 4: Run test to verify it passes**
 
@@ -1499,6 +1506,7 @@ git commit -m "feat: add TournamentRoundFactory to create rounds and notify play
 
 **Interfaces:**
 - Produces: `POST /tournament` (name `tournament.store`, `admin` + `auth` middleware) → creates a `Tournament` with `status = 'registration'`, `current_round = 0`, `created_by_user_id = auth()->id()`.
+- Produces (route name only, ahead of its implementation): registers `GET /tournament` as `tournament.show` pointing at `[TournamentController::class, 'show']`, even though `show()` doesn't exist on the controller yet. Route *registration* doesn't require the target method to exist — only *dispatching* a real request to it would, and nothing does that before Task 15 adds `show()`. This route is registered here (not in Task 15) because `redirect()->route('tournament.show')` is called by this task's own `store()` method and by Tasks 13 and 14 — all of which run before Task 15 — so the named route must already exist for those redirects (and this task's own test assertion `assertRedirect(route('tournament.show'))`) to resolve. Task 15 does **not** re-register this route; it only adds the `show()` method to the controller.
 
 - [ ] **Step 1: Write the failing test**
 
@@ -1636,15 +1644,18 @@ class TournamentController extends Controller
 }
 ```
 
-In `routes/web.php`, add the import and route (inside the existing `Route::middleware('auth')->group(...)` block, near the other feature routes):
+In `routes/web.php`, add the import and routes (inside the existing `Route::middleware('auth')->group(...)` block, near the other feature routes):
 ```php
 use App\Http\Controllers\TournamentController;
 ```
 ```php
+    Route::get('/tournament', [TournamentController::class, 'show'])->name('tournament.show');
+
     Route::middleware('admin')->group(function () {
         Route::post('/tournament', [TournamentController::class, 'store'])->name('tournament.store');
     });
 ```
+(The `GET /tournament` route is registered now, ahead of Task 15 which implements `show()` — see the note in Interfaces above. It sits unused by any real request until Task 15, but its *name* must resolve for the `redirect()->route('tournament.show')` calls in this task and Tasks 13-14.)
 
 - [ ] **Step 4: Run test to verify it passes**
 
@@ -2449,11 +2460,10 @@ git commit -m "feat: add cut-to-elimination endpoint with seeded bracket"
 
 **Files:**
 - Modify: `app/Http/Controllers/TournamentController.php` (add `show`)
-- Modify: `routes/web.php`
 - Test: `tests/Feature/TournamentShowTest.php`
 
 **Interfaces:**
-- Produces: `GET /tournament` (name `tournament.show`, `auth` only). Renders Inertia component `Tournament/Show` with props:
+- Produces: the `show()` method for `GET /tournament` (route already registered as `tournament.show` since Task 10 — this task does not touch `routes/web.php`). Renders Inertia component `Tournament/Show` with props:
   ```
   tournament: { id, name, status, swiss_rounds, cut_size, current_round, champion_nickname } | null
   has_tournament_deck: bool
@@ -2563,9 +2573,9 @@ class TournamentShowTest extends TestCase
 - [ ] **Step 2: Run test to verify it fails**
 
 Run: `php artisan test --filter TournamentShowTest`
-Expected: FAIL (route doesn't exist)
+Expected: FAIL — the route exists (registered in Task 10) but `TournamentController::show()` doesn't yet, so requests to it error out (undefined method) instead of rendering.
 
-- [ ] **Step 3: Implement `show` and the route**
+- [ ] **Step 3: Implement `show`**
 
 Add to `app/Http/Controllers/TournamentController.php` (add `Inertia` import at the top):
 ```php
@@ -2635,10 +2645,7 @@ use Inertia\Inertia;
     }
 ```
 
-In `routes/web.php`, add (in the `auth` group, outside the `admin` sub-group, alongside `tournament.join`):
-```php
-    Route::get('/tournament', [TournamentController::class, 'show'])->name('tournament.show');
-```
+No `routes/web.php` change needed — `GET /tournament` was already registered as `tournament.show` in Task 10.
 
 - [ ] **Step 4: Run test to verify it passes**
 
@@ -2648,7 +2655,7 @@ Expected: PASS
 - [ ] **Step 5: Commit**
 
 ```bash
-git add app/Http/Controllers/TournamentController.php routes/web.php tests/Feature/TournamentShowTest.php
+git add app/Http/Controllers/TournamentController.php tests/Feature/TournamentShowTest.php
 git commit -m "feat: add tournament show page props (registration/swiss/elimination/completed)"
 ```
 
