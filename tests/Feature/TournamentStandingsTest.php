@@ -60,4 +60,34 @@ class TournamentStandingsTest extends TestCase
         // Standings ordered by wins desc: a (2) before b and c (1 each) before d (0).
         $this->assertSame($a->id, $standings[0]['entry_id']);
     }
+
+    public function test_entry_id_is_the_final_ascending_tiebreak_when_wins_and_opponent_win_percentage_tie(): void
+    {
+        $tournament = Tournament::create([
+            'name' => 'Copa Y', 'status' => 'swiss', 'swiss_rounds' => 1, 'cut_size' => 2,
+            'current_round' => 1, 'created_by_user_id' => User::factory()->create()->id,
+        ]);
+
+        $a = $this->makeEntry($tournament);
+        $b = $this->makeEntry($tournament);
+        $c = $this->makeEntry($tournament);
+        $d = $this->makeEntry($tournament);
+
+        // Two independent 1-0 results, no shared opponents: a/b both end up 1-0 with
+        // opponent_win_percentage 0.0 (their opponents lost their only match, 0/1 wins).
+        $round = $tournament->rounds()->create(['number' => 1, 'phase' => 'swiss']);
+        $round->matches()->create(['entry_one_id' => $a->id, 'entry_two_id' => $c->id, 'winner_entry_id' => $a->id]);
+        $round->matches()->create(['entry_one_id' => $b->id, 'entry_two_id' => $d->id, 'winner_entry_id' => $b->id]);
+
+        $standings = TournamentStandings::forTournament($tournament);
+        $byId = collect($standings)->keyBy('entry_id');
+
+        $this->assertEqualsWithDelta($byId[$a->id]['opponent_win_percentage'], $byId[$b->id]['opponent_win_percentage'], 0.001);
+        $this->assertSame($byId[$a->id]['wins'], $byId[$b->id]['wins']);
+
+        // a and b are fully tied (same wins, same opponent_win_percentage) — the lower
+        // entry_id must sort first.
+        $topTwoIds = collect($standings)->take(2)->pluck('entry_id')->all();
+        $this->assertSame([min($a->id, $b->id), max($a->id, $b->id)], $topTwoIds);
+    }
 }

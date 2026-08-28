@@ -68,8 +68,8 @@ class TournamentStandings
 
         $rows = array_values($stats);
 
-        usort($rows, fn ($a, $b) => [$b['wins'], $b['opponent_win_percentage'], -$a['entry_id']]
-            <=> [$a['wins'], $a['opponent_win_percentage'], -$b['entry_id']]);
+        usort($rows, fn ($a, $b) => [$b['wins'], $b['opponent_win_percentage'], $a['entry_id']]
+            <=> [$a['wins'], $a['opponent_win_percentage'], $b['entry_id']]);
 
         return $rows;
     }
