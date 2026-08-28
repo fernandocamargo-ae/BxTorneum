@@ -227,7 +227,7 @@ function isMyMatch(match) {
                 No clasificaste al corte esta ronda.
             </div>
 
-            <div v-if="isAdmin" class="rounded-xl border border-white/10 bg-zinc-900/50 p-5">
+            <div v-if="current_round_matches.length" class="rounded-xl border border-white/10 bg-zinc-900/50 p-5">
                 <h3 class="mb-3 text-sm font-semibold text-zinc-400">
                     {{ tournament.status === 'swiss' ? `Emparejamientos · Ronda ${tournament.current_round} de ${tournament.swiss_rounds}` : 'Emparejamientos' }}
                 </h3>
@@ -249,7 +249,7 @@ function isMyMatch(match) {
                                 <span class="text-xs text-zinc-500">vs</span>
                                 <span :class="match.winner_entry_id === match.entry_two_id ? 'font-bold text-bx-cyan' : 'text-zinc-200'">{{ match.entry_two_nickname }}</span>
                             </div>
-                            <div v-if="!match.winner_entry_id" class="flex gap-2">
+                            <div v-if="isAdmin && !match.winner_entry_id" class="flex gap-2">
                                 <button type="button" class="rounded border border-white/15 px-2 py-1 text-xs font-semibold transition hover:border-bx-cyan hover:text-bx-cyan" @click="reportWinner(match.id, match.entry_one_id)">
                                     {{ match.entry_one_nickname }} gana
                                 </button>
@@ -261,30 +261,32 @@ function isMyMatch(match) {
                     </div>
                 </div>
 
-                <button
-                    v-if="tournament.status === 'swiss' && tournament.current_round < tournament.swiss_rounds"
-                    type="button"
-                    class="mt-4 block rounded-lg border border-white/15 px-4 py-2 text-sm font-semibold hover:border-bx-cyan hover:text-bx-cyan"
-                    @click="generateRound"
-                >
-                    Generar siguiente ronda
-                </button>
-                <button
-                    v-if="tournament.status === 'swiss' && tournament.current_round === tournament.swiss_rounds"
-                    type="button"
-                    class="mt-4 block rounded-lg border border-white/15 px-4 py-2 text-sm font-semibold hover:border-bx-cyan hover:text-bx-cyan"
-                    @click="cutToElimination"
-                >
-                    Cortar a eliminatorias
-                </button>
-                <button
-                    v-if="tournament.status === 'elimination' && current_round_matches.length > 1"
-                    type="button"
-                    class="mt-4 block rounded-lg border border-white/15 px-4 py-2 text-sm font-semibold hover:border-bx-cyan hover:text-bx-cyan"
-                    @click="generateRound"
-                >
-                    Generar siguiente ronda
-                </button>
+                <template v-if="isAdmin">
+                    <button
+                        v-if="tournament.status === 'swiss' && tournament.current_round < tournament.swiss_rounds"
+                        type="button"
+                        class="mt-4 block rounded-lg border border-white/15 px-4 py-2 text-sm font-semibold hover:border-bx-cyan hover:text-bx-cyan"
+                        @click="generateRound"
+                    >
+                        Generar siguiente ronda
+                    </button>
+                    <button
+                        v-if="tournament.status === 'swiss' && tournament.current_round === tournament.swiss_rounds"
+                        type="button"
+                        class="mt-4 block rounded-lg border border-white/15 px-4 py-2 text-sm font-semibold hover:border-bx-cyan hover:text-bx-cyan"
+                        @click="cutToElimination"
+                    >
+                        Cortar a eliminatorias
+                    </button>
+                    <button
+                        v-if="tournament.status === 'elimination' && current_round_matches.length > 1"
+                        type="button"
+                        class="mt-4 block rounded-lg border border-white/15 px-4 py-2 text-sm font-semibold hover:border-bx-cyan hover:text-bx-cyan"
+                        @click="generateRound"
+                    >
+                        Generar siguiente ronda
+                    </button>
+                </template>
             </div>
         </template>
 
