@@ -24,7 +24,7 @@ class PairedForRound extends Notification
             ->subject("BxTorneum — Ronda {$this->roundNumber}: te toca contra {$this->opponentNickname}")
             ->greeting("¡Hola {$notifiable->nickname}!")
             ->line("En la ronda {$this->roundNumber} del torneo te toca jugar contra {$this->opponentNickname}.")
-            ->action('Ver torneo', '/tournament')
+            ->action('Ver torneo', route('tournament.show'))
             ->line('¡Mucha suerte!');
     }
 }

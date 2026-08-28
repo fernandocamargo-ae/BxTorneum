@@ -100,4 +100,34 @@ class TournamentShowTest extends TestCase
             ->where('tournament.champion_nickname', 'Champ')
         );
     }
+
+    public function test_can_create_tournament_is_true_when_tournament_is_completed(): void
+    {
+        $tournament = Tournament::create([
+            'name' => 'Copa X', 'status' => 'completed', 'swiss_rounds' => 1, 'cut_size' => 2,
+            'current_round' => 2, 'created_by_user_id' => User::factory()->create()->id,
+        ]);
+
+        $this->actingAs(User::factory()->create())->get('/tournament')->assertInertia(fn ($page) => $page
+            ->where('tournament.status', 'completed')
+            ->where('can_create_tournament', true)
+        );
+    }
+
+    public function test_can_create_tournament_is_false_for_active_tournament_statuses(): void
+    {
+        foreach (['registration', 'swiss', 'elimination'] as $status) {
+            $tournament = Tournament::create([
+                'name' => 'Copa X', 'status' => $status, 'swiss_rounds' => 2, 'cut_size' => 2,
+                'current_round' => 0, 'created_by_user_id' => User::factory()->create()->id,
+            ]);
+
+            $this->actingAs(User::factory()->create())->get('/tournament')->assertInertia(fn ($page) => $page
+                ->where('tournament.status', $status)
+                ->where('can_create_tournament', false)
+            );
+
+            $tournament->delete();
+        }
+    }
 }

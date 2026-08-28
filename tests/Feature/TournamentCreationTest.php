@@ -61,4 +61,22 @@ class TournamentCreationTest extends TestCase
             ->post('/tournament', ['name' => 'Copa Y', 'swiss_rounds' => 3, 'cut_size' => 4])
             ->assertStatus(422);
     }
+
+    public function test_admin_can_create_a_new_tournament_after_the_previous_one_completed(): void
+    {
+        $admin = User::factory()->create(['is_admin' => true]);
+        Tournament::create([
+            'name' => 'Finalizado', 'status' => 'completed', 'swiss_rounds' => 3, 'cut_size' => 4,
+            'current_round' => 3, 'created_by_user_id' => $admin->id,
+        ]);
+
+        $this->actingAs($admin)
+            ->post('/tournament', ['name' => 'Copa Y', 'swiss_rounds' => 3, 'cut_size' => 4])
+            ->assertRedirect(route('tournament.show'));
+
+        $this->assertDatabaseHas('tournaments', [
+            'name' => 'Copa Y', 'status' => 'registration', 'swiss_rounds' => 3, 'cut_size' => 4,
+            'current_round' => 0, 'created_by_user_id' => $admin->id,
+        ]);
+    }
 }

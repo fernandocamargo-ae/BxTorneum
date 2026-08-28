@@ -24,7 +24,8 @@ class PairedForRoundTest extends TestCase
             $mail = $notification->toMail($user);
 
             return str_contains($mail->subject, 'Ronda 2')
-                && str_contains(implode(' ', $mail->introLines), 'RivalNick');
+                && str_contains(implode(' ', $mail->introLines), 'RivalNick')
+                && $mail->actionUrl === route('tournament.show');
         });
     }
 }

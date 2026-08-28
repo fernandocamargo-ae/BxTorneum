@@ -79,4 +79,61 @@ describe('Tournament/Show', () => {
 
         expect(wrapper.text()).toContain('Ganador');
     });
+
+    it('shows the creation form for an admin when the tournament is completed and can_create_tournament is true', async () => {
+        const { usePage } = await import('@inertiajs/vue3');
+        usePage.mockReturnValueOnce({ props: { auth: { user: { is_admin: true } } } });
+
+        const wrapper = mount(Show, {
+            props: {
+                tournament: { id: 1, name: 'Copa X', status: 'completed', swiss_rounds: 3, cut_size: 4, current_round: 3, champion_nickname: 'Ganador' },
+                has_tournament_deck: true,
+                my_entry_id: 5,
+                entries: [],
+                standings: [],
+                current_round_matches: [],
+                can_create_tournament: true,
+            },
+        });
+
+        expect(wrapper.text()).toContain('Crear torneo');
+        expect(wrapper.findAll('form').length).toBe(1);
+    });
+
+    it('hides the creation form when can_create_tournament is false even for an admin', async () => {
+        const { usePage } = await import('@inertiajs/vue3');
+        usePage.mockReturnValueOnce({ props: { auth: { user: { is_admin: true } } } });
+
+        const wrapper = mount(Show, {
+            props: {
+                tournament: { id: 1, name: 'Copa X', status: 'completed', swiss_rounds: 3, cut_size: 4, current_round: 3, champion_nickname: 'Ganador' },
+                has_tournament_deck: true,
+                my_entry_id: 5,
+                entries: [],
+                standings: [],
+                current_round_matches: [],
+                can_create_tournament: false,
+            },
+        });
+
+        expect(wrapper.findAll('form').length).toBe(0);
+    });
+
+    it('shows the standings table for a completed tournament', () => {
+        const wrapper = mount(Show, {
+            props: {
+                tournament: { id: 1, name: 'Copa X', status: 'completed', swiss_rounds: 3, cut_size: 4, current_round: 3, champion_nickname: 'Ganador' },
+                has_tournament_deck: true,
+                my_entry_id: 5,
+                entries: [],
+                standings: [
+                    { entry_id: 5, nickname: 'Ganador', wins: 3 },
+                    { entry_id: 6, nickname: 'Subcampeon', wins: 2 },
+                ],
+                current_round_matches: [],
+            },
+        });
+
+        expect(wrapper.text()).toContain('Subcampeon');
+    });
 });

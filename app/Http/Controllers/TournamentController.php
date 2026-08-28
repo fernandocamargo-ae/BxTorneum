@@ -94,6 +94,7 @@ class TournamentController extends Controller
                 'entries' => [],
                 'standings' => [],
                 'current_round_matches' => [],
+                'can_create_tournament' => true,
             ]);
         }
 
@@ -120,6 +121,7 @@ class TournamentController extends Controller
                 'champion_nickname' => $tournament->champion?->user?->nickname,
             ],
             'has_tournament_deck' => auth()->user()->decks()->where('is_tournament_deck', true)->exists(),
+            'can_create_tournament' => $tournament->status === 'completed',
             'my_entry_id' => $myEntry?->id,
             'entries' => $entries->map(fn ($entry) => [
                 'id' => $entry->id,

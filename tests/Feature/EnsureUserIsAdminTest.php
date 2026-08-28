@@ -31,4 +31,13 @@ class EnsureUserIsAdminTest extends TestCase
 
         $this->actingAs($admin)->get('/__admin_only_probe')->assertOk();
     }
+
+    public function test_is_admin_can_be_set_via_mass_assignment(): void
+    {
+        $user = User::factory()->create(['is_admin' => false]);
+
+        $user->update(['is_admin' => true]);
+
+        $this->assertTrue($user->fresh()->is_admin);
+    }
 }

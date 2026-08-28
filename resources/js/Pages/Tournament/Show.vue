@@ -9,6 +9,7 @@ const props = defineProps({
     entries: { type: Array, default: () => [] },
     standings: { type: Array, default: () => [] },
     current_round_matches: { type: Array, default: () => [] },
+    can_create_tournament: { type: Boolean, default: false },
 });
 
 const page = usePage();
@@ -113,6 +114,49 @@ function opponentNickname(match) {
             <p class="bx-gradient-text text-2xl font-black">{{ tournament.champion_nickname }}</p>
         </div>
 
+        <div v-if="tournament.status === 'completed' && isAdmin && can_create_tournament" class="rounded-xl border border-white/10 bg-zinc-900/50 p-5">
+            <h3 class="mb-4 text-sm font-semibold text-zinc-300">Crear un nuevo torneo</h3>
+            <form class="max-w-sm space-y-4" @submit.prevent="createTournament">
+                <div>
+                    <label class="mb-1 block text-sm font-medium text-zinc-300">Nombre</label>
+                    <input
+                        v-model="createForm.name"
+                        type="text"
+                        class="w-full rounded-md border border-white/10 bg-zinc-900 px-3 py-2 text-sm outline-none focus:border-bx-cyan"
+                    />
+                    <p v-if="createForm.errors.name" class="mt-1 text-xs text-bx-magenta">{{ createForm.errors.name }}</p>
+                </div>
+                <div>
+                    <label class="mb-1 block text-sm font-medium text-zinc-300">Rondas suizas</label>
+                    <input
+                        v-model.number="createForm.swiss_rounds"
+                        type="number"
+                        min="1"
+                        class="w-full rounded-md border border-white/10 bg-zinc-900 px-3 py-2 text-sm outline-none focus:border-bx-cyan"
+                    />
+                </div>
+                <div>
+                    <label class="mb-1 block text-sm font-medium text-zinc-300">Corte a eliminatorias (top N)</label>
+                    <select
+                        v-model.number="createForm.cut_size"
+                        class="w-full rounded-md border border-white/10 bg-zinc-900 px-3 py-2 text-sm outline-none focus:border-bx-cyan"
+                    >
+                        <option :value="2">Top 2</option>
+                        <option :value="4">Top 4</option>
+                        <option :value="8">Top 8</option>
+                        <option :value="16">Top 16</option>
+                    </select>
+                </div>
+                <button
+                    type="submit"
+                    :disabled="createForm.processing"
+                    class="w-full rounded-lg bg-gradient-to-r from-bx-cyan to-bx-magenta px-4 py-2 font-bold text-zinc-950 transition hover:opacity-90 disabled:opacity-50"
+                >
+                    Crear torneo
+                </button>
+            </form>
+        </div>
+
         <div v-if="tournament.status === 'registration'" class="rounded-xl border border-white/10 bg-zinc-900/50 p-5">
             <ul class="mb-4 space-y-1 text-sm text-zinc-300">
                 <li v-for="entry in entries" :key="entry.id">{{ entry.nickname }}</li>
@@ -195,8 +239,10 @@ function opponentNickname(match) {
                     Generar siguiente ronda
                 </button>
             </div>
+        </div>
 
-            <table v-if="standings.length" class="mt-6 w-full text-left text-sm">
+        <div v-if="standings.length" class="rounded-xl border border-white/10 bg-zinc-900/50 p-5">
+            <table class="w-full text-left text-sm">
                 <thead class="text-zinc-400">
                     <tr>
                         <th class="pb-2">#</th>
