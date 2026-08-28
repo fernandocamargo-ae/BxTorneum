@@ -8,6 +8,7 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\TeamComboController;
 use App\Http\Controllers\TeamController;
+use App\Http\Controllers\TournamentController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', fn () => redirect()->route('decks.index'));
@@ -34,6 +35,12 @@ Route::middleware('auth')->group(function () {
 
     Route::get('/players', [PlayerController::class, 'index'])->name('players.index');
     Route::get('/players/{user}', [PlayerController::class, 'show'])->name('players.show');
+
+    Route::get('/tournament', [TournamentController::class, 'show'])->name('tournament.show');
+
+    Route::middleware('admin')->group(function () {
+        Route::post('/tournament', [TournamentController::class, 'store'])->name('tournament.store');
+    });
 });
 
 require __DIR__.'/auth.php';
