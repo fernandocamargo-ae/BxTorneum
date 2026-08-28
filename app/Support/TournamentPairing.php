@@ -37,25 +37,29 @@ class TournamentPairing
     {
         $pool = array_column($standings, null, 'entry_id');
         $order = array_column($standings, 'entry_id');
+
+        $byeEntry = null;
+        if (count($order) % 2 === 1) {
+            $byeEntry = self::selectByeEntry($order, $pool, $previousMatchups);
+            $order = array_values(array_diff($order, [$byeEntry]));
+        }
+
         $remaining = $order;
         $pairs = [];
 
         while (count($remaining) > 0) {
             $current = array_shift($remaining);
-
-            if (count($remaining) === 0) {
-                $pairs[] = [$current, null];
-                break;
-            }
-
             $opponentIndex = self::findOpponent($current, $remaining, $previousMatchups);
             $opponent = $remaining[$opponentIndex];
             array_splice($remaining, $opponentIndex, 1);
-
             $pairs[] = [$current, $opponent];
         }
 
-        return self::assignBye($pairs, $pool);
+        if ($byeEntry !== null) {
+            $pairs[] = [$byeEntry, null];
+        }
+
+        return $pairs;
     }
 
     /** @param  array<int>  $remaining */
@@ -74,60 +78,56 @@ class TournamentPairing
     }
 
     /**
-     * If the last pair produced by the greedy walk is a "bye" (second slot null), reassign
-     * it to the lowest-ranked entry among $pool that hasn't had a bye yet.
+     * Lowest-ranked entry without a previous bye; tries to avoid selecting an entry
+     * whose removal would force others into unavoidable rematches. Falls back to the
+     * lowest-ranked entry overall if all remaining entries have had a bye.
      *
-     * @param  array<int, array{0:int,1:int|null}>  $pairs
+     * @param  array<int>  $order  entry_ids, best-to-worst
      * @param  array<int, array{entry_id:int, had_bye:bool}>  $pool
-     * @return array<int, array{0:int,1:int|null}>
+     * @param  array<int, array<int>>  $previousMatchups
      */
-    private static function assignBye(array $pairs, array $pool): array
+    private static function selectByeEntry(array $order, array $pool, array $previousMatchups): int
     {
-        $byeIndex = null;
-        foreach ($pairs as $index => [$a, $b]) {
-            if ($b === null) {
-                $byeIndex = $index;
-                break;
+        $candidates = array_reverse($order);
+        $preferred = null;
+        $fallback = null;
+
+        foreach ($candidates as $entryId) {
+            if (! ($pool[$entryId]['had_bye'] ?? false)) {
+                if ($preferred === null) {
+                    $preferred = $entryId;
+                }
+
+                // Check if removing this entry would force any remaining entry into all-rematches.
+                $testOrder = array_values(array_diff($order, [$entryId]));
+                $forced = false;
+
+                foreach ($testOrder as $candidate) {
+                    $faced = $previousMatchups[$candidate] ?? [];
+                    $available = array_diff($testOrder, [$candidate]);
+                    $hasFresh = false;
+
+                    foreach ($available as $opponent) {
+                        if (! in_array($opponent, $faced, true)) {
+                            $hasFresh = true;
+                            break;
+                        }
+                    }
+
+                    if (! $hasFresh) {
+                        $forced = true;
+                        break;
+                    }
+                }
+
+                if (! $forced) {
+                    return $entryId;
+                }
+            } else {
+                $fallback = $entryId;
             }
         }
 
-        if ($byeIndex === null) {
-            return $pairs;
-        }
-
-        $currentByeEntry = $pairs[$byeIndex][0];
-
-        $candidates = array_reverse(array_column($pool, 'entry_id'));
-        $chosen = null;
-        foreach ($candidates as $candidateId) {
-            if (! ($pool[$candidateId]['had_bye'] ?? false)) {
-                $chosen = $candidateId;
-                break;
-            }
-        }
-        $chosen ??= end($candidates);
-
-        if ($chosen === $currentByeEntry) {
-            return $pairs;
-        }
-
-        // Swap: give the bye to $chosen, and pair $currentByeEntry with whoever $chosen was facing.
-        foreach ($pairs as $index => [$a, $b]) {
-            if ($index === $byeIndex) {
-                continue;
-            }
-            if ($a === $chosen) {
-                $pairs[$index][0] = $currentByeEntry;
-                $pairs[$byeIndex][0] = $chosen;
-                return $pairs;
-            }
-            if ($b === $chosen) {
-                $pairs[$index][1] = $currentByeEntry;
-                $pairs[$byeIndex][0] = $chosen;
-                return $pairs;
-            }
-        }
-
-        return $pairs;
+        return $preferred ?? $fallback ?? end($order);
     }
 }

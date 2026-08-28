@@ -79,4 +79,27 @@ class TournamentPairingTest extends TestCase
         $byes = collect($pairs)->filter(fn ($pair) => $pair[1] === null)->flatten()->filter();
         $this->assertSame([2], $byes->values()->all());
     }
+
+    public function test_swiss_round_bye_reassignment_never_creates_a_rematch(): void
+    {
+        $standings = [
+            ['entry_id' => 1, 'wins' => 3, 'matches_played' => 3, 'opponent_win_percentage' => 0.6, 'had_bye' => false],
+            ['entry_id' => 2, 'wins' => 2, 'matches_played' => 3, 'opponent_win_percentage' => 0.5, 'had_bye' => false],
+            ['entry_id' => 3, 'wins' => 2, 'matches_played' => 3, 'opponent_win_percentage' => 0.4, 'had_bye' => false],
+            ['entry_id' => 4, 'wins' => 1, 'matches_played' => 3, 'opponent_win_percentage' => 0.4, 'had_bye' => false],
+            ['entry_id' => 5, 'wins' => 1, 'matches_played' => 3, 'opponent_win_percentage' => 0.3, 'had_bye' => false],
+        ];
+        // Entry 1 has already faced 2, 3, and 4 — only 5 is a fresh opponent for entry 1.
+        $previousMatchups = [
+            1 => [2, 3, 4], 2 => [1], 3 => [1], 4 => [1], 5 => [],
+        ];
+
+        $pairs = TournamentPairing::pairSwissRound($standings, $previousMatchups);
+
+        foreach ($pairs as [$a, $b]) {
+            if ($b !== null) {
+                $this->assertNotContains($b, $previousMatchups[$a] ?? [], "Entries $a and $b were paired despite having already faced each other.");
+            }
+        }
+    }
 }
