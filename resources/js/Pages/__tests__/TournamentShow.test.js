@@ -103,7 +103,7 @@ describe('Tournament/Show', () => {
         expect(wrapper.text()).toContain('Ganador');
     });
 
-    it('shows the creation form for an admin when the tournament is completed and can_create_tournament is true', async () => {
+    it('reveals the creation form for an admin after clicking "+ Crear un nuevo torneo"', async () => {
         const { usePage } = await import('@inertiajs/vue3');
         usePage.mockReturnValueOnce({ props: { auth: { user: { is_admin: true } } } });
 
@@ -119,11 +119,16 @@ describe('Tournament/Show', () => {
             },
         });
 
+        expect(wrapper.text()).toContain('+ Crear un nuevo torneo');
+        expect(wrapper.findAll('form').length).toBe(0);
+
+        await wrapper.find('button').trigger('click');
+
         expect(wrapper.text()).toContain('Crear torneo');
         expect(wrapper.findAll('form').length).toBe(1);
     });
 
-    it('hides the creation form when can_create_tournament is false even for an admin', async () => {
+    it('hides the creation toggle when can_create_tournament is false even for an admin', async () => {
         const { usePage } = await import('@inertiajs/vue3');
         usePage.mockReturnValueOnce({ props: { auth: { user: { is_admin: true } } } });
 
@@ -139,6 +144,7 @@ describe('Tournament/Show', () => {
             },
         });
 
+        expect(wrapper.text()).not.toContain('Crear un nuevo torneo');
         expect(wrapper.findAll('form').length).toBe(0);
     });
 

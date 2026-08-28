@@ -1,6 +1,6 @@
 <script setup>
 import { Head, Link, router, useForm, usePage } from '@inertiajs/vue3';
-import { computed } from 'vue';
+import { computed, ref } from 'vue';
 
 const props = defineProps({
     tournament: { type: Object, default: null },
@@ -15,6 +15,7 @@ const props = defineProps({
 const page = usePage();
 const isAdmin = computed(() => !!page.props.auth?.user?.is_admin);
 const isRegistered = computed(() => props.my_entry_id !== null);
+const showCreateForm = ref(false);
 
 const createForm = useForm({ name: '', swiss_rounds: 3, cut_size: 4 });
 
@@ -116,49 +117,6 @@ function isMyMatch(match) {
         <div v-if="tournament.status === 'completed'" class="rounded-xl border border-bx-cyan/40 bg-bx-cyan/10 p-6 text-center">
             <p class="text-sm text-zinc-300">Campeón</p>
             <p class="bx-gradient-text text-2xl font-black">{{ tournament.champion_nickname }}</p>
-        </div>
-
-        <div v-if="tournament.status === 'completed' && isAdmin && can_create_tournament" class="rounded-xl border border-white/10 bg-zinc-900/50 p-5">
-            <h3 class="mb-4 text-sm font-semibold text-zinc-300">Crear un nuevo torneo</h3>
-            <form class="max-w-sm space-y-4" @submit.prevent="createTournament">
-                <div>
-                    <label class="mb-1 block text-sm font-medium text-zinc-300">Nombre</label>
-                    <input
-                        v-model="createForm.name"
-                        type="text"
-                        class="w-full rounded-md border border-white/10 bg-zinc-900 px-3 py-2 text-sm outline-none focus:border-bx-cyan"
-                    />
-                    <p v-if="createForm.errors.name" class="mt-1 text-xs text-bx-magenta">{{ createForm.errors.name }}</p>
-                </div>
-                <div>
-                    <label class="mb-1 block text-sm font-medium text-zinc-300">Rondas suizas</label>
-                    <input
-                        v-model.number="createForm.swiss_rounds"
-                        type="number"
-                        min="1"
-                        class="w-full rounded-md border border-white/10 bg-zinc-900 px-3 py-2 text-sm outline-none focus:border-bx-cyan"
-                    />
-                </div>
-                <div>
-                    <label class="mb-1 block text-sm font-medium text-zinc-300">Corte a eliminatorias (top N)</label>
-                    <select
-                        v-model.number="createForm.cut_size"
-                        class="w-full rounded-md border border-white/10 bg-zinc-900 px-3 py-2 text-sm outline-none focus:border-bx-cyan"
-                    >
-                        <option :value="2">Top 2</option>
-                        <option :value="4">Top 4</option>
-                        <option :value="8">Top 8</option>
-                        <option :value="16">Top 16</option>
-                    </select>
-                </div>
-                <button
-                    type="submit"
-                    :disabled="createForm.processing"
-                    class="w-full rounded-lg bg-gradient-to-r from-bx-cyan to-bx-magenta px-4 py-2 font-bold text-zinc-950 transition hover:opacity-90 disabled:opacity-50"
-                >
-                    Crear torneo
-                </button>
-            </form>
         </div>
 
         <div v-if="tournament.status === 'registration'" class="rounded-xl border border-white/10 bg-zinc-900/50 p-5">
@@ -291,7 +249,9 @@ function isMyMatch(match) {
         </template>
 
         <div v-if="standings.length" class="rounded-xl border border-white/10 bg-zinc-900/50 p-5">
-            <h3 class="mb-3 text-sm font-semibold text-zinc-400">Tabla de posiciones</h3>
+            <h3 class="mb-3 text-sm font-semibold text-zinc-400">
+                {{ tournament.status === 'completed' ? 'Posiciones finales' : 'Tabla de posiciones' }}
+            </h3>
             <table class="w-full text-left text-sm">
                 <thead class="text-xs uppercase tracking-wide text-zinc-500">
                     <tr>
@@ -316,6 +276,68 @@ function isMyMatch(match) {
                     </tr>
                 </tbody>
             </table>
+        </div>
+
+        <div v-if="tournament.status === 'completed' && isAdmin && can_create_tournament" class="rounded-xl border border-white/10 bg-zinc-900/50 p-5">
+            <button
+                v-if="!showCreateForm"
+                type="button"
+                class="text-sm font-semibold text-zinc-400 transition hover:text-bx-cyan"
+                @click="showCreateForm = true"
+            >
+                + Crear un nuevo torneo
+            </button>
+            <template v-else>
+                <h3 class="mb-4 text-sm font-semibold text-zinc-300">Crear un nuevo torneo</h3>
+                <form class="max-w-sm space-y-4" @submit.prevent="createTournament">
+                    <div>
+                        <label class="mb-1 block text-sm font-medium text-zinc-300">Nombre</label>
+                        <input
+                            v-model="createForm.name"
+                            type="text"
+                            class="w-full rounded-md border border-white/10 bg-zinc-900 px-3 py-2 text-sm outline-none focus:border-bx-cyan"
+                        />
+                        <p v-if="createForm.errors.name" class="mt-1 text-xs text-bx-magenta">{{ createForm.errors.name }}</p>
+                    </div>
+                    <div>
+                        <label class="mb-1 block text-sm font-medium text-zinc-300">Rondas suizas</label>
+                        <input
+                            v-model.number="createForm.swiss_rounds"
+                            type="number"
+                            min="1"
+                            class="w-full rounded-md border border-white/10 bg-zinc-900 px-3 py-2 text-sm outline-none focus:border-bx-cyan"
+                        />
+                    </div>
+                    <div>
+                        <label class="mb-1 block text-sm font-medium text-zinc-300">Corte a eliminatorias (top N)</label>
+                        <select
+                            v-model.number="createForm.cut_size"
+                            class="w-full rounded-md border border-white/10 bg-zinc-900 px-3 py-2 text-sm outline-none focus:border-bx-cyan"
+                        >
+                            <option :value="2">Top 2</option>
+                            <option :value="4">Top 4</option>
+                            <option :value="8">Top 8</option>
+                            <option :value="16">Top 16</option>
+                        </select>
+                    </div>
+                    <div class="flex gap-2">
+                        <button
+                            type="submit"
+                            :disabled="createForm.processing"
+                            class="rounded-lg bg-gradient-to-r from-bx-cyan to-bx-magenta px-4 py-2 text-sm font-bold text-zinc-950 transition hover:opacity-90 disabled:opacity-50"
+                        >
+                            Crear torneo
+                        </button>
+                        <button
+                            type="button"
+                            class="rounded-lg border border-white/15 px-4 py-2 text-sm font-semibold text-zinc-300 hover:border-white/30"
+                            @click="showCreateForm = false"
+                        >
+                            Cancelar
+                        </button>
+                    </div>
+                </form>
+            </template>
         </div>
     </div>
 </template>
