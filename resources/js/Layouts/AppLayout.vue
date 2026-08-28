@@ -27,6 +27,7 @@ watch(() => page.url, () => {
                     <template v-if="user">
                         <Link href="/decks" class="text-sm font-medium text-zinc-300 transition hover:text-bx-cyan">Mis decks</Link>
                         <Link href="/tournament" class="text-sm font-medium text-zinc-300 transition hover:text-bx-cyan">Torneo</Link>
+                        <Link href="/tournament/history" class="text-sm font-medium text-zinc-300 transition hover:text-bx-cyan">Historial</Link>
                         <Link href="/players" class="text-sm font-medium text-zinc-300 transition hover:text-bx-cyan">Jugadores</Link>
                         <div class="flex items-center gap-2 rounded-full border border-white/10 bg-zinc-900/50 py-1 pl-3 pr-1">
                             <Link href="/profile" class="text-sm font-medium text-zinc-200 transition hover:text-bx-cyan">
@@ -76,6 +77,7 @@ watch(() => page.url, () => {
                     <template v-if="user">
                         <Link href="/decks" class="rounded-lg px-3 py-2 text-sm font-medium text-zinc-300 hover:bg-white/5">Mis decks</Link>
                         <Link href="/tournament" class="rounded-lg px-3 py-2 text-sm font-medium text-zinc-300 hover:bg-white/5">Torneo</Link>
+                        <Link href="/tournament/history" class="rounded-lg px-3 py-2 text-sm font-medium text-zinc-300 hover:bg-white/5">Historial</Link>
                         <Link href="/players" class="rounded-lg px-3 py-2 text-sm font-medium text-zinc-300 hover:bg-white/5">Jugadores</Link>
                         <div class="my-1 border-t border-white/10"></div>
                         <Link href="/profile" class="rounded-lg px-3 py-2 text-sm font-medium text-zinc-300 hover:bg-white/5">

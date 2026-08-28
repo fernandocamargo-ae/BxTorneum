@@ -40,6 +40,8 @@ Route::middleware('auth')->group(function () {
 
     Route::get('/tournament', [TournamentController::class, 'show'])->name('tournament.show');
     Route::post('/tournament/join', [TournamentController::class, 'join'])->name('tournament.join');
+    Route::get('/tournament/history', [TournamentController::class, 'history'])->name('tournament.history');
+    Route::get('/tournament/history/{tournament}', [TournamentController::class, 'historyShow'])->name('tournament.history.show');
 
     Route::middleware('admin')->group(function () {
         Route::post('/tournament', [TournamentController::class, 'store'])->name('tournament.store');

@@ -142,6 +142,60 @@ class TournamentController extends Controller
         ]);
     }
 
+    public function history()
+    {
+        $tournaments = Tournament::where('status', 'completed')
+            ->with('champion.user:id,nickname')
+            ->withCount('entries')
+            ->orderByDesc('created_at')
+            ->get()
+            ->map(fn (Tournament $tournament) => [
+                'id' => $tournament->id,
+                'name' => $tournament->name,
+                'champion_nickname' => $tournament->champion?->user?->nickname,
+                'entries_count' => $tournament->entries_count,
+                'created_at' => $tournament->created_at->format('d/m/Y'),
+            ]);
+
+        return Inertia::render('Tournament/History', ['tournaments' => $tournaments]);
+    }
+
+    public function historyShow(Tournament $tournament)
+    {
+        abort_unless($tournament->status === 'completed', 404);
+
+        $entries = $tournament->entries()->with('user:id,nickname')->get();
+        $standings = $this->standingsWithNicknames($tournament, $entries);
+
+        $rounds = $tournament->rounds()
+            ->orderBy('number')
+            ->with('matches.entryOne.user:id,nickname', 'matches.entryTwo.user:id,nickname')
+            ->get()
+            ->map(fn ($round) => [
+                'number' => $round->number,
+                'phase' => $round->phase,
+                'matches' => $round->matches->map(fn ($match) => [
+                    'id' => $match->id,
+                    'entry_one_id' => $match->entry_one_id,
+                    'entry_one_nickname' => $match->entryOne->user->nickname,
+                    'entry_two_id' => $match->entry_two_id,
+                    'entry_two_nickname' => $match->entryTwo?->user->nickname,
+                    'winner_entry_id' => $match->winner_entry_id,
+                    'is_bye' => $match->is_bye,
+                ])->values(),
+            ])->values();
+
+        return Inertia::render('Tournament/HistoryShow', [
+            'tournament' => [
+                'id' => $tournament->id,
+                'name' => $tournament->name,
+                'champion_nickname' => $tournament->champion?->user?->nickname,
+            ],
+            'standings' => $standings,
+            'rounds' => $rounds,
+        ]);
+    }
+
     private function standingsWithNicknames(Tournament $tournament, $entries): array
     {
         $nicknames = $entries->pluck('user.nickname', 'id');
