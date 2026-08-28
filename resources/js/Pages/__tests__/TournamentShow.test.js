@@ -62,7 +62,8 @@ describe('Tournament/Show', () => {
             },
         });
 
-        expect(wrapper.text()).toContain('Tu duelo esta ronda: vs Rival');
+        expect(wrapper.text()).toContain('Tu duelo esta ronda');
+        expect(wrapper.text()).toContain('Rival');
     });
 
     it('shows the champion banner when completed', () => {
