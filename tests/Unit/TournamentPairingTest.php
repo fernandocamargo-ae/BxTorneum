@@ -117,4 +117,26 @@ class TournamentPairingTest extends TestCase
         $byes = collect($pairs)->filter(fn ($pair) => $pair[1] === null)->flatten()->filter();
         $this->assertSame([3], $byes->values()->all(), 'When everyone has already had a bye, it should go to the lowest-ranked entry (3), not the highest-ranked (1).');
     }
+
+    public function test_seed_elimination_bracket_pairs_top_seed_against_bottom_seed(): void
+    {
+        $standings = [
+            ['entry_id' => 1, 'wins' => 3, 'matches_played' => 3, 'opponent_win_percentage' => 0.6, 'had_bye' => false],
+            ['entry_id' => 2, 'wins' => 3, 'matches_played' => 3, 'opponent_win_percentage' => 0.5, 'had_bye' => false],
+            ['entry_id' => 3, 'wins' => 2, 'matches_played' => 3, 'opponent_win_percentage' => 0.6, 'had_bye' => false],
+            ['entry_id' => 4, 'wins' => 2, 'matches_played' => 3, 'opponent_win_percentage' => 0.5, 'had_bye' => false],
+            ['entry_id' => 5, 'wins' => 1, 'matches_played' => 3, 'opponent_win_percentage' => 0.5, 'had_bye' => false],
+        ];
+
+        $pairs = TournamentPairing::seedEliminationBracket($standings, 4);
+
+        $this->assertSame([[1, 4], [2, 3]], $pairs);
+    }
+
+    public function test_advance_elimination_round_pairs_consecutive_winners(): void
+    {
+        $pairs = TournamentPairing::advanceEliminationRound([10, 30, 20, 40]);
+
+        $this->assertSame([[10, 30], [20, 40]], $pairs);
+    }
 }

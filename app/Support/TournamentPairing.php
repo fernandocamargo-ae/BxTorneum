@@ -130,4 +130,40 @@ class TournamentPairing
 
         return $preferred ?? $fallback ?? end($order);
     }
+
+    /**
+     * @param  array<int, array{entry_id:int, wins:int, matches_played:int, opponent_win_percentage:float, had_bye:bool}>  $standings  ordered best-to-worst
+     * @return array<int, array{0:int,1:int}>
+     */
+    public static function seedEliminationBracket(array $standings, int $cutSize): array
+    {
+        $seeds = array_column(array_slice($standings, 0, $cutSize), 'entry_id');
+
+        $pairs = [];
+        $low = 0;
+        $high = count($seeds) - 1;
+
+        while ($low < $high) {
+            $pairs[] = [$seeds[$low], $seeds[$high]];
+            $low++;
+            $high--;
+        }
+
+        return $pairs;
+    }
+
+    /**
+     * @param  array<int,int>  $winnerEntryIds  in bracket order
+     * @return array<int, array{0:int,1:int}>
+     */
+    public static function advanceEliminationRound(array $winnerEntryIds): array
+    {
+        $pairs = [];
+
+        for ($i = 0; $i < count($winnerEntryIds); $i += 2) {
+            $pairs[] = [$winnerEntryIds[$i], $winnerEntryIds[$i + 1]];
+        }
+
+        return $pairs;
+    }
 }
