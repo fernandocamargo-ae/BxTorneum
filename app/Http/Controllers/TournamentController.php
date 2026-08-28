@@ -87,7 +87,14 @@ class TournamentController extends Controller
             ?? Tournament::where('status', 'completed')->latest()->first();
 
         if (! $tournament) {
-            return Inertia::render('Tournament/Show', ['tournament' => null]);
+            return Inertia::render('Tournament/Show', [
+                'tournament' => null,
+                'has_tournament_deck' => auth()->user()->decks()->where('is_tournament_deck', true)->exists(),
+                'my_entry_id' => null,
+                'entries' => [],
+                'standings' => [],
+                'current_round_matches' => [],
+            ]);
         }
 
         $entries = $tournament->entries()->with('user:id,nickname')->get();

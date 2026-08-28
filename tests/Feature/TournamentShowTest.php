@@ -26,9 +26,20 @@ class TournamentShowTest extends TestCase
 
     public function test_shows_null_tournament_when_none_exists(): void
     {
-        $this->actingAs(User::factory()->create())
+        $viewer = User::factory()->create();
+        $viewer->decks()->create(['name' => 'Mi torneo', 'visibility' => 'private', 'is_tournament_deck' => true]);
+
+        $this->actingAs($viewer)
             ->get('/tournament')
-            ->assertInertia(fn ($page) => $page->component('Tournament/Show')->where('tournament', null));
+            ->assertInertia(fn ($page) => $page
+                ->component('Tournament/Show')
+                ->where('tournament', null)
+                ->where('has_tournament_deck', true)
+                ->where('my_entry_id', null)
+                ->where('entries', [])
+                ->where('standings', [])
+                ->where('current_round_matches', [])
+            );
     }
 
     public function test_shows_registration_state_with_entries_and_deck_flag(): void
