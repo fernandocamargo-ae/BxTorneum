@@ -633,6 +633,44 @@ Add to `tests/Unit/TournamentPairingTest.php`:
         $byes = collect($pairs)->filter(fn ($pair) => $pair[1] === null)->flatten()->filter();
         $this->assertSame([2], $byes->values()->all());
     }
+
+    public function test_swiss_round_bye_reassignment_never_creates_a_rematch(): void
+    {
+        $standings = [
+            ['entry_id' => 1, 'wins' => 3, 'matches_played' => 3, 'opponent_win_percentage' => 0.6, 'had_bye' => false],
+            ['entry_id' => 2, 'wins' => 2, 'matches_played' => 3, 'opponent_win_percentage' => 0.5, 'had_bye' => false],
+            ['entry_id' => 3, 'wins' => 2, 'matches_played' => 3, 'opponent_win_percentage' => 0.4, 'had_bye' => false],
+            ['entry_id' => 4, 'wins' => 1, 'matches_played' => 3, 'opponent_win_percentage' => 0.4, 'had_bye' => false],
+            ['entry_id' => 5, 'wins' => 1, 'matches_played' => 3, 'opponent_win_percentage' => 0.3, 'had_bye' => false],
+        ];
+        // Entry 1 has already faced 2, 3, and 4 — only 5 is a fresh opponent for entry 1.
+        $previousMatchups = [
+            1 => [2, 3, 4], 2 => [1], 3 => [1], 4 => [1], 5 => [],
+        ];
+
+        $pairs = TournamentPairing::pairSwissRound($standings, $previousMatchups);
+
+        foreach ($pairs as [$a, $b]) {
+            if ($b !== null) {
+                $this->assertNotContains($b, $previousMatchups[$a] ?? [], "Entries $a and $b were paired despite having already faced each other.");
+            }
+        }
+    }
+
+    public function test_swiss_round_bye_falls_back_to_lowest_ranked_when_everyone_already_had_a_bye(): void
+    {
+        $standings = [
+            ['entry_id' => 1, 'wins' => 3, 'matches_played' => 3, 'opponent_win_percentage' => 0.6, 'had_bye' => true],
+            ['entry_id' => 2, 'wins' => 2, 'matches_played' => 3, 'opponent_win_percentage' => 0.5, 'had_bye' => true],
+            ['entry_id' => 3, 'wins' => 1, 'matches_played' => 3, 'opponent_win_percentage' => 0.3, 'had_bye' => true],
+        ];
+        $previousMatchups = [1 => [], 2 => [], 3 => []];
+
+        $pairs = TournamentPairing::pairSwissRound($standings, $previousMatchups);
+
+        $byes = collect($pairs)->filter(fn ($pair) => $pair[1] === null)->flatten()->filter();
+        $this->assertSame([3], $byes->values()->all(), 'When everyone has already had a bye, it should go to the lowest-ranked entry (3), not the highest-ranked (1).');
+    }
 ```
 
 - [ ] **Step 2: Run test to verify it fails**
@@ -653,25 +691,29 @@ Add to `app/Support/TournamentPairing.php` (inside the class, after `pairFirstRo
     {
         $pool = array_column($standings, null, 'entry_id');
         $order = array_column($standings, 'entry_id');
+
+        $byeEntry = null;
+        if (count($order) % 2 === 1) {
+            $byeEntry = self::selectByeEntry($order, $pool, $previousMatchups);
+            $order = array_values(array_diff($order, [$byeEntry]));
+        }
+
         $remaining = $order;
         $pairs = [];
 
         while (count($remaining) > 0) {
             $current = array_shift($remaining);
-
-            if (count($remaining) === 0) {
-                $pairs[] = [$current, null];
-                break;
-            }
-
             $opponentIndex = self::findOpponent($current, $remaining, $previousMatchups);
             $opponent = $remaining[$opponentIndex];
             array_splice($remaining, $opponentIndex, 1);
-
             $pairs[] = [$current, $opponent];
         }
 
-        return self::assignBye($pairs, $pool);
+        if ($byeEntry !== null) {
+            $pairs[] = [$byeEntry, null];
+        }
+
+        return $pairs;
     }
 
     /** @param  array<int>  $remaining */
@@ -690,68 +732,72 @@ Add to `app/Support/TournamentPairing.php` (inside the class, after `pairFirstRo
     }
 
     /**
-     * If the last pair produced by the greedy walk is a "bye" (second slot null), reassign
-     * it to the lowest-ranked entry among $pool that hasn't had a bye yet.
+     * Lowest-ranked entry without a previous bye; tries to avoid selecting an entry
+     * whose removal would force others into unavoidable rematches. Falls back to the
+     * lowest-ranked entry overall if all remaining entries have had a bye.
      *
-     * @param  array<int, array{0:int,1:int|null}>  $pairs
+     * @param  array<int>  $order  entry_ids, best-to-worst
      * @param  array<int, array{entry_id:int, had_bye:bool}>  $pool
-     * @return array<int, array{0:int,1:int|null}>
+     * @param  array<int, array<int>>  $previousMatchups
      */
-    private static function assignBye(array $pairs, array $pool): array
+    private static function selectByeEntry(array $order, array $pool, array $previousMatchups): int
     {
-        $byeIndex = null;
-        foreach ($pairs as $index => [$a, $b]) {
-            if ($b === null) {
-                $byeIndex = $index;
-                break;
+        $candidates = array_reverse($order);
+        $preferred = null;
+        $fallback = null;
+
+        foreach ($candidates as $entryId) {
+            if (! ($pool[$entryId]['had_bye'] ?? false)) {
+                if ($preferred === null) {
+                    $preferred = $entryId;
+                }
+
+                // Check if removing this entry would force any remaining entry into all-rematches.
+                $testOrder = array_values(array_diff($order, [$entryId]));
+                $forced = false;
+
+                foreach ($testOrder as $candidate) {
+                    $faced = $previousMatchups[$candidate] ?? [];
+                    $available = array_diff($testOrder, [$candidate]);
+                    $hasFresh = false;
+
+                    foreach ($available as $opponent) {
+                        if (! in_array($opponent, $faced, true)) {
+                            $hasFresh = true;
+                            break;
+                        }
+                    }
+
+                    if (! $hasFresh) {
+                        $forced = true;
+                        break;
+                    }
+                }
+
+                if (! $forced) {
+                    return $entryId;
+                }
+            } else {
+                $fallback ??= $entryId;
             }
         }
 
-        if ($byeIndex === null) {
-            return $pairs;
-        }
-
-        $currentByeEntry = $pairs[$byeIndex][0];
-
-        $candidates = array_reverse(array_column($pool, 'entry_id'));
-        $chosen = null;
-        foreach ($candidates as $candidateId) {
-            if (! ($pool[$candidateId]['had_bye'] ?? false)) {
-                $chosen = $candidateId;
-                break;
-            }
-        }
-        $chosen ??= end($candidates);
-
-        if ($chosen === $currentByeEntry) {
-            return $pairs;
-        }
-
-        // Swap: give the bye to $chosen, and pair $currentByeEntry with whoever $chosen was facing.
-        foreach ($pairs as $index => [$a, $b]) {
-            if ($index === $byeIndex) {
-                continue;
-            }
-            if ($a === $chosen) {
-                $pairs[$index][0] = $currentByeEntry;
-                $pairs[$byeIndex][0] = $chosen;
-                return $pairs;
-            }
-            if ($b === $chosen) {
-                $pairs[$index][1] = $currentByeEntry;
-                $pairs[$byeIndex][0] = $chosen;
-                return $pairs;
-            }
-        }
-
-        return $pairs;
+        return $preferred ?? $fallback ?? end($order);
     }
 ```
+
+> **Note (post-implementation correction, applied during execution — see the SDD ledger for this plan):**
+> the version above is the corrected implementation. The bye recipient is chosen *before* pairing
+> runs and removed from the pool, instead of pairing everyone first and swapping the bye in
+> afterward — an earlier draft that did the swap-after-the-fact could silently reintroduce a
+> rematch the greedy walk had already avoided. `selectByeEntry` also looks ahead to avoid
+> starving another entry of every fresh opponent where it reasonably can, falling back to the
+> plain lowest-ranked-without-a-bye entry when it can't find one that avoids that.
 
 - [ ] **Step 4: Run test to verify it passes**
 
 Run: `php artisan test --filter TournamentPairingTest`
-Expected: PASS (5 tests)
+Expected: PASS (7 tests — includes 2 tests added during post-implementation bug fixes, see note above)
 
 - [ ] **Step 5: Commit**
 
