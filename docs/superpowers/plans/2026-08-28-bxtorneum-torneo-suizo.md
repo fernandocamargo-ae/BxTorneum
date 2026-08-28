@@ -974,11 +974,42 @@ class TournamentStandingsTest extends TestCase
         $this->assertTrue($byId[$b->id]['had_bye']);
         $this->assertSame(1, $byId[$b->id]['matches_played']); // only the round-1 match counts
 
-        // a's opponents were b (0 real wins / 1 match = 0.0) and c (0 real wins / 2 matches = 0.0).
-        $this->assertEqualsWithDelta(0.0, $byId[$a->id]['opponent_win_percentage'], 0.001);
+        // a's opponents were b (0 real wins / 1 match = 0.0) and c (1 real win / 2 matches = 0.5);
+        // average = 0.25.
+        $this->assertEqualsWithDelta(0.25, $byId[$a->id]['opponent_win_percentage'], 0.001);
 
         // Standings ordered by wins desc: a (2) before b and c (1 each) before d (0).
         $this->assertSame($a->id, $standings[0]['entry_id']);
+    }
+
+    public function test_entry_id_is_the_final_ascending_tiebreak_when_wins_and_opponent_win_percentage_tie(): void
+    {
+        $tournament = Tournament::create([
+            'name' => 'Copa Y', 'status' => 'swiss', 'swiss_rounds' => 1, 'cut_size' => 2,
+            'current_round' => 1, 'created_by_user_id' => User::factory()->create()->id,
+        ]);
+
+        $a = $this->makeEntry($tournament);
+        $b = $this->makeEntry($tournament);
+        $c = $this->makeEntry($tournament);
+        $d = $this->makeEntry($tournament);
+
+        // Two independent 1-0 results, no shared opponents: a/b both end up 1-0 with
+        // opponent_win_percentage 0.0 (their opponents lost their only match, 0/1 wins).
+        $round = $tournament->rounds()->create(['number' => 1, 'phase' => 'swiss']);
+        $round->matches()->create(['entry_one_id' => $a->id, 'entry_two_id' => $c->id, 'winner_entry_id' => $a->id]);
+        $round->matches()->create(['entry_one_id' => $b->id, 'entry_two_id' => $d->id, 'winner_entry_id' => $b->id]);
+
+        $standings = TournamentStandings::forTournament($tournament);
+        $byId = collect($standings)->keyBy('entry_id');
+
+        $this->assertEqualsWithDelta($byId[$a->id]['opponent_win_percentage'], $byId[$b->id]['opponent_win_percentage'], 0.001);
+        $this->assertSame($byId[$a->id]['wins'], $byId[$b->id]['wins']);
+
+        // a and b are fully tied (same wins, same opponent_win_percentage) — the lower
+        // entry_id must sort first.
+        $topTwoIds = collect($standings)->take(2)->pluck('entry_id')->all();
+        $this->assertSame([min($a->id, $b->id), max($a->id, $b->id)], $topTwoIds);
     }
 }
 ```
@@ -1052,20 +1083,34 @@ class TournamentStandings
             $row['opponent_win_percentage'] = count($percentages) > 0
                 ? array_sum($percentages) / count($percentages)
                 : 0.0;
+        }
+        unset($row);
 
+        foreach ($stats as &$row) {
             unset($row['opponents'], $row['match_wins']);
         }
         unset($row);
 
         $rows = array_values($stats);
 
-        usort($rows, fn ($a, $b) => [$b['wins'], $b['opponent_win_percentage'], -$a['entry_id']]
-            <=> [$a['wins'], $a['opponent_win_percentage'], -$b['entry_id']]);
+        usort($rows, fn ($a, $b) => [$b['wins'], $b['opponent_win_percentage'], $a['entry_id']]
+            <=> [$a['wins'], $a['opponent_win_percentage'], $b['entry_id']]);
 
         return $rows;
     }
 }
 ```
+
+> **Note (post-implementation correction, applied during execution — see the SDD ledger for
+> this plan):** the version above fixes two bugs found during Task 6's review loop in the
+> original reference code: (1) the `unset()` calls ran inside the same loop that computes
+> `opponent_win_percentage`, and because the loop variable is a reference into `$stats`, an
+> earlier entry's `match_wins` could be stripped before a later entry read it as an opponent —
+> moved to a separate loop that runs only after every percentage is computed; (2) the final
+> `entry_id` tiebreak used a `-$a['entry_id']`/`-$b['entry_id']` negation that actually sorted
+> descending instead of the required ascending — the negation is removed. The plan's own test
+> fixture below is also corrected: entry `a`'s `opponent_win_percentage` is `0.25`, not the
+> `0.0` originally asserted (hand-derivation error in the original plan text).
 
 - [ ] **Step 4: Run test to verify it passes**
 
