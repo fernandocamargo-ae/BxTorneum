@@ -5,6 +5,9 @@ namespace App\Http\Controllers;
 use App\Http\Requests\StoreTournamentRequest;
 use App\Models\Tournament;
 use App\Models\TournamentEntry;
+use App\Support\TournamentPairing;
+use App\Support\TournamentRoundFactory;
+use App\Support\TournamentStandings;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 
@@ -52,5 +55,28 @@ class TournamentController extends Controller
         ]);
 
         return back()->with('success', 'Te uniste al torneo.');
+    }
+
+    public function cut(): RedirectResponse
+    {
+        $tournament = Tournament::where('status', '!=', 'completed')->firstOrFail();
+
+        abort_unless($tournament->status === 'swiss', 422, 'El torneo no está en fase suiza.');
+        abort_unless($tournament->current_round === $tournament->swiss_rounds, 422, 'Aún faltan rondas suizas por jugar.');
+
+        $currentRound = $tournament->rounds()->where('number', $tournament->current_round)->first();
+        abort_if(
+            $currentRound->matches()->whereNull('winner_entry_id')->exists(),
+            422,
+            'Faltan resultados de la última ronda suiza.'
+        );
+
+        $standings = TournamentStandings::forTournament($tournament);
+        abort_if(count($standings) < $tournament->cut_size, 422, 'No hay suficientes jugadores inscritos para este corte.');
+
+        $pairs = TournamentPairing::seedEliminationBracket($standings, $tournament->cut_size);
+        TournamentRoundFactory::create($tournament, 'elimination', $pairs);
+
+        return redirect()->route('tournament.show')->with('success', 'Corte a eliminatorias generado.');
     }
 }
