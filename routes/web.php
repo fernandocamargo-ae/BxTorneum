@@ -10,6 +10,7 @@ use App\Http\Controllers\TeamComboController;
 use App\Http\Controllers\TeamController;
 use App\Http\Controllers\TournamentController;
 use App\Http\Controllers\TournamentMatchController;
+use App\Http\Controllers\TournamentRoundController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', fn () => redirect()->route('decks.index'));
@@ -43,6 +44,7 @@ Route::middleware('auth')->group(function () {
     Route::middleware('admin')->group(function () {
         Route::post('/tournament', [TournamentController::class, 'store'])->name('tournament.store');
         Route::patch('/tournament/matches/{match}', [TournamentMatchController::class, 'update'])->name('tournament.matches.update');
+        Route::post('/tournament/rounds', [TournamentRoundController::class, 'store'])->name('tournament.rounds.store');
     });
 });
 
