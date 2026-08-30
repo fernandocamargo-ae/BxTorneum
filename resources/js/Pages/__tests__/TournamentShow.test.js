@@ -16,10 +16,8 @@ describe('Tournament/Show', () => {
         expect(wrapper.text()).toContain('No hay torneo activo');
     });
 
-    it('lets a player without an entry join when they have a tournament deck, after confirming which deck', async () => {
+    it('lets a player without an entry join when they have a tournament deck, after confirming which deck in the dialog', async () => {
         const { router } = await import('@inertiajs/vue3');
-        const confirmSpy = vi.fn(() => true);
-        vi.stubGlobal('confirm', confirmSpy);
 
         const wrapper = mount(Show, {
             props: {
@@ -38,16 +36,18 @@ describe('Tournament/Show', () => {
         const joinButton = wrapper.findAll('button').find((b) => b.text() === 'Unirme');
         await joinButton.trigger('click');
 
-        expect(confirmSpy).toHaveBeenCalledWith(expect.stringContaining('Ofensivo'));
-        expect(router.post).toHaveBeenCalledWith('/tournament/join');
+        expect(wrapper.text()).toContain('Ofensivo');
+        expect(router.post).not.toHaveBeenCalled();
 
-        vi.unstubAllGlobals();
+        const confirmButton = wrapper.findAll('button').find((b) => b.text() === 'Sí, unirme');
+        await confirmButton.trigger('click');
+
+        expect(router.post).toHaveBeenCalledWith('/tournament/join');
     });
 
-    it('does not join when the deck confirmation is declined', async () => {
+    it('does not join when the deck confirmation dialog is cancelled', async () => {
         const { router } = await import('@inertiajs/vue3');
         router.post.mockClear();
-        vi.stubGlobal('confirm', vi.fn(() => false));
 
         const wrapper = mount(Show, {
             props: {
@@ -64,9 +64,10 @@ describe('Tournament/Show', () => {
         const joinButton = wrapper.findAll('button').find((b) => b.text() === 'Unirme');
         await joinButton.trigger('click');
 
-        expect(router.post).not.toHaveBeenCalled();
+        const cancelButton = wrapper.findAll('button').find((b) => b.text() === 'Cancelar');
+        await cancelButton.trigger('click');
 
-        vi.unstubAllGlobals();
+        expect(router.post).not.toHaveBeenCalled();
     });
 
     it('disables the join button without a tournament deck', () => {
@@ -226,11 +227,10 @@ describe('Tournament/Show', () => {
         expect(wrapper.text()).not.toContain('Quitar');
     });
 
-    it('lets an admin remove a participant, sending the prompted reason', async () => {
+    it('lets an admin remove a participant, sending the reason typed into the dialog', async () => {
         const { usePage, router } = await import('@inertiajs/vue3');
         usePage.mockReturnValueOnce({ props: { auth: { user: { is_admin: true } } } });
         router.visit.mockClear();
-        vi.stubGlobal('prompt', vi.fn(() => 'Se salió del torneo'));
 
         const wrapper = mount(Show, {
             props: {
@@ -245,21 +245,26 @@ describe('Tournament/Show', () => {
 
         const removeButton = wrapper.findAll('button').find((b) => b.text() === 'Quitar');
         await removeButton.trigger('click');
+
+        expect(wrapper.text()).toContain('Jugador1');
+
+        const reasonInput = wrapper.find('input[type="text"]');
+        await reasonInput.setValue('Se salió del torneo');
+
+        const confirmButton = wrapper.findAll('button').find((b) => b.text() === 'Sí, quitar');
+        await confirmButton.trigger('click');
 
         expect(router.visit).toHaveBeenCalledWith('/tournament/entries/7', {
             method: 'delete',
             data: { reason: 'Se salió del torneo' },
             preserveScroll: true,
         });
-
-        vi.unstubAllGlobals();
     });
 
-    it('does not remove a participant when the reason prompt is cancelled', async () => {
+    it('does not remove a participant when the dialog is cancelled', async () => {
         const { usePage, router } = await import('@inertiajs/vue3');
         usePage.mockReturnValueOnce({ props: { auth: { user: { is_admin: true } } } });
         router.visit.mockClear();
-        vi.stubGlobal('prompt', vi.fn(() => null));
 
         const wrapper = mount(Show, {
             props: {
@@ -275,15 +280,15 @@ describe('Tournament/Show', () => {
         const removeButton = wrapper.findAll('button').find((b) => b.text() === 'Quitar');
         await removeButton.trigger('click');
 
-        expect(router.visit).not.toHaveBeenCalled();
+        const cancelButton = wrapper.findAll('button').find((b) => b.text() === 'Cancelar');
+        await cancelButton.trigger('click');
 
-        vi.unstubAllGlobals();
+        expect(router.visit).not.toHaveBeenCalled();
     });
 
-    it('shows a "Salir del torneo" button for a registered player and leaves on confirm', async () => {
+    it('shows a "Salir del torneo" button for a registered player and leaves on dialog confirm', async () => {
         const { router } = await import('@inertiajs/vue3');
         router.delete.mockClear();
-        vi.stubGlobal('confirm', vi.fn(() => true));
 
         const wrapper = mount(Show, {
             props: {
@@ -301,15 +306,17 @@ describe('Tournament/Show', () => {
         const leaveButton = wrapper.findAll('button').find((b) => b.text() === 'Salir del torneo');
         await leaveButton.trigger('click');
 
-        expect(router.delete).toHaveBeenCalledWith('/tournament/leave', { preserveScroll: true });
+        expect(router.delete).not.toHaveBeenCalled();
 
-        vi.unstubAllGlobals();
+        const confirmButton = wrapper.findAll('button').find((b) => b.text() === 'Sí, salir');
+        await confirmButton.trigger('click');
+
+        expect(router.delete).toHaveBeenCalledWith('/tournament/leave', { preserveScroll: true });
     });
 
-    it('does not leave the tournament when the confirmation is declined', async () => {
+    it('does not leave the tournament when the dialog is cancelled', async () => {
         const { router } = await import('@inertiajs/vue3');
         router.delete.mockClear();
-        vi.stubGlobal('confirm', vi.fn(() => false));
 
         const wrapper = mount(Show, {
             props: {
@@ -325,9 +332,10 @@ describe('Tournament/Show', () => {
         const leaveButton = wrapper.findAll('button').find((b) => b.text() === 'Salir del torneo');
         await leaveButton.trigger('click');
 
-        expect(router.delete).not.toHaveBeenCalled();
+        const cancelButton = wrapper.findAll('button').find((b) => b.text() === 'Cancelar');
+        await cancelButton.trigger('click');
 
-        vi.unstubAllGlobals();
+        expect(router.delete).not.toHaveBeenCalled();
     });
 
     it('shows the standings table for a completed tournament', () => {

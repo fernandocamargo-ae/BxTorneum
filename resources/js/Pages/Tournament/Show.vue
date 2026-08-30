@@ -1,6 +1,7 @@
 <script setup>
 import { Head, Link, router, useForm, usePage } from '@inertiajs/vue3';
 import { computed, ref } from 'vue';
+import ConfirmDialog from '../../Components/ConfirmDialog.vue';
 import ReportExport from '../../Components/ReportExport.vue';
 
 const props = defineProps({
@@ -39,14 +40,56 @@ function updateTournament() {
     });
 }
 
-function removeEntry(entry) {
-    const reason = prompt(`¿Por qué quitas a "${entry.nickname}" del torneo? (opcional)`);
-    if (reason === null) return; // cancelled
+const confirmDialog = ref({
+    visible: false,
+    title: '',
+    message: '',
+    confirmLabel: 'Confirmar',
+    danger: false,
+    withReason: false,
+    reasonLabel: 'Motivo (opcional)',
+    action: null,
+});
 
-    router.visit(`/tournament/entries/${entry.id}`, {
-        method: 'delete',
-        data: { reason },
-        preserveScroll: true,
+function openConfirm(options) {
+    confirmDialog.value = {
+        visible: true,
+        title: '',
+        message: '',
+        confirmLabel: 'Confirmar',
+        danger: false,
+        withReason: false,
+        reasonLabel: 'Motivo (opcional)',
+        action: null,
+        ...options,
+    };
+}
+
+function handleDialogConfirm(reason) {
+    const action = confirmDialog.value.action;
+    confirmDialog.value.visible = false;
+    action?.(reason);
+}
+
+function handleDialogCancel() {
+    confirmDialog.value.visible = false;
+}
+
+function removeEntry(entry) {
+    openConfirm({
+        title: `Quitar a "${entry.nickname}"`,
+        message: 'Podrá volver a unirse él mismo cuando quiera.',
+        confirmLabel: 'Sí, quitar',
+        danger: true,
+        withReason: true,
+        reasonLabel: 'Motivo (opcional)',
+        action: (reason) => {
+            router.visit(`/tournament/entries/${entry.id}`, {
+                method: 'delete',
+                data: { reason: reason ?? '' },
+                preserveScroll: true,
+            });
+        },
     });
 }
 
@@ -54,17 +97,22 @@ function join() {
     const deck = props.tournament_deck;
     const label = deck ? `"${deck.name}" (${deck.combos_count} combo(s))` : 'tu deck de torneo';
 
-    if (!confirm(`¿Confirmas que vas a jugar con ${label}? Si no es el correcto, cancela y corrígelo en "Mis decks".`)) {
-        return;
-    }
-
-    router.post('/tournament/join');
+    openConfirm({
+        title: 'Confirma tu deck',
+        message: `¿Confirmas que vas a jugar con ${label}? Si no es el correcto, cancela y corrígelo en "Mis decks".`,
+        confirmLabel: 'Sí, unirme',
+        action: () => router.post('/tournament/join'),
+    });
 }
 
 function leave() {
-    if (!confirm('¿Seguro que quieres salir del torneo? Puedes volver a unirte cuando quieras.')) return;
-
-    router.delete('/tournament/leave', { preserveScroll: true });
+    openConfirm({
+        title: 'Salir del torneo',
+        message: '¿Seguro que quieres salir? Puedes volver a unirte cuando quieras.',
+        confirmLabel: 'Sí, salir',
+        danger: true,
+        action: () => router.delete('/tournament/leave', { preserveScroll: true }),
+    });
 }
 
 function generateRound() {
@@ -465,4 +513,16 @@ function isMyMatch(match) {
             </template>
         </div>
     </div>
+
+    <ConfirmDialog
+        :visible="confirmDialog.visible"
+        :title="confirmDialog.title"
+        :message="confirmDialog.message"
+        :confirm-label="confirmDialog.confirmLabel"
+        :danger="confirmDialog.danger"
+        :with-reason="confirmDialog.withReason"
+        :reason-label="confirmDialog.reasonLabel"
+        @confirm="handleDialogConfirm"
+        @cancel="handleDialogCancel"
+    />
 </template>
