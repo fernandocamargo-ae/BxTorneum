@@ -42,6 +42,7 @@ Route::middleware('auth')->group(function () {
 
     Route::get('/tournament', [TournamentController::class, 'show'])->name('tournament.show');
     Route::post('/tournament/join', [TournamentController::class, 'join'])->name('tournament.join');
+    Route::delete('/tournament/leave', [TournamentController::class, 'leave'])->name('tournament.leave');
     Route::get('/tournament/history', [TournamentController::class, 'history'])->name('tournament.history');
     Route::get('/tournament/history/{tournament}', [TournamentController::class, 'historyShow'])->name('tournament.history.show');
     Route::post('/tournament/report/pdf', [TournamentReportController::class, 'download'])->middleware('throttle:5,1')->name('tournament.report.pdf');

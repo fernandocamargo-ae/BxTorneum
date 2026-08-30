@@ -5,7 +5,7 @@ import Show from '../Tournament/Show.vue';
 vi.mock('@inertiajs/vue3', () => ({
     Link: { props: ['href'], template: '<a :href="href"><slot/></a>' },
     Head: { template: '<div><slot/></div>' },
-    router: { post: vi.fn(), patch: vi.fn(), visit: vi.fn() },
+    router: { post: vi.fn(), patch: vi.fn(), visit: vi.fn(), delete: vi.fn() },
     useForm: (data) => ({ ...data, post: vi.fn(), patch: vi.fn(), processing: false, errors: {} }),
     usePage: vi.fn(() => ({ props: { auth: { user: { is_admin: false } } } })),
 }));
@@ -241,6 +241,56 @@ describe('Tournament/Show', () => {
         await removeButton.trigger('click');
 
         expect(router.visit).not.toHaveBeenCalled();
+
+        vi.unstubAllGlobals();
+    });
+
+    it('shows a "Salir del torneo" button for a registered player and leaves on confirm', async () => {
+        const { router } = await import('@inertiajs/vue3');
+        router.delete.mockClear();
+        vi.stubGlobal('confirm', vi.fn(() => true));
+
+        const wrapper = mount(Show, {
+            props: {
+                tournament: { id: 1, name: 'Copa X', status: 'registration', swiss_rounds: 3, cut_size: 4, current_round: 0, champion_nickname: null },
+                has_tournament_deck: true,
+                my_entry_id: 5,
+                entries: [{ id: 5, nickname: 'Yo' }],
+                standings: [],
+                current_round_matches: [],
+            },
+        });
+
+        expect(wrapper.text()).toContain('Ya estás inscrito');
+
+        const leaveButton = wrapper.findAll('button').find((b) => b.text() === 'Salir del torneo');
+        await leaveButton.trigger('click');
+
+        expect(router.delete).toHaveBeenCalledWith('/tournament/leave', { preserveScroll: true });
+
+        vi.unstubAllGlobals();
+    });
+
+    it('does not leave the tournament when the confirmation is declined', async () => {
+        const { router } = await import('@inertiajs/vue3');
+        router.delete.mockClear();
+        vi.stubGlobal('confirm', vi.fn(() => false));
+
+        const wrapper = mount(Show, {
+            props: {
+                tournament: { id: 1, name: 'Copa X', status: 'registration', swiss_rounds: 3, cut_size: 4, current_round: 0, champion_nickname: null },
+                has_tournament_deck: true,
+                my_entry_id: 5,
+                entries: [{ id: 5, nickname: 'Yo' }],
+                standings: [],
+                current_round_matches: [],
+            },
+        });
+
+        const leaveButton = wrapper.findAll('button').find((b) => b.text() === 'Salir del torneo');
+        await leaveButton.trigger('click');
+
+        expect(router.delete).not.toHaveBeenCalled();
 
         vi.unstubAllGlobals();
     });

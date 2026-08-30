@@ -91,6 +91,20 @@ class TournamentController extends Controller
         return back()->with('success', 'Te uniste al torneo.');
     }
 
+    public function leave(): RedirectResponse
+    {
+        $tournament = Tournament::where('status', '!=', 'completed')->firstOrFail();
+
+        abort_unless($tournament->status === 'registration', 422, 'Ya no puedes salir del torneo; las inscripciones cerraron.');
+
+        $entry = TournamentEntry::where('tournament_id', $tournament->id)->where('user_id', auth()->id())->first();
+        abort_unless($entry, 422, 'No estás inscrito en este torneo.');
+
+        $entry->delete();
+
+        return back()->with('success', 'Saliste del torneo. Puedes volver a unirte cuando quieras.');
+    }
+
     public function cut(): RedirectResponse
     {
         $tournament = Tournament::where('status', '!=', 'completed')->firstOrFail();

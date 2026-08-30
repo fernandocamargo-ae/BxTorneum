@@ -53,6 +53,12 @@ function join() {
     router.post('/tournament/join');
 }
 
+function leave() {
+    if (!confirm('¿Seguro que quieres salir del torneo? Puedes volver a unirte cuando quieras.')) return;
+
+    router.delete('/tournament/leave', { preserveScroll: true });
+}
+
 function generateRound() {
     router.post('/tournament/rounds');
 }
@@ -187,7 +193,16 @@ function isMyMatch(match) {
             <p v-if="!isRegistered && !has_tournament_deck" class="mt-2 text-xs text-zinc-400">
                 Necesitas <Link href="/decks" class="text-bx-cyan hover:underline">un deck de torneo con al menos un combo</Link> antes de unirte.
             </p>
-            <p v-else-if="isRegistered" class="text-sm text-bx-cyan">Ya estás inscrito.</p>
+            <div v-else-if="isRegistered" class="flex items-center gap-3">
+                <p class="text-sm text-bx-cyan">Ya estás inscrito.</p>
+                <button
+                    type="button"
+                    class="text-xs font-semibold text-zinc-500 underline transition hover:text-bx-magenta"
+                    @click="leave"
+                >
+                    Salir del torneo
+                </button>
+            </div>
             <div v-if="isAdmin" class="mt-4 flex flex-wrap gap-2">
                 <button
                     type="button"
