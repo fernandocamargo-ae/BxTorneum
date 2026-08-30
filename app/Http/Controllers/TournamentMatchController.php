@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Tournament;
 use App\Models\TournamentMatch;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -35,9 +36,24 @@ class TournamentMatchController extends Controller
                     'status' => 'completed',
                     'champion_entry_id' => $winnerId,
                 ]);
+
+                $this->endGuestSessions($tournament);
             }
         });
 
         return back()->with('success', 'Resultado guardado.');
+    }
+
+    /**
+     * Guests aren't real members — once their tournament ends they shouldn't be able to
+     * keep browsing logged in. Only their history (entry, deck, standings) stays.
+     */
+    private function endGuestSessions(Tournament $tournament): void
+    {
+        $guestUserIds = $tournament->entries()
+            ->whereHas('user', fn ($query) => $query->where('is_guest', true))
+            ->pluck('user_id');
+
+        DB::table('sessions')->whereIn('user_id', $guestUserIds)->delete();
     }
 }
