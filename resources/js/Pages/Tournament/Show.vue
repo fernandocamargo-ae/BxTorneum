@@ -1,6 +1,7 @@
 <script setup>
 import { Head, Link, router, useForm, usePage } from '@inertiajs/vue3';
 import { computed, ref } from 'vue';
+import ReportExport from '../../Components/ReportExport.vue';
 
 const props = defineProps({
     tournament: { type: Object, default: null },
@@ -105,13 +106,18 @@ function isMyMatch(match) {
 
     <div v-else class="space-y-6">
         <div class="rounded-xl border border-white/10 bg-zinc-900/50 p-5">
-            <h2 class="text-xl font-bold">{{ tournament.name }}</h2>
-            <p class="mt-1 text-sm text-zinc-400">
-                <span v-if="tournament.status === 'registration'">Inscripciones abiertas · {{ entries.length }} inscrito(s)</span>
-                <span v-else-if="tournament.status === 'swiss'">Fase suiza · Ronda {{ tournament.current_round }} de {{ tournament.swiss_rounds }}</span>
-                <span v-else-if="tournament.status === 'elimination'">Eliminatorias · Ronda {{ tournament.current_round }}</span>
-                <span v-else>Torneo finalizado</span>
-            </p>
+            <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                    <h2 class="text-xl font-bold">{{ tournament.name }}</h2>
+                    <p class="mt-1 text-sm text-zinc-400">
+                        <span v-if="tournament.status === 'registration'">Inscripciones abiertas · {{ entries.length }} inscrito(s)</span>
+                        <span v-else-if="tournament.status === 'swiss'">Fase suiza · Ronda {{ tournament.current_round }} de {{ tournament.swiss_rounds }}</span>
+                        <span v-else-if="tournament.status === 'elimination'">Eliminatorias · Ronda {{ tournament.current_round }}</span>
+                        <span v-else>Torneo finalizado</span>
+                    </p>
+                </div>
+                <ReportExport endpoint="/tournament/report/pdf" filename="reporte-torneo.pdf" />
+            </div>
         </div>
 
         <div v-if="tournament.status === 'completed'" class="rounded-xl border border-bx-cyan/40 bg-bx-cyan/10 p-6 text-center">

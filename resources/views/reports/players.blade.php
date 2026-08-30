@@ -23,7 +23,7 @@
 <body>
     <div class="header">
         <h1>BEYBLADE <span class="x">X</span> &middot; Torneum</h1>
-        <div class="sub">Reporte de jugadores</div>
+        <div class="sub">{{ $subtitle ?? 'Reporte de jugadores' }}</div>
     </div>
     <div class="meta">Generado el {{ $generatedAt }} &middot; {{ count($players) }} jugadores</div>
 

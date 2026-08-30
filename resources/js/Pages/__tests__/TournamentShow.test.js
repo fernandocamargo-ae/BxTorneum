@@ -29,7 +29,8 @@ describe('Tournament/Show', () => {
             },
         });
 
-        await wrapper.find('button').trigger('click');
+        const joinButton = wrapper.findAll('button').find((b) => b.text() === 'Unirme');
+        await joinButton.trigger('click');
         expect(router.post).toHaveBeenCalledWith('/tournament/join');
     });
 
@@ -45,7 +46,8 @@ describe('Tournament/Show', () => {
             },
         });
 
-        expect(wrapper.find('button').attributes('disabled')).toBeDefined();
+        const joinButton = wrapper.findAll('button').find((b) => b.text() === 'Unirme');
+        expect(joinButton.attributes('disabled')).toBeDefined();
     });
 
     it("shows the player's opponent for the current round", () => {
@@ -122,7 +124,8 @@ describe('Tournament/Show', () => {
         expect(wrapper.text()).toContain('+ Crear un nuevo torneo');
         expect(wrapper.findAll('form').length).toBe(0);
 
-        await wrapper.find('button').trigger('click');
+        const toggleButton = wrapper.findAll('button').find((b) => b.text() === '+ Crear un nuevo torneo');
+        await toggleButton.trigger('click');
 
         expect(wrapper.text()).toContain('Crear torneo');
         expect(wrapper.findAll('form').length).toBe(1);
