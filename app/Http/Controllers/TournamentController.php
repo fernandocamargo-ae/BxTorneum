@@ -34,6 +34,39 @@ class TournamentController extends Controller
         return redirect()->route('tournament.show')->with('success', "Torneo \"{$tournament->name}\" creado.");
     }
 
+    public function update(StoreTournamentRequest $request): RedirectResponse
+    {
+        $tournament = Tournament::where('status', '!=', 'completed')->firstOrFail();
+
+        abort_unless($tournament->status === 'registration', 422, 'Solo puedes editar el torneo mientras las inscripciones están abiertas.');
+
+        $tournament->update([
+            'name' => $request->validated('name'),
+            'swiss_rounds' => $request->validated('swiss_rounds'),
+            'cut_size' => $request->validated('cut_size'),
+        ]);
+
+        return back()->with('success', "Torneo \"{$tournament->name}\" actualizado.");
+    }
+
+    public function removeEntry(Request $request, TournamentEntry $entry): RedirectResponse
+    {
+        $tournament = Tournament::where('status', '!=', 'completed')->firstOrFail();
+
+        abort_unless($tournament->status === 'registration', 422, 'Solo puedes quitar jugadores mientras las inscripciones están abiertas.');
+        abort_unless($entry->tournament_id === $tournament->id, 404);
+
+        $nickname = $entry->user->nickname;
+        $reason = trim((string) $request->input('reason', ''));
+        $entry->delete();
+
+        $message = $reason !== ''
+            ? "Se quitó a \"{$nickname}\" del torneo. Motivo: {$reason}"
+            : "Se quitó a \"{$nickname}\" del torneo.";
+
+        return back()->with('success', $message);
+    }
+
     public function join(Request $request): RedirectResponse
     {
         $tournament = Tournament::where('status', '!=', 'completed')->firstOrFail();

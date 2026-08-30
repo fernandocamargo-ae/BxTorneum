@@ -17,11 +17,36 @@ const page = usePage();
 const isAdmin = computed(() => !!page.props.auth?.user?.is_admin);
 const isRegistered = computed(() => props.my_entry_id !== null);
 const showCreateForm = ref(false);
+const showEditForm = ref(false);
 
 const createForm = useForm({ name: '', swiss_rounds: 3, cut_size: 4 });
+const editForm = useForm({
+    name: props.tournament?.name ?? '',
+    swiss_rounds: props.tournament?.swiss_rounds ?? 3,
+    cut_size: props.tournament?.cut_size ?? 4,
+});
 
 function createTournament() {
     createForm.post('/tournament');
+}
+
+function updateTournament() {
+    editForm.patch('/tournament', {
+        onSuccess: () => {
+            showEditForm.value = false;
+        },
+    });
+}
+
+function removeEntry(entry) {
+    const reason = prompt(`¿Por qué quitas a "${entry.nickname}" del torneo? (opcional)`);
+    if (reason === null) return; // cancelled
+
+    router.visit(`/tournament/entries/${entry.id}`, {
+        method: 'delete',
+        data: { reason },
+        preserveScroll: true,
+    });
 }
 
 function join() {
@@ -138,7 +163,15 @@ function isMyMatch(match) {
                     >
                         {{ entry.nickname.charAt(0).toUpperCase() }}
                     </span>
-                    <span class="truncate text-sm font-medium text-zinc-200">{{ entry.nickname }}</span>
+                    <span class="min-w-0 flex-1 truncate text-sm font-medium text-zinc-200">{{ entry.nickname }}</span>
+                    <button
+                        v-if="isAdmin"
+                        type="button"
+                        class="shrink-0 rounded px-2 py-0.5 text-xs font-semibold text-zinc-500 transition hover:bg-bx-magenta/20 hover:text-bx-magenta"
+                        @click="removeEntry(entry)"
+                    >
+                        Quitar
+                    </button>
                 </div>
             </div>
             <p v-else class="mb-6 text-sm text-zinc-500">Todavía no hay inscritos.</p>
@@ -155,14 +188,72 @@ function isMyMatch(match) {
                 Necesitas <Link href="/decks" class="text-bx-cyan hover:underline">un deck de torneo con al menos un combo</Link> antes de unirte.
             </p>
             <p v-else-if="isRegistered" class="text-sm text-bx-cyan">Ya estás inscrito.</p>
-            <button
-                v-if="isAdmin"
-                type="button"
-                class="mt-4 block rounded-lg border border-white/15 px-4 py-2 text-sm font-semibold hover:border-bx-cyan hover:text-bx-cyan"
-                @click="generateRound"
-            >
-                Cerrar inscripción y generar ronda 1
-            </button>
+            <div v-if="isAdmin" class="mt-4 flex flex-wrap gap-2">
+                <button
+                    type="button"
+                    class="rounded-lg border border-white/15 px-4 py-2 text-sm font-semibold hover:border-bx-cyan hover:text-bx-cyan"
+                    @click="generateRound"
+                >
+                    Cerrar inscripción y generar ronda 1
+                </button>
+                <button
+                    v-if="!showEditForm"
+                    type="button"
+                    class="rounded-lg border border-white/15 px-4 py-2 text-sm font-semibold text-zinc-300 hover:border-white/30"
+                    @click="showEditForm = true"
+                >
+                    Editar torneo
+                </button>
+            </div>
+
+            <form v-if="isAdmin && showEditForm" class="mt-4 max-w-sm space-y-4 border-t border-white/10 pt-4" @submit.prevent="updateTournament">
+                <div>
+                    <label class="mb-1 block text-sm font-medium text-zinc-300">Nombre</label>
+                    <input
+                        v-model="editForm.name"
+                        type="text"
+                        class="w-full rounded-md border border-white/10 bg-zinc-900 px-3 py-2 text-sm outline-none focus:border-bx-cyan"
+                    />
+                    <p v-if="editForm.errors.name" class="mt-1 text-xs text-bx-magenta">{{ editForm.errors.name }}</p>
+                </div>
+                <div>
+                    <label class="mb-1 block text-sm font-medium text-zinc-300">Rondas suizas</label>
+                    <input
+                        v-model.number="editForm.swiss_rounds"
+                        type="number"
+                        min="1"
+                        class="w-full rounded-md border border-white/10 bg-zinc-900 px-3 py-2 text-sm outline-none focus:border-bx-cyan"
+                    />
+                </div>
+                <div>
+                    <label class="mb-1 block text-sm font-medium text-zinc-300">Corte a eliminatorias (top N)</label>
+                    <select
+                        v-model.number="editForm.cut_size"
+                        class="w-full rounded-md border border-white/10 bg-zinc-900 px-3 py-2 text-sm outline-none focus:border-bx-cyan"
+                    >
+                        <option :value="2">Top 2</option>
+                        <option :value="4">Top 4</option>
+                        <option :value="8">Top 8</option>
+                        <option :value="16">Top 16</option>
+                    </select>
+                </div>
+                <div class="flex gap-2">
+                    <button
+                        type="submit"
+                        :disabled="editForm.processing"
+                        class="rounded-lg bg-gradient-to-r from-bx-cyan to-bx-magenta px-4 py-2 text-sm font-bold text-zinc-950 transition hover:opacity-90 disabled:opacity-50"
+                    >
+                        Guardar cambios
+                    </button>
+                    <button
+                        type="button"
+                        class="rounded-lg border border-white/15 px-4 py-2 text-sm font-semibold text-zinc-300 hover:border-white/30"
+                        @click="showEditForm = false"
+                    >
+                        Cancelar
+                    </button>
+                </div>
+            </form>
         </div>
 
         <template v-if="tournament.status === 'swiss' || tournament.status === 'elimination'">

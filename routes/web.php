@@ -48,6 +48,8 @@ Route::middleware('auth')->group(function () {
 
     Route::middleware('admin')->group(function () {
         Route::post('/tournament', [TournamentController::class, 'store'])->name('tournament.store');
+        Route::patch('/tournament', [TournamentController::class, 'update'])->name('tournament.update');
+        Route::delete('/tournament/entries/{entry}', [TournamentController::class, 'removeEntry'])->name('tournament.entries.destroy');
         Route::patch('/tournament/matches/{match}', [TournamentMatchController::class, 'update'])->name('tournament.matches.update');
         Route::post('/tournament/rounds', [TournamentRoundController::class, 'store'])->name('tournament.rounds.store');
         Route::post('/tournament/cut', [TournamentController::class, 'cut'])->name('tournament.cut');
