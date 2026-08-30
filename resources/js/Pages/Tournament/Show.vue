@@ -152,7 +152,7 @@ function isMyMatch(match) {
                 Unirme
             </button>
             <p v-if="!isRegistered && !has_tournament_deck" class="mt-2 text-xs text-zinc-400">
-                Necesitas <Link href="/decks" class="text-bx-cyan hover:underline">marcar un deck de torneo</Link> antes de unirte.
+                Necesitas <Link href="/decks" class="text-bx-cyan hover:underline">un deck de torneo con al menos un combo</Link> antes de unirte.
             </p>
             <p v-else-if="isRegistered" class="text-sm text-bx-cyan">Ya estás inscrito.</p>
             <button

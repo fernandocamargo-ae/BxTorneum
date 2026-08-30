@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Models\Deck;
 use App\Models\Tournament;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -19,6 +20,14 @@ class TournamentJoinTest extends TestCase
         ]);
     }
 
+    private function tournamentDeckWithACombo(User $user): Deck
+    {
+        $deck = $user->decks()->create(['name' => 'Mi torneo', 'visibility' => 'private', 'is_tournament_deck' => true]);
+        $deck->deckBeyblades()->create(['line' => 'bx', 'position' => 1]);
+
+        return $deck;
+    }
+
     public function test_user_without_a_tournament_deck_cannot_join(): void
     {
         $tournament = $this->openTournament();
@@ -28,11 +37,21 @@ class TournamentJoinTest extends TestCase
         $this->assertDatabaseCount('tournament_entries', 0);
     }
 
+    public function test_user_with_an_empty_tournament_deck_cannot_join(): void
+    {
+        $tournament = $this->openTournament();
+        $user = User::factory()->create();
+        $user->decks()->create(['name' => 'Vacío', 'visibility' => 'private', 'is_tournament_deck' => true]);
+
+        $this->actingAs($user)->post('/tournament/join')->assertStatus(422);
+        $this->assertDatabaseCount('tournament_entries', 0);
+    }
+
     public function test_user_with_a_tournament_deck_joins_with_a_snapshot_of_that_deck(): void
     {
         $tournament = $this->openTournament();
         $user = User::factory()->create();
-        $deck = $user->decks()->create(['name' => 'Mi torneo', 'visibility' => 'private', 'is_tournament_deck' => true]);
+        $deck = $this->tournamentDeckWithACombo($user);
 
         $this->actingAs($user)->post('/tournament/join')->assertRedirect();
 
@@ -45,7 +64,7 @@ class TournamentJoinTest extends TestCase
     {
         $tournament = $this->openTournament();
         $user = User::factory()->create();
-        $user->decks()->create(['name' => 'Mi torneo', 'visibility' => 'private', 'is_tournament_deck' => true]);
+        $this->tournamentDeckWithACombo($user);
 
         $this->actingAs($user)->post('/tournament/join');
         $this->actingAs($user)->post('/tournament/join')->assertStatus(422);
@@ -58,7 +77,7 @@ class TournamentJoinTest extends TestCase
         $tournament = $this->openTournament();
         $tournament->update(['status' => 'swiss', 'current_round' => 1]);
         $user = User::factory()->create();
-        $user->decks()->create(['name' => 'Mi torneo', 'visibility' => 'private', 'is_tournament_deck' => true]);
+        $this->tournamentDeckWithACombo($user);
 
         $this->actingAs($user)->post('/tournament/join')->assertStatus(422);
     }

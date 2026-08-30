@@ -17,7 +17,8 @@ class TournamentFullSimulationTest extends TestCase
         $admin = User::factory()->create(['is_admin' => true]);
         $players = User::factory()->count(8)->create();
         foreach ($players as $player) {
-            $player->decks()->create(['name' => 'Torneo', 'visibility' => 'private', 'is_tournament_deck' => true]);
+            $deck = $player->decks()->create(['name' => 'Torneo', 'visibility' => 'private', 'is_tournament_deck' => true]);
+            $deck->deckBeyblades()->create(['line' => 'bx', 'position' => 1]);
         }
 
         $this->actingAs($admin)

@@ -46,8 +46,8 @@ class TournamentController extends Controller
             'Ya estás inscrito.'
         );
 
-        $deck = auth()->user()->decks()->where('is_tournament_deck', true)->first();
-        abort_unless($deck, 422, 'Marca un deck como torneo antes de unirte.');
+        $deck = $this->eligibleTournamentDeck();
+        abort_unless($deck, 422, 'Marca un deck de torneo con al menos un combo antes de unirte.');
 
         TournamentEntry::create([
             'tournament_id' => $tournament->id,
@@ -89,7 +89,7 @@ class TournamentController extends Controller
         if (! $tournament) {
             return Inertia::render('Tournament/Show', [
                 'tournament' => null,
-                'has_tournament_deck' => auth()->user()->decks()->where('is_tournament_deck', true)->exists(),
+                'has_tournament_deck' => (bool) $this->eligibleTournamentDeck(),
                 'my_entry_id' => null,
                 'entries' => [],
                 'standings' => [],
@@ -120,7 +120,7 @@ class TournamentController extends Controller
                 'current_round' => $tournament->current_round,
                 'champion_nickname' => $tournament->champion?->user?->nickname,
             ],
-            'has_tournament_deck' => auth()->user()->decks()->where('is_tournament_deck', true)->exists(),
+            'has_tournament_deck' => (bool) $this->eligibleTournamentDeck(),
             'can_create_tournament' => $tournament->status === 'completed',
             'my_entry_id' => $myEntry?->id,
             'entries' => $entries->map(fn ($entry) => [
@@ -194,6 +194,18 @@ class TournamentController extends Controller
             'standings' => $standings,
             'rounds' => $rounds,
         ]);
+    }
+
+    /**
+     * The user's deck marked for tournament play, only if it actually has at least one
+     * combo — a deck marked as tournament but left empty doesn't count as "having a deck".
+     */
+    private function eligibleTournamentDeck()
+    {
+        return auth()->user()->decks()
+            ->where('is_tournament_deck', true)
+            ->whereHas('deckBeyblades')
+            ->first();
     }
 
     private function standingsWithNicknames(Tournament $tournament, $entries): array

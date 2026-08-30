@@ -27,7 +27,8 @@ class TournamentShowTest extends TestCase
     public function test_shows_null_tournament_when_none_exists(): void
     {
         $viewer = User::factory()->create();
-        $viewer->decks()->create(['name' => 'Mi torneo', 'visibility' => 'private', 'is_tournament_deck' => true]);
+        $viewerDeck = $viewer->decks()->create(['name' => 'Mi torneo', 'visibility' => 'private', 'is_tournament_deck' => true]);
+        $viewerDeck->deckBeyblades()->create(['line' => 'bx', 'position' => 1]);
 
         $this->actingAs($viewer)
             ->get('/tournament')
@@ -51,7 +52,8 @@ class TournamentShowTest extends TestCase
         $this->makeEntry($tournament, 'Nick1');
 
         $viewer = User::factory()->create();
-        $viewer->decks()->create(['name' => 'Mi torneo', 'visibility' => 'private', 'is_tournament_deck' => true]);
+        $viewerDeck = $viewer->decks()->create(['name' => 'Mi torneo', 'visibility' => 'private', 'is_tournament_deck' => true]);
+        $viewerDeck->deckBeyblades()->create(['line' => 'bx', 'position' => 1]);
 
         $this->actingAs($viewer)->get('/tournament')->assertInertia(fn ($page) => $page
             ->component('Tournament/Show')
