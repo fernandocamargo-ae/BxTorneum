@@ -214,7 +214,7 @@ function isMyMatch(match) {
 
         <div v-if="tournament.status === 'registration'" class="rounded-xl border border-white/10 bg-zinc-900/50 p-5">
             <h3 class="mb-3 text-sm font-semibold text-zinc-400">Jugadores inscritos ({{ entries.length }})</h3>
-            <div v-if="entries.length" class="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">
+            <div v-if="entries.length" class="mb-6 grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
                 <div
                     v-for="entry in entries"
                     :key="entry.id"
