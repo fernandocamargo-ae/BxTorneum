@@ -6,12 +6,6 @@ import PrimaryButton from '@/Components/PrimaryButton.vue';
 import TextInput from '@/Components/TextInput.vue';
 import { Head, useForm } from '@inertiajs/vue3';
 
-defineProps({
-    status: {
-        type: String,
-    },
-});
-
 const form = useForm({
     email: '',
 });
@@ -26,15 +20,7 @@ const submit = () => {
         <Head title="Recuperar contraseña" />
 
         <div class="mb-4 text-sm text-zinc-400">
-            ¿Olvidaste tu contraseña? No hay problema. Escribe tu email y te
-            enviaremos un enlace para elegir una nueva.
-        </div>
-
-        <div
-            v-if="status"
-            class="mb-4 text-sm font-medium text-bx-cyan"
-        >
-            {{ status }}
+            ¿Olvidaste tu contraseña? Escribe el email con el que te registraste.
         </div>
 
         <form @submit.prevent="submit">
@@ -59,7 +45,7 @@ const submit = () => {
                     :class="{ 'opacity-25': form.processing }"
                     :disabled="form.processing"
                 >
-                    Enviar enlace de recuperación
+                    Continuar
                 </PrimaryButton>
             </div>
         </form>

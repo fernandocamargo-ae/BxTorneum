@@ -11,14 +11,9 @@ const props = defineProps({
         type: String,
         required: true,
     },
-    token: {
-        type: String,
-        required: true,
-    },
 });
 
 const form = useForm({
-    token: props.token,
     email: props.email,
     password: '',
     password_confirmation: '',
