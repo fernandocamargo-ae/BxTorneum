@@ -16,12 +16,44 @@ describe('Tournament/Show', () => {
         expect(wrapper.text()).toContain('No hay torneo activo');
     });
 
-    it('lets a player without an entry join when they have a tournament deck', async () => {
+    it('lets a player without an entry join when they have a tournament deck, after confirming which deck', async () => {
         const { router } = await import('@inertiajs/vue3');
+        const confirmSpy = vi.fn(() => true);
+        vi.stubGlobal('confirm', confirmSpy);
+
         const wrapper = mount(Show, {
             props: {
                 tournament: { id: 1, name: 'Copa X', status: 'registration', swiss_rounds: 3, cut_size: 4, current_round: 0, champion_nickname: null },
                 has_tournament_deck: true,
+                tournament_deck: { id: 9, name: 'Ofensivo', combos_count: 3 },
+                my_entry_id: null,
+                entries: [],
+                standings: [],
+                current_round_matches: [],
+            },
+        });
+
+        expect(wrapper.text()).toContain('Ofensivo');
+
+        const joinButton = wrapper.findAll('button').find((b) => b.text() === 'Unirme');
+        await joinButton.trigger('click');
+
+        expect(confirmSpy).toHaveBeenCalledWith(expect.stringContaining('Ofensivo'));
+        expect(router.post).toHaveBeenCalledWith('/tournament/join');
+
+        vi.unstubAllGlobals();
+    });
+
+    it('does not join when the deck confirmation is declined', async () => {
+        const { router } = await import('@inertiajs/vue3');
+        router.post.mockClear();
+        vi.stubGlobal('confirm', vi.fn(() => false));
+
+        const wrapper = mount(Show, {
+            props: {
+                tournament: { id: 1, name: 'Copa X', status: 'registration', swiss_rounds: 3, cut_size: 4, current_round: 0, champion_nickname: null },
+                has_tournament_deck: true,
+                tournament_deck: { id: 9, name: 'Ofensivo', combos_count: 3 },
                 my_entry_id: null,
                 entries: [],
                 standings: [],
@@ -31,7 +63,10 @@ describe('Tournament/Show', () => {
 
         const joinButton = wrapper.findAll('button').find((b) => b.text() === 'Unirme');
         await joinButton.trigger('click');
-        expect(router.post).toHaveBeenCalledWith('/tournament/join');
+
+        expect(router.post).not.toHaveBeenCalled();
+
+        vi.unstubAllGlobals();
     });
 
     it('disables the join button without a tournament deck', () => {

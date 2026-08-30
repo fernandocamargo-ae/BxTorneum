@@ -36,6 +36,8 @@ class TournamentShowTest extends TestCase
                 ->component('Tournament/Show')
                 ->where('tournament', null)
                 ->where('has_tournament_deck', true)
+                ->where('tournament_deck.name', 'Mi torneo')
+                ->where('tournament_deck.combos_count', 1)
                 ->where('my_entry_id', null)
                 ->where('entries', [])
                 ->where('standings', [])
@@ -59,9 +61,21 @@ class TournamentShowTest extends TestCase
             ->component('Tournament/Show')
             ->where('tournament.status', 'registration')
             ->where('has_tournament_deck', true)
+            ->where('tournament_deck.name', 'Mi torneo')
+            ->where('tournament_deck.combos_count', 1)
             ->where('my_entry_id', null)
             ->has('entries', 1)
             ->where('entries.0.nickname', 'Nick1')
+        );
+    }
+
+    public function test_tournament_deck_is_null_when_the_viewer_has_no_eligible_deck(): void
+    {
+        $viewer = User::factory()->create();
+
+        $this->actingAs($viewer)->get('/tournament')->assertInertia(fn ($page) => $page
+            ->where('has_tournament_deck', false)
+            ->where('tournament_deck', null)
         );
     }
 

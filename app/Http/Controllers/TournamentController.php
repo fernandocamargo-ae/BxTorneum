@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreTournamentRequest;
+use App\Models\Deck;
 use App\Models\Tournament;
 use App\Models\TournamentEntry;
 use App\Support\TournamentPairing;
@@ -133,10 +134,13 @@ class TournamentController extends Controller
         $tournament = Tournament::where('status', '!=', 'completed')->latest()->first()
             ?? Tournament::where('status', 'completed')->latest()->first();
 
+        $tournamentDeck = $this->eligibleTournamentDeck();
+
         if (! $tournament) {
             return Inertia::render('Tournament/Show', [
                 'tournament' => null,
-                'has_tournament_deck' => (bool) $this->eligibleTournamentDeck(),
+                'has_tournament_deck' => (bool) $tournamentDeck,
+                'tournament_deck' => $this->deckSummary($tournamentDeck),
                 'my_entry_id' => null,
                 'entries' => [],
                 'standings' => [],
@@ -167,7 +171,8 @@ class TournamentController extends Controller
                 'current_round' => $tournament->current_round,
                 'champion_nickname' => $tournament->champion?->user?->nickname,
             ],
-            'has_tournament_deck' => (bool) $this->eligibleTournamentDeck(),
+            'has_tournament_deck' => (bool) $tournamentDeck,
+            'tournament_deck' => $this->deckSummary($tournamentDeck),
             'can_create_tournament' => $tournament->status === 'completed',
             'my_entry_id' => $myEntry?->id,
             'entries' => $entries->map(fn ($entry) => [
@@ -253,6 +258,19 @@ class TournamentController extends Controller
             ->where('is_tournament_deck', true)
             ->whereHas('deckBeyblades')
             ->first();
+    }
+
+    private function deckSummary(?Deck $deck): ?array
+    {
+        if (! $deck) {
+            return null;
+        }
+
+        return [
+            'id' => $deck->id,
+            'name' => $deck->name,
+            'combos_count' => $deck->deckBeyblades()->count(),
+        ];
     }
 
     private function standingsWithNicknames(Tournament $tournament, $entries): array

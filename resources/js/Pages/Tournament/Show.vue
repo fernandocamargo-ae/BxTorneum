@@ -6,6 +6,7 @@ import ReportExport from '../../Components/ReportExport.vue';
 const props = defineProps({
     tournament: { type: Object, default: null },
     has_tournament_deck: { type: Boolean, default: false },
+    tournament_deck: { type: Object, default: null },
     my_entry_id: { type: Number, default: null },
     entries: { type: Array, default: () => [] },
     standings: { type: Array, default: () => [] },
@@ -50,6 +51,13 @@ function removeEntry(entry) {
 }
 
 function join() {
+    const deck = props.tournament_deck;
+    const label = deck ? `"${deck.name}" (${deck.combos_count} combo(s))` : 'tu deck de torneo';
+
+    if (!confirm(`¿Confirmas que vas a jugar con ${label}? Si no es el correcto, cancela y corrígelo en "Mis decks".`)) {
+        return;
+    }
+
     router.post('/tournament/join');
 }
 
@@ -181,6 +189,11 @@ function isMyMatch(match) {
                 </div>
             </div>
             <p v-else class="mb-6 text-sm text-zinc-500">Todavía no hay inscritos.</p>
+            <p v-if="!isRegistered && tournament_deck" class="mb-2 text-xs text-zinc-400">
+                Te vas a unir con: <span class="font-semibold text-zinc-200">"{{ tournament_deck.name }}"</span>
+                ({{ tournament_deck.combos_count }} combo(s)). ¿No es el correcto?
+                <Link href="/decks" class="text-bx-cyan hover:underline">Corrígelo aquí</Link>.
+            </p>
             <button
                 v-if="!isRegistered"
                 type="button"
