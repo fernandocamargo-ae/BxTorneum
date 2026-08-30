@@ -98,6 +98,10 @@ const submit = () => {
                 ¿No tienes cuenta?
                 <Link :href="route('register')" class="text-bx-cyan underline hover:opacity-80">Regístrate</Link>
             </div>
+
+            <div class="mt-2 text-center text-sm text-zinc-400">
+                <Link :href="route('guest.create')" class="text-bx-cyan underline hover:opacity-80">Jugar como invitado</Link>
+            </div>
         </form>
     </GuestLayout>
 </template>
