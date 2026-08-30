@@ -27,10 +27,13 @@ function toggleAdmin(user) {
             </thead>
             <tbody>
                 <tr v-for="user in users" :key="user.id" class="border-t border-white/5">
-                    <td class="py-2 font-medium text-zinc-100">
-                        {{ user.nickname }}
-                        <span v-if="user.is_owner" class="ml-1 rounded-full bg-bx-magenta/20 px-2 py-0.5 text-xs font-bold text-bx-magenta">DUEÑO</span>
-                        <span v-else-if="user.is_guest" class="ml-1 rounded-full bg-white/10 px-2 py-0.5 text-xs font-semibold text-zinc-400">INVITADO</span>
+                    <td class="py-2">
+                        <div class="font-medium text-zinc-100">
+                            {{ user.nickname }}
+                            <span v-if="user.is_owner" class="ml-1 rounded-full bg-bx-magenta/20 px-2 py-0.5 text-xs font-bold text-bx-magenta">DUEÑO</span>
+                            <span v-else-if="user.is_guest" class="ml-1 rounded-full bg-white/10 px-2 py-0.5 text-xs font-semibold text-zinc-400">INVITADO</span>
+                        </div>
+                        <div class="text-xs text-zinc-500">{{ user.name }}</div>
                     </td>
                     <td class="py-2 text-zinc-400">{{ user.email }}</td>
                     <td class="py-2">

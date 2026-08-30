@@ -9,17 +9,19 @@ vi.mock('@inertiajs/vue3', () => ({
 
 describe('Admin/Users', () => {
     const users = [
-        { id: 1, nickname: 'Dueño', email: 'dueno@example.com', is_admin: true, is_guest: false, is_owner: true },
-        { id: 2, nickname: 'Jugador1', email: 'j1@example.com', is_admin: false, is_guest: false, is_owner: false },
-        { id: 3, nickname: 'Invitado1', email: 'inv@example.com', is_admin: false, is_guest: true, is_owner: false },
+        { id: 1, name: 'Fernando Camargo', nickname: 'Dueño', email: 'dueno@example.com', is_admin: true, is_guest: false, is_owner: true },
+        { id: 2, name: 'Juan Perez', nickname: 'Jugador1', email: 'j1@example.com', is_admin: false, is_guest: false, is_owner: false },
+        { id: 3, name: 'Ana Lopez', nickname: 'Invitado1', email: 'inv@example.com', is_admin: false, is_guest: true, is_owner: false },
     ];
 
-    it('lists every user with their role and no action button for the owner', () => {
+    it('lists every user with their real name, role, and no action button for the owner', () => {
         const wrapper = mount(Users, { props: { users } });
 
         expect(wrapper.text()).toContain('Dueño');
+        expect(wrapper.text()).toContain('Fernando Camargo');
         expect(wrapper.text()).toContain('DUEÑO');
         expect(wrapper.text()).toContain('Jugador1');
+        expect(wrapper.text()).toContain('Juan Perez');
         expect(wrapper.text()).toContain('INVITADO');
         expect(wrapper.findAll('button')).toHaveLength(2); // one per non-owner user
     });
