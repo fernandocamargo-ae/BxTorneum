@@ -31,6 +31,34 @@ class DeckControllerTest extends TestCase
         $this->assertCount(1, $deck->deckBeyblades);
     }
 
+    public function test_a_users_first_deck_is_automatically_marked_as_the_tournament_deck(): void
+    {
+        $user = User::factory()->create();
+
+        $this->actingAs($user)->post('/decks', [
+            'name' => 'Primero',
+            'visibility' => 'private',
+            'beyblades' => [['line' => '', 'parts' => []]],
+        ]);
+
+        $this->assertTrue(Deck::first()->is_tournament_deck);
+    }
+
+    public function test_a_second_deck_is_not_automatically_marked_as_the_tournament_deck(): void
+    {
+        $user = User::factory()->create();
+        $user->decks()->create(['name' => 'Ya existente', 'visibility' => 'private', 'is_tournament_deck' => true]);
+
+        $this->actingAs($user)->post('/decks', [
+            'name' => 'Segundo',
+            'visibility' => 'private',
+            'beyblades' => [['line' => '', 'parts' => []]],
+        ]);
+
+        $second = Deck::where('name', 'Segundo')->first();
+        $this->assertFalse($second->is_tournament_deck);
+    }
+
     public function test_user_can_create_a_deck_with_more_than_three_combos(): void
     {
         $user = User::factory()->create();

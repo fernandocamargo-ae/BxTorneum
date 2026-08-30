@@ -41,18 +41,25 @@ class DeckController extends Controller
 
     public function store(DeckRequest $request): RedirectResponse
     {
-        $deck = DB::transaction(function () use ($request) {
+        [$deck, $isFirstDeck] = DB::transaction(function () use ($request) {
+            $isFirstDeck = ! auth()->user()->decks()->exists();
+
             $deck = auth()->user()->decks()->create([
                 'name' => $request->validated('name'),
                 'visibility' => $request->validated('visibility'),
+                'is_tournament_deck' => $isFirstDeck,
             ]);
 
             $this->syncCombos($deck, $request->validated('beyblades'));
 
-            return $deck;
+            return [$deck, $isFirstDeck];
         });
 
-        return redirect()->route('decks.index')->with('success', "Deck \"{$deck->name}\" creado.");
+        $message = $isFirstDeck
+            ? "Deck \"{$deck->name}\" creado y marcado como tu deck de torneo."
+            : "Deck \"{$deck->name}\" creado.";
+
+        return redirect()->route('decks.index')->with('success', $message);
     }
 
     public function edit(Deck $deck)
