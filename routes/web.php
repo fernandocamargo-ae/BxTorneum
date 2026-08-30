@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Admin\UserManagementController;
 use App\Http\Controllers\DeckController;
 use App\Http\Controllers\PartController;
 use App\Http\Controllers\PlayerController;
@@ -50,6 +51,11 @@ Route::middleware('auth')->group(function () {
         Route::patch('/tournament/matches/{match}', [TournamentMatchController::class, 'update'])->name('tournament.matches.update');
         Route::post('/tournament/rounds', [TournamentRoundController::class, 'store'])->name('tournament.rounds.store');
         Route::post('/tournament/cut', [TournamentController::class, 'cut'])->name('tournament.cut');
+    });
+
+    Route::middleware('owner')->group(function () {
+        Route::get('/admin/users', [UserManagementController::class, 'index'])->name('admin.users.index');
+        Route::patch('/admin/users/{user}/admin', [UserManagementController::class, 'updateAdmin'])->name('admin.users.update-admin');
     });
 });
 

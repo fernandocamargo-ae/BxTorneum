@@ -18,6 +18,8 @@ class User extends Authenticatable
      *
      * @var list<string>
      */
+    // is_owner is deliberately NOT fillable — it must never be settable via mass
+    // assignment; it's only ever changed directly (forceFill/tinker).
     protected $fillable = [
         'name',
         'nickname',
@@ -49,6 +51,7 @@ class User extends Authenticatable
             'password' => 'hashed',
             'is_admin' => 'boolean',
             'is_guest' => 'boolean',
+            'is_owner' => 'boolean',
         ];
     }
 
