@@ -29,4 +29,18 @@ class RegistrationTest extends TestCase
         $this->assertAuthenticated();
         $response->assertRedirect(route('decks.index', absolute: false));
     }
+
+    public function test_nickname_may_contain_spaces(): void
+    {
+        $response = $this->post('/register', [
+            'name' => 'Test User',
+            'nickname' => 'Don Gsan',
+            'email' => 'don@example.com',
+            'password' => 'password',
+            'password_confirmation' => 'password',
+        ]);
+
+        $this->assertAuthenticated();
+        $response->assertRedirect(route('decks.index', absolute: false));
+    }
 }

@@ -23,6 +23,15 @@ class GuestSessionTest extends TestCase
         $this->assertFalse($guest->is_admin);
     }
 
+    public function test_nickname_may_contain_spaces(): void
+    {
+        $response = $this->post('/play-as-guest', ['nickname' => 'Don Gsan']);
+
+        $response->assertRedirect('/decks/create');
+        $this->assertAuthenticated();
+        $this->assertDatabaseHas('users', ['nickname' => 'Don Gsan', 'is_guest' => true]);
+    }
+
     public function test_each_guest_gets_a_unique_synthetic_email(): void
     {
         $this->post('/play-as-guest', ['nickname' => 'Kid1']);

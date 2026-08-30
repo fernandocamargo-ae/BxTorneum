@@ -26,7 +26,7 @@ class GuestSessionController extends Controller
     public function store(Request $request): RedirectResponse
     {
         $request->validate([
-            'nickname' => 'required|string|min:3|max:32|regex:/^[A-Za-z0-9_-]+$/|unique:'.User::class,
+            'nickname' => 'required|string|min:3|max:32|regex:/^[A-Za-z0-9_ -]+$/|unique:'.User::class,
         ]);
 
         $guest = User::create([
