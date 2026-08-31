@@ -412,7 +412,7 @@ function isMyMatch(match) {
                                 <button
                                     v-if="editingMatchId !== match.id"
                                     type="button"
-                                    class="text-xs font-semibold text-zinc-500 underline transition hover:text-bx-magenta"
+                                    class="rounded border border-white/15 px-2 py-1 text-xs font-semibold text-zinc-300 transition hover:border-bx-magenta hover:text-bx-magenta"
                                     @click="editingMatchId = match.id"
                                 >
                                     Corregir resultado
