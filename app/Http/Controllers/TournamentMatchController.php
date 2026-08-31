@@ -13,7 +13,15 @@ class TournamentMatchController extends Controller
     public function update(Request $request, TournamentMatch $match): RedirectResponse
     {
         abort_if($match->is_bye, 422, 'Un bye no se reporta.');
-        abort_unless($match->winner_entry_id === null, 422, 'Este duelo ya tiene resultado.');
+
+        $round = $match->round;
+        $tournament = $round->tournament;
+
+        abort_unless(
+            $round->number === $tournament->current_round,
+            422,
+            'Ya no puedes corregir este resultado; ya se generó una ronda posterior.'
+        );
 
         $winnerId = (int) $request->validate([
             'winner_entry_id' => ['required', 'integer'],
@@ -25,19 +33,20 @@ class TournamentMatchController extends Controller
             'Ese jugador no está en este duelo.'
         );
 
-        DB::transaction(function () use ($match, $winnerId) {
+        DB::transaction(function () use ($match, $winnerId, $round, $tournament) {
+            $isFirstReport = $match->winner_entry_id === null;
+
             $match->update(['winner_entry_id' => $winnerId]);
 
-            $round = $match->round;
-            $tournament = $round->tournament;
-
-            if ($tournament->status === 'elimination' && $round->matches()->count() === 1) {
+            if ($round->phase === 'elimination' && $round->matches()->count() === 1) {
                 $tournament->update([
                     'status' => 'completed',
                     'champion_entry_id' => $winnerId,
                 ]);
 
-                $this->endGuestSessions($tournament);
+                if ($isFirstReport) {
+                    $this->endGuestSessions($tournament);
+                }
             }
         });
 

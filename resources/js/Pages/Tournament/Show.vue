@@ -20,6 +20,7 @@ const isAdmin = computed(() => !!page.props.auth?.user?.is_admin);
 const isRegistered = computed(() => props.my_entry_id !== null);
 const showCreateForm = ref(false);
 const showEditForm = ref(false);
+const editingMatchId = ref(null);
 
 const createForm = useForm({ name: '', swiss_rounds: 3, cut_size: 4 });
 const editForm = useForm({
@@ -123,8 +124,27 @@ function cutToElimination() {
     router.post('/tournament/cut');
 }
 
-function reportWinner(matchId, winnerEntryId) {
-    router.patch(`/tournament/matches/${matchId}`, { winner_entry_id: winnerEntryId });
+function reportWinner(matchId, winnerEntryId, isCorrection = false) {
+    const submit = () => {
+        router.patch(
+            `/tournament/matches/${matchId}`,
+            { winner_entry_id: winnerEntryId },
+            { onSuccess: () => { editingMatchId.value = null; } },
+        );
+    };
+
+    if (!isCorrection) {
+        submit();
+        return;
+    }
+
+    openConfirm({
+        title: 'Corregir resultado',
+        message: '¿Seguro que quieres cambiar el ganador de este duelo?',
+        confirmLabel: 'Sí, corregir',
+        danger: true,
+        action: submit,
+    });
 }
 
 const myMatch = computed(() =>
@@ -387,6 +407,27 @@ function isMyMatch(match) {
                                 <button type="button" class="rounded border border-white/15 px-2 py-1 text-xs font-semibold transition hover:border-bx-cyan hover:text-bx-cyan" @click="reportWinner(match.id, match.entry_two_id)">
                                     {{ match.entry_two_nickname }} gana
                                 </button>
+                            </div>
+                            <div v-else-if="isAdmin && match.winner_entry_id" class="flex flex-wrap items-center gap-2">
+                                <button
+                                    v-if="editingMatchId !== match.id"
+                                    type="button"
+                                    class="text-xs font-semibold text-zinc-500 underline transition hover:text-bx-magenta"
+                                    @click="editingMatchId = match.id"
+                                >
+                                    Corregir resultado
+                                </button>
+                                <template v-else>
+                                    <button type="button" class="rounded border border-white/15 px-2 py-1 text-xs font-semibold transition hover:border-bx-cyan hover:text-bx-cyan" @click="reportWinner(match.id, match.entry_one_id, true)">
+                                        {{ match.entry_one_nickname }} gana
+                                    </button>
+                                    <button type="button" class="rounded border border-white/15 px-2 py-1 text-xs font-semibold transition hover:border-bx-cyan hover:text-bx-cyan" @click="reportWinner(match.id, match.entry_two_id, true)">
+                                        {{ match.entry_two_nickname }} gana
+                                    </button>
+                                    <button type="button" class="text-xs font-semibold text-zinc-500 hover:text-zinc-300" @click="editingMatchId = null">
+                                        Cancelar
+                                    </button>
+                                </template>
                             </div>
                         </div>
                     </div>

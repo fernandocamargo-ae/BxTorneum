@@ -123,7 +123,94 @@ describe('Tournament/Show', () => {
         expect(wrapper.text()).toContain('Otro');
         expect(wrapper.text()).toContain('Mas');
         expect(wrapper.text()).not.toContain('gana');
+        expect(wrapper.text()).not.toContain('Corregir resultado');
         expect(wrapper.text()).not.toContain('Generar siguiente ronda');
+    });
+
+    it('lets an admin report a result for an unplayed match directly, without a confirmation dialog', async () => {
+        const { usePage, router } = await import('@inertiajs/vue3');
+        usePage.mockReturnValueOnce({ props: { auth: { user: { is_admin: true } } } });
+        router.patch.mockClear();
+
+        const wrapper = mount(Show, {
+            props: {
+                tournament: { id: 1, name: 'Copa X', status: 'swiss', swiss_rounds: 3, cut_size: 4, current_round: 1, champion_nickname: null },
+                has_tournament_deck: true,
+                my_entry_id: null,
+                entries: [],
+                standings: [],
+                current_round_matches: [
+                    { id: 10, entry_one_id: 5, entry_one_nickname: 'Yo', entry_two_id: 6, entry_two_nickname: 'Rival', winner_entry_id: null, is_bye: false },
+                ],
+            },
+        });
+
+        const winButton = wrapper.findAll('button').find((b) => b.text() === 'Yo gana');
+        await winButton.trigger('click');
+
+        expect(router.patch).toHaveBeenCalledWith('/tournament/matches/10', { winner_entry_id: 5 }, expect.any(Object));
+    });
+
+    it('lets an admin correct an already-reported result after confirming in the dialog', async () => {
+        const { usePage, router } = await import('@inertiajs/vue3');
+        usePage.mockReturnValueOnce({ props: { auth: { user: { is_admin: true } } } });
+        router.patch.mockClear();
+
+        const wrapper = mount(Show, {
+            props: {
+                tournament: { id: 1, name: 'Copa X', status: 'swiss', swiss_rounds: 3, cut_size: 4, current_round: 1, champion_nickname: null },
+                has_tournament_deck: true,
+                my_entry_id: null,
+                entries: [],
+                standings: [],
+                current_round_matches: [
+                    { id: 10, entry_one_id: 5, entry_one_nickname: 'Yo', entry_two_id: 6, entry_two_nickname: 'Rival', winner_entry_id: 5, is_bye: false },
+                ],
+            },
+        });
+
+        const correctToggle = wrapper.findAll('button').find((b) => b.text() === 'Corregir resultado');
+        await correctToggle.trigger('click');
+
+        const rivalWinButton = wrapper.findAll('button').find((b) => b.text() === 'Rival gana');
+        await rivalWinButton.trigger('click');
+
+        expect(router.patch).not.toHaveBeenCalled();
+
+        const confirmButton = wrapper.findAll('button').find((b) => b.text() === 'Sí, corregir');
+        await confirmButton.trigger('click');
+
+        expect(router.patch).toHaveBeenCalledWith('/tournament/matches/10', { winner_entry_id: 6 }, expect.any(Object));
+    });
+
+    it('does not correct a result when the correction dialog is cancelled', async () => {
+        const { usePage, router } = await import('@inertiajs/vue3');
+        usePage.mockReturnValueOnce({ props: { auth: { user: { is_admin: true } } } });
+        router.patch.mockClear();
+
+        const wrapper = mount(Show, {
+            props: {
+                tournament: { id: 1, name: 'Copa X', status: 'swiss', swiss_rounds: 3, cut_size: 4, current_round: 1, champion_nickname: null },
+                has_tournament_deck: true,
+                my_entry_id: null,
+                entries: [],
+                standings: [],
+                current_round_matches: [
+                    { id: 10, entry_one_id: 5, entry_one_nickname: 'Yo', entry_two_id: 6, entry_two_nickname: 'Rival', winner_entry_id: 5, is_bye: false },
+                ],
+            },
+        });
+
+        const correctToggle = wrapper.findAll('button').find((b) => b.text() === 'Corregir resultado');
+        await correctToggle.trigger('click');
+
+        const rivalWinButton = wrapper.findAll('button').find((b) => b.text() === 'Rival gana');
+        await rivalWinButton.trigger('click');
+
+        const cancelButtons = wrapper.findAll('button').filter((b) => b.text() === 'Cancelar');
+        await cancelButtons[cancelButtons.length - 1].trigger('click');
+
+        expect(router.patch).not.toHaveBeenCalled();
     });
 
     it('shows the champion banner when completed', () => {

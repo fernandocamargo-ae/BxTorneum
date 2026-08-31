@@ -1,0 +1,1 @@
+import{_ as o}from"./_plugin-vue_export-helper-DlAUqK2U.js";import{o as r,c as t,p as s}from"./app-DSqv8oFl.js";const c={},n={class:"mx-auto max-w-md rounded-lg border border-white/10 bg-zinc-900/50 p-6"};function a(e,d){return r(),t("div",n,[s(e.$slots,"default")])}const i=o(c,[["render",a]]);export{i as G};
