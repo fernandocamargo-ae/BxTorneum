@@ -95,7 +95,7 @@ function submit() {
             :key="champion.id"
             class="overflow-hidden rounded-xl border border-white/10 bg-zinc-900/50"
         >
-            <img :src="champion.image_url" :alt="`Campeón de ${champion.month}`" class="aspect-square w-full object-cover" />
+            <img :src="champion.image_url" :alt="`Campeón de ${champion.month}`" class="w-full object-contain" />
             <div class="p-4">
                 <p class="text-xs font-bold uppercase tracking-widest text-zinc-500">{{ champion.month }}</p>
                 <p v-if="champion.champion_nickname" class="bx-gradient-text text-xl font-black">{{ champion.champion_nickname }}</p>
