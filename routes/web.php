@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Admin\UserManagementController;
 use App\Http\Controllers\DeckController;
+use App\Http\Controllers\MonthlyChampionController;
 use App\Http\Controllers\PartController;
 use App\Http\Controllers\PlayerController;
 use App\Http\Controllers\PlayerReportController;
@@ -18,6 +19,8 @@ use Illuminate\Support\Facades\Route;
 Route::get('/', fn () => redirect()->route('decks.index'));
 
 Route::post('/report/players/pdf', [PlayerReportController::class, 'download'])->middleware('throttle:5,1')->name('report.players.pdf');
+
+Route::get('/campeones-mensuales', [MonthlyChampionController::class, 'index'])->name('monthly-champions.index');
 
 Route::middleware('auth')->group(function () {
     // Equipos deshabilitados temporalmente (no se usan por ahora). Lógica y vistas se conservan intactas.
@@ -54,6 +57,8 @@ Route::middleware('auth')->group(function () {
         Route::patch('/tournament/matches/{match}', [TournamentMatchController::class, 'update'])->name('tournament.matches.update');
         Route::post('/tournament/rounds', [TournamentRoundController::class, 'store'])->name('tournament.rounds.store');
         Route::post('/tournament/cut', [TournamentController::class, 'cut'])->name('tournament.cut');
+
+        Route::post('/campeones-mensuales', [MonthlyChampionController::class, 'store'])->name('monthly-champions.store');
     });
 
     Route::middleware('owner')->group(function () {

@@ -24,6 +24,7 @@ watch(() => page.url, () => {
 
                 <!-- Desktop nav -->
                 <nav class="hidden items-center gap-4 sm:flex">
+                    <Link href="/campeones-mensuales" class="text-sm font-medium text-zinc-300 transition hover:text-bx-cyan">Campeones</Link>
                     <template v-if="user">
                         <Link href="/decks" class="text-sm font-medium text-zinc-300 transition hover:text-bx-cyan">Mis decks</Link>
                         <Link href="/tournament" class="text-sm font-medium text-zinc-300 transition hover:text-bx-cyan">Torneo</Link>
@@ -75,6 +76,7 @@ watch(() => page.url, () => {
             <!-- Mobile menu -->
             <div v-if="mobileOpen" class="border-t border-white/10 px-4 py-3 sm:hidden">
                 <nav class="flex flex-col gap-1">
+                    <Link href="/campeones-mensuales" class="rounded-lg px-3 py-2 text-sm font-medium text-zinc-300 hover:bg-white/5">Campeones</Link>
                     <template v-if="user">
                         <Link href="/decks" class="rounded-lg px-3 py-2 text-sm font-medium text-zinc-300 hover:bg-white/5">Mis decks</Link>
                         <Link href="/tournament" class="rounded-lg px-3 py-2 text-sm font-medium text-zinc-300 hover:bg-white/5">Torneo</Link>
