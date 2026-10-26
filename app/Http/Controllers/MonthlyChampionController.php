@@ -18,7 +18,9 @@ class MonthlyChampionController extends Controller
                 'id' => $champion->id,
                 'month' => $champion->month,
                 'champion_nickname' => $champion->champion_nickname,
-                'image_url' => Storage::disk('public')->url($champion->image_path),
+                'image_url' => $champion->image_path
+                    ? Storage::disk('public')->url($champion->image_path)
+                    : null,
             ]);
 
         return Inertia::render('MonthlyChampions/Index', ['champions' => $champions]);
@@ -29,10 +31,12 @@ class MonthlyChampionController extends Controller
         $data = $request->validate([
             'month' => ['required', 'string', 'max:60'],
             'champion_nickname' => ['nullable', 'string', 'max:60'],
-            'image' => ['required', 'image', 'max:5120'],
+            'image' => ['nullable', 'image', 'max:5120'],
         ]);
 
-        $path = $request->file('image')->store('monthly-champions', 'public');
+        $path = $request->hasFile('image')
+            ? $request->file('image')->store('monthly-champions', 'public')
+            : null;
 
         MonthlyChampion::create([
             'month' => $data['month'],

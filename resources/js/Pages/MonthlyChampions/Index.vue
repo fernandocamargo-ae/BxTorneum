@@ -61,7 +61,7 @@ function submit() {
                 />
             </div>
             <div>
-                <label class="mb-1 block text-sm font-medium text-zinc-300">Foto</label>
+                <label class="mb-1 block text-sm font-medium text-zinc-300">Foto (opcional)</label>
                 <input
                     type="file"
                     accept="image/*"
@@ -95,7 +95,12 @@ function submit() {
             :key="champion.id"
             class="overflow-hidden rounded-xl border border-white/10 bg-zinc-900/50"
         >
-            <img :src="champion.image_url" :alt="`Campeón de ${champion.month}`" class="w-full object-contain" />
+            <img
+                v-if="champion.image_url"
+                :src="champion.image_url"
+                :alt="`Campeón de ${champion.month}`"
+                class="w-full object-contain"
+            />
             <div class="p-4">
                 <p class="text-xs font-bold uppercase tracking-widest text-zinc-500">{{ champion.month }}</p>
                 <p v-if="champion.champion_nickname" class="bx-gradient-text text-xl font-black">{{ champion.champion_nickname }}</p>

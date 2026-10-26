@@ -32,6 +32,20 @@ describe('MonthlyChampions/Index', () => {
         expect(wrapper.text()).not.toContain('Agregar campeón del mes');
     });
 
+    it('shows a text-only card when a champion has no photo', () => {
+        const wrapper = mount(Index, {
+            props: {
+                champions: [
+                    { id: 2, month: 'Enero 2026', champion_nickname: 'Gustavo Santi', image_url: null },
+                ],
+            },
+        });
+
+        expect(wrapper.text()).toContain('Enero 2026');
+        expect(wrapper.text()).toContain('Gustavo Santi');
+        expect(wrapper.find('img').exists()).toBe(false);
+    });
+
     it('lets an admin reveal the upload form', async () => {
         const { usePage } = await import('@inertiajs/vue3');
         usePage.mockReturnValueOnce({ props: { auth: { user: { is_admin: true } } } });
