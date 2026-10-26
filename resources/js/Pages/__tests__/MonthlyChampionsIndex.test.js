@@ -10,38 +10,61 @@ vi.mock('@inertiajs/vue3', () => ({
 
 describe('MonthlyChampions/Index', () => {
     it('shows the empty state when there are no champions yet', () => {
-        const wrapper = mount(Index, { props: { champions: [] } });
+        const wrapper = mount(Index, { props: { groups: [] } });
         expect(wrapper.text()).toContain('Todavía no hay campeones mensuales publicados');
     });
 
-    it('lists each month and champion in a table, without images or an upload form', async () => {
+    it('lists months chronologically inside a year heading, as a table without images', async () => {
         const { usePage } = await import('@inertiajs/vue3');
         usePage.mockReturnValueOnce({ props: { auth: { user: null } } });
 
         const wrapper = mount(Index, {
             props: {
-                champions: [
-                    { id: 10, month: 'Octubre 2026', champion_nickname: 'ItsMrPanda', image_url: null },
-                    { id: 1, month: 'Septiembre 2026', champion_nickname: 'Robin', image_url: '/storage/x.jpg' },
+                groups: [
+                    {
+                        year: 2026,
+                        champions: [
+                            { id: 2, month: 'Enero 2026', month_name: 'Enero', champion_nickname: 'Gustavo Santi' },
+                            { id: 10, month: 'Octubre 2026', month_name: 'Octubre', champion_nickname: 'ItsMrPanda' },
+                        ],
+                    },
                 ],
             },
         });
 
+        const text = wrapper.text();
         expect(wrapper.find('table').exists()).toBe(true);
-        expect(wrapper.text()).toContain('Octubre 2026');
-        expect(wrapper.text()).toContain('ItsMrPanda');
-        expect(wrapper.text()).toContain('Septiembre 2026');
-        expect(wrapper.text()).toContain('Robin');
-        // No images anywhere, even when a champion still has an image_url.
+        expect(text).toContain('2026');
+        // Chronological: Enero appears before Octubre in the rendered rows.
+        expect(text.indexOf('Enero')).toBeLessThan(text.indexOf('Octubre'));
+        expect(text).toContain('Gustavo Santi');
+        expect(text).toContain('ItsMrPanda');
+        // Month cells drop the redundant year; the year is the heading.
+        expect(text).not.toContain('Enero 2026');
         expect(wrapper.find('img').exists()).toBe(false);
-        expect(wrapper.text()).not.toContain('Agregar campeón del mes');
+        expect(text).not.toContain('Agregar campeón del mes');
+    });
+
+    it('renders a separate section per year, most recent year first', () => {
+        const wrapper = mount(Index, {
+            props: {
+                groups: [
+                    { year: 2027, champions: [{ id: 11, month: 'Enero 2027', month_name: 'Enero', champion_nickname: 'Nuevo' }] },
+                    { year: 2026, champions: [{ id: 2, month: 'Enero 2026', month_name: 'Enero', champion_nickname: 'Gustavo Santi' }] },
+                ],
+            },
+        });
+
+        const text = wrapper.text();
+        expect(wrapper.findAll('table').length).toBe(2);
+        expect(text.indexOf('2027')).toBeLessThan(text.indexOf('2026'));
     });
 
     it('lets an admin reveal the upload form', async () => {
         const { usePage } = await import('@inertiajs/vue3');
         usePage.mockReturnValueOnce({ props: { auth: { user: { is_admin: true } } } });
 
-        const wrapper = mount(Index, { props: { champions: [] } });
+        const wrapper = mount(Index, { props: { groups: [] } });
 
         const toggle = wrapper.findAll('button').find((b) => b.text() === '+ Agregar campeón del mes');
         await toggle.trigger('click');
