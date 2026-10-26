@@ -14,36 +14,27 @@ describe('MonthlyChampions/Index', () => {
         expect(wrapper.text()).toContain('Todavía no hay campeones mensuales publicados');
     });
 
-    it('shows each champion photo, month, and nickname to a guest, without an upload form', async () => {
+    it('lists each month and champion in a table, without images or an upload form', async () => {
         const { usePage } = await import('@inertiajs/vue3');
         usePage.mockReturnValueOnce({ props: { auth: { user: null } } });
 
         const wrapper = mount(Index, {
             props: {
                 champions: [
-                    { id: 1, month: 'Agosto 2026', champion_nickname: 'Ricardo', image_url: '/storage/monthly-champions/x.jpg' },
+                    { id: 10, month: 'Octubre 2026', champion_nickname: 'ItsMrPanda', image_url: null },
+                    { id: 1, month: 'Septiembre 2026', champion_nickname: 'Robin', image_url: '/storage/x.jpg' },
                 ],
             },
         });
 
-        expect(wrapper.text()).toContain('Agosto 2026');
-        expect(wrapper.text()).toContain('Ricardo');
-        expect(wrapper.find('img').attributes('src')).toBe('/storage/monthly-champions/x.jpg');
-        expect(wrapper.text()).not.toContain('Agregar campeón del mes');
-    });
-
-    it('shows a text-only card when a champion has no photo', () => {
-        const wrapper = mount(Index, {
-            props: {
-                champions: [
-                    { id: 2, month: 'Enero 2026', champion_nickname: 'Gustavo Santi', image_url: null },
-                ],
-            },
-        });
-
-        expect(wrapper.text()).toContain('Enero 2026');
-        expect(wrapper.text()).toContain('Gustavo Santi');
+        expect(wrapper.find('table').exists()).toBe(true);
+        expect(wrapper.text()).toContain('Octubre 2026');
+        expect(wrapper.text()).toContain('ItsMrPanda');
+        expect(wrapper.text()).toContain('Septiembre 2026');
+        expect(wrapper.text()).toContain('Robin');
+        // No images anywhere, even when a champion still has an image_url.
         expect(wrapper.find('img').exists()).toBe(false);
+        expect(wrapper.text()).not.toContain('Agregar campeón del mes');
     });
 
     it('lets an admin reveal the upload form', async () => {

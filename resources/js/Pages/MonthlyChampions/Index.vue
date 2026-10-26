@@ -13,12 +13,10 @@ const showForm = ref(false);
 const form = useForm({
     month: '',
     champion_nickname: '',
-    image: null,
 });
 
 function submit() {
     form.post('/campeones-mensuales', {
-        forceFormData: true,
         onSuccess: () => {
             form.reset();
             showForm.value = false;
@@ -47,28 +45,20 @@ function submit() {
                 <input
                     v-model="form.month"
                     type="text"
-                    placeholder="Septiembre 2026"
+                    placeholder="Octubre 2026"
                     class="w-full rounded-md border border-white/10 bg-zinc-900 px-3 py-2 text-sm outline-none focus:border-bx-cyan"
                 />
                 <p v-if="form.errors.month" class="mt-1 text-xs text-bx-magenta">{{ form.errors.month }}</p>
             </div>
             <div>
-                <label class="mb-1 block text-sm font-medium text-zinc-300">Jugador (opcional)</label>
+                <label class="mb-1 block text-sm font-medium text-zinc-300">Campeón</label>
                 <input
                     v-model="form.champion_nickname"
                     type="text"
+                    placeholder="Jugador o jugadores"
                     class="w-full rounded-md border border-white/10 bg-zinc-900 px-3 py-2 text-sm outline-none focus:border-bx-cyan"
                 />
-            </div>
-            <div>
-                <label class="mb-1 block text-sm font-medium text-zinc-300">Foto (opcional)</label>
-                <input
-                    type="file"
-                    accept="image/*"
-                    class="w-full text-sm text-zinc-300"
-                    @change="form.image = $event.target.files[0]"
-                />
-                <p v-if="form.errors.image" class="mt-1 text-xs text-bx-magenta">{{ form.errors.image }}</p>
+                <p v-if="form.errors.champion_nickname" class="mt-1 text-xs text-bx-magenta">{{ form.errors.champion_nickname }}</p>
             </div>
             <div class="flex gap-2">
                 <button
@@ -89,23 +79,29 @@ function submit() {
         </form>
     </div>
 
-    <div v-if="champions.length" class="grid gap-5 sm:grid-cols-2">
-        <div
-            v-for="champion in champions"
-            :key="champion.id"
-            class="overflow-hidden rounded-xl border border-white/10 bg-zinc-900/50"
-        >
-            <img
-                v-if="champion.image_url"
-                :src="champion.image_url"
-                :alt="`Campeón de ${champion.month}`"
-                class="w-full object-contain"
-            />
-            <div class="p-4">
-                <p class="text-xs font-bold uppercase tracking-widest text-zinc-500">{{ champion.month }}</p>
-                <p v-if="champion.champion_nickname" class="bx-gradient-text text-xl font-black">{{ champion.champion_nickname }}</p>
-            </div>
-        </div>
+    <div v-if="champions.length" class="overflow-hidden rounded-xl border border-white/10 bg-zinc-900/50">
+        <table class="w-full text-left">
+            <thead>
+                <tr class="border-b border-white/10 text-xs font-bold uppercase tracking-widest text-zinc-500">
+                    <th class="px-5 py-3">Mes</th>
+                    <th class="px-5 py-3">Campeón</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr
+                    v-for="champion in champions"
+                    :key="champion.id"
+                    class="border-t border-white/5 transition hover:bg-white/5"
+                >
+                    <td class="whitespace-nowrap px-5 py-4 align-middle text-xs font-bold uppercase tracking-widest text-zinc-500">
+                        {{ champion.month }}
+                    </td>
+                    <td class="px-5 py-4 align-middle">
+                        <span class="bx-gradient-text text-lg font-black">{{ champion.champion_nickname }}</span>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
     </div>
 
     <div v-else class="rounded-xl border border-dashed border-white/15 p-12 text-center text-zinc-400">
