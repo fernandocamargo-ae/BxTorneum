@@ -1,83 +1,15 @@
 <script setup>
-import { Head, usePage, useForm } from '@inertiajs/vue3';
-import { computed, ref } from 'vue';
+import { Head } from '@inertiajs/vue3';
 
 defineProps({
     groups: { type: Array, default: () => [] },
 });
-
-const page = usePage();
-const isAdmin = computed(() => !!page.props.auth?.user?.is_admin);
-const showForm = ref(false);
-
-const form = useForm({
-    month: '',
-    champion_nickname: '',
-});
-
-function submit() {
-    form.post('/campeones-mensuales', {
-        onSuccess: () => {
-            form.reset();
-            showForm.value = false;
-        },
-    });
-}
 </script>
 
 <template>
     <Head title="Campeones mensuales" />
 
     <h1 class="mb-6 text-3xl font-black"><span class="bx-gradient-text">Campeones mensuales</span></h1>
-
-    <div v-if="isAdmin" class="mb-6 rounded-xl border border-white/10 bg-zinc-900/50 p-5">
-        <button
-            v-if="!showForm"
-            type="button"
-            class="text-sm font-semibold text-zinc-400 transition hover:text-bx-cyan"
-            @click="showForm = true"
-        >
-            + Agregar campeón del mes
-        </button>
-        <form v-else class="max-w-sm space-y-4" @submit.prevent="submit">
-            <div>
-                <label class="mb-1 block text-sm font-medium text-zinc-300">Mes</label>
-                <input
-                    v-model="form.month"
-                    type="text"
-                    placeholder="Octubre 2026"
-                    class="w-full rounded-md border border-white/10 bg-zinc-900 px-3 py-2 text-sm outline-none focus:border-bx-cyan"
-                />
-                <p v-if="form.errors.month" class="mt-1 text-xs text-bx-magenta">{{ form.errors.month }}</p>
-            </div>
-            <div>
-                <label class="mb-1 block text-sm font-medium text-zinc-300">Campeón</label>
-                <input
-                    v-model="form.champion_nickname"
-                    type="text"
-                    placeholder="Jugador o jugadores"
-                    class="w-full rounded-md border border-white/10 bg-zinc-900 px-3 py-2 text-sm outline-none focus:border-bx-cyan"
-                />
-                <p v-if="form.errors.champion_nickname" class="mt-1 text-xs text-bx-magenta">{{ form.errors.champion_nickname }}</p>
-            </div>
-            <div class="flex gap-2">
-                <button
-                    type="submit"
-                    :disabled="form.processing"
-                    class="rounded-lg bg-gradient-to-r from-bx-cyan to-bx-magenta px-4 py-2 text-sm font-bold text-zinc-950 transition hover:opacity-90 disabled:opacity-50"
-                >
-                    Guardar
-                </button>
-                <button
-                    type="button"
-                    class="rounded-lg border border-white/15 px-4 py-2 text-sm font-semibold text-zinc-300 hover:border-white/30"
-                    @click="showForm = false"
-                >
-                    Cancelar
-                </button>
-            </div>
-        </form>
-    </div>
 
     <div v-if="groups.length" class="space-y-8">
         <section v-for="group in groups" :key="group.year">

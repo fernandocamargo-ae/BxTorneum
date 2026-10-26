@@ -60,16 +60,16 @@ describe('MonthlyChampions/Index', () => {
         expect(text.indexOf('2027')).toBeLessThan(text.indexOf('2026'));
     });
 
-    it('lets an admin reveal the upload form', async () => {
-        const { usePage } = await import('@inertiajs/vue3');
-        usePage.mockReturnValueOnce({ props: { auth: { user: { is_admin: true } } } });
+    it('never shows the add-champion option', () => {
+        const wrapper = mount(Index, {
+            props: {
+                groups: [
+                    { year: 2026, champions: [{ id: 2, month: 'Enero 2026', month_name: 'Enero', champion_nickname: 'Gustavo Santi' }] },
+                ],
+            },
+        });
 
-        const wrapper = mount(Index, { props: { groups: [] } });
-
-        const toggle = wrapper.findAll('button').find((b) => b.text() === '+ Agregar campeón del mes');
-        await toggle.trigger('click');
-
-        expect(wrapper.findAll('form').length).toBe(1);
-        expect(wrapper.text()).toContain('Guardar');
+        expect(wrapper.text()).not.toContain('Agregar campeón del mes');
+        expect(wrapper.find('form').exists()).toBe(false);
     });
 });
