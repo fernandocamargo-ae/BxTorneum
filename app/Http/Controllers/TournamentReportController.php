@@ -10,7 +10,7 @@ use Illuminate\Http\Request;
 
 class TournamentReportController extends Controller
 {
-    public function download(Request $request)
+    public function download(Request $request, Tournament $tournament)
     {
         $request->validate(['password' => ['required', 'string']]);
 
@@ -18,11 +18,6 @@ class TournamentReportController extends Controller
         if (blank($expected) || ! hash_equals((string) $expected, (string) $request->input('password'))) {
             abort(403, 'Contraseña incorrecta.');
         }
-
-        $tournament = Tournament::where('status', '!=', 'completed')->latest()->first()
-            ?? Tournament::where('status', 'completed')->latest()->first();
-
-        abort_unless($tournament, 404, 'No hay ningún torneo.');
 
         $players = $this->playersFor($tournament);
 

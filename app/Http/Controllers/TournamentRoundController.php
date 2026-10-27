@@ -10,9 +10,9 @@ use Illuminate\Http\RedirectResponse;
 
 class TournamentRoundController extends Controller
 {
-    public function store(): RedirectResponse
+    public function store(Tournament $tournament): RedirectResponse
     {
-        $tournament = Tournament::where('status', '!=', 'completed')->firstOrFail();
+        $this->authorize('manage', $tournament);
 
         if ($tournament->status === 'registration') {
             $entryIds = $tournament->entries()->pluck('id');
@@ -21,7 +21,7 @@ class TournamentRoundController extends Controller
             $pairs = TournamentPairing::pairFirstRound($entryIds);
             TournamentRoundFactory::create($tournament, 'swiss', $pairs);
 
-            return redirect()->route('tournament.show')->with('success', 'Ronda 1 generada.');
+            return back()->with('success', 'Ronda 1 generada.');
         }
 
         if ($tournament->status === 'swiss') {
@@ -32,10 +32,11 @@ class TournamentRoundController extends Controller
             $pairs = TournamentPairing::pairSwissRound($standings, $this->previousMatchups($tournament));
             TournamentRoundFactory::create($tournament, 'swiss', $pairs);
 
-            return redirect()->route('tournament.show')->with('success', "Ronda {$tournament->fresh()->current_round} generada.");
+            return back()->with('success', "Ronda {$tournament->fresh()->current_round} generada.");
         }
 
-        // elimination
+        abort_unless($tournament->status === 'elimination', 422, 'El torneo ya terminó.');
+
         $this->abortIfCurrentRoundHasPendingResults($tournament);
         $currentRound = $tournament->rounds()->where('number', $tournament->current_round)->first();
         abort_if($currentRound->matches()->count() <= 1, 422, 'Esa era la final; reporta su resultado para cerrar el torneo.');
@@ -44,7 +45,7 @@ class TournamentRoundController extends Controller
         $pairs = TournamentPairing::advanceEliminationRound($winnerIds);
         TournamentRoundFactory::create($tournament, 'elimination', $pairs);
 
-        return redirect()->route('tournament.show')->with('success', 'Siguiente ronda de eliminatorias generada.');
+        return back()->with('success', 'Siguiente ronda de eliminatorias generada.');
     }
 
     private function abortIfCurrentRoundHasPendingResults(Tournament $tournament): void

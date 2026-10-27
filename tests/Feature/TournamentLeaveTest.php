@@ -31,7 +31,7 @@ class TournamentLeaveTest extends TestCase
 
     public function test_guests_are_redirected_to_login(): void
     {
-        $this->delete('/tournament/leave')->assertRedirect('/login');
+        $this->delete('/tournament/1/leave')->assertRedirect('/login');
     }
 
     public function test_a_registered_player_can_leave_on_their_own(): void
@@ -39,7 +39,7 @@ class TournamentLeaveTest extends TestCase
         $tournament = $this->registrationTournament();
         $player = $this->joinedPlayer($tournament);
 
-        $this->actingAs($player)->delete('/tournament/leave')->assertRedirect();
+        $this->actingAs($player)->delete("/tournament/{$tournament->id}/leave")->assertRedirect();
 
         $this->assertDatabaseMissing('tournament_entries', ['tournament_id' => $tournament->id, 'user_id' => $player->id]);
     }
@@ -49,18 +49,18 @@ class TournamentLeaveTest extends TestCase
         $tournament = $this->registrationTournament();
         $player = $this->joinedPlayer($tournament);
 
-        $this->actingAs($player)->delete('/tournament/leave');
-        $this->actingAs($player)->post('/tournament/join')->assertRedirect();
+        $this->actingAs($player)->delete("/tournament/{$tournament->id}/leave");
+        $this->actingAs($player)->post("/tournament/{$tournament->id}/join")->assertRedirect();
 
         $this->assertDatabaseHas('tournament_entries', ['tournament_id' => $tournament->id, 'user_id' => $player->id]);
     }
 
     public function test_a_player_who_never_joined_cannot_leave(): void
     {
-        $this->registrationTournament();
+        $tournament = $this->registrationTournament();
         $user = User::factory()->create();
 
-        $this->actingAs($user)->delete('/tournament/leave')->assertStatus(422);
+        $this->actingAs($user)->delete("/tournament/{$tournament->id}/leave")->assertStatus(422);
     }
 
     public function test_cannot_leave_once_swiss_rounds_have_started(): void
@@ -69,7 +69,7 @@ class TournamentLeaveTest extends TestCase
         $player = $this->joinedPlayer($tournament);
         $tournament->update(['status' => 'swiss', 'current_round' => 1]);
 
-        $this->actingAs($player)->delete('/tournament/leave')->assertStatus(422);
+        $this->actingAs($player)->delete("/tournament/{$tournament->id}/leave")->assertStatus(422);
         $this->assertDatabaseHas('tournament_entries', ['tournament_id' => $tournament->id, 'user_id' => $player->id]);
     }
 
@@ -79,7 +79,7 @@ class TournamentLeaveTest extends TestCase
         $player = $this->joinedPlayer($tournament);
         $other = $this->joinedPlayer($tournament);
 
-        $this->actingAs($player)->delete('/tournament/leave');
+        $this->actingAs($player)->delete("/tournament/{$tournament->id}/leave");
 
         $this->assertDatabaseHas('tournament_entries', ['tournament_id' => $tournament->id, 'user_id' => $other->id]);
     }

@@ -13,6 +13,7 @@ const props = defineProps({
     standings: { type: Array, default: () => [] },
     current_round_matches: { type: Array, default: () => [] },
     can_create_tournament: { type: Boolean, default: false },
+    can_manage: { type: Boolean, default: false },
 });
 
 const page = usePage();
@@ -34,7 +35,7 @@ function createTournament() {
 }
 
 function updateTournament() {
-    editForm.patch('/tournament', {
+    editForm.patch(`/tournament/${props.tournament.id}`, {
         onSuccess: () => {
             showEditForm.value = false;
         },
@@ -85,7 +86,7 @@ function removeEntry(entry) {
         withReason: true,
         reasonLabel: 'Motivo (opcional)',
         action: (reason) => {
-            router.visit(`/tournament/entries/${entry.id}`, {
+            router.visit(`/tournament/${props.tournament.id}/entries/${entry.id}`, {
                 method: 'delete',
                 data: { reason: reason ?? '' },
                 preserveScroll: true,
@@ -102,7 +103,7 @@ function join() {
         title: 'Confirma tu deck',
         message: `¿Confirmas que vas a jugar con ${label}? Si no es el correcto, cancela y corrígelo en "Mis decks".`,
         confirmLabel: 'Sí, unirme',
-        action: () => router.post('/tournament/join'),
+        action: () => router.post(`/tournament/${props.tournament.id}/join`),
     });
 }
 
@@ -112,12 +113,12 @@ function leave() {
         message: '¿Seguro que quieres salir? Puedes volver a unirte cuando quieras.',
         confirmLabel: 'Sí, salir',
         danger: true,
-        action: () => router.delete('/tournament/leave', { preserveScroll: true }),
+        action: () => router.delete(`/tournament/${props.tournament.id}/leave`, { preserveScroll: true }),
     });
 }
 
 function generateRound({ firstRound = false } = {}) {
-    const submit = () => router.post('/tournament/rounds');
+    const submit = () => router.post(`/tournament/${props.tournament.id}/rounds`);
 
     if (firstRound) {
         openConfirm({
@@ -138,7 +139,7 @@ function generateRound({ firstRound = false } = {}) {
 }
 
 function cutToElimination() {
-    router.post('/tournament/cut');
+    router.post(`/tournament/${props.tournament.id}/cut`);
 }
 
 function reportWinner(matchId, winnerEntryId, isCorrection = false) {
@@ -240,7 +241,7 @@ function isMyMatch(match) {
                         <span v-else>Torneo finalizado</span>
                     </p>
                 </div>
-                <ReportExport endpoint="/tournament/report/pdf" filename="reporte-torneo.pdf" />
+                <ReportExport :endpoint="`/tournament/${tournament.id}/report/pdf`" filename="reporte-torneo.pdf" />
             </div>
         </div>
 
@@ -264,7 +265,7 @@ function isMyMatch(match) {
                     </span>
                     <span class="min-w-0 flex-1 truncate text-sm font-medium text-zinc-200">{{ entry.nickname }}</span>
                     <button
-                        v-if="isAdmin"
+                        v-if="can_manage"
                         type="button"
                         class="shrink-0 rounded px-2 py-0.5 text-xs font-semibold text-zinc-500 transition hover:bg-bx-magenta/20 hover:text-bx-magenta"
                         @click="removeEntry(entry)"
@@ -301,7 +302,7 @@ function isMyMatch(match) {
                     Salir del torneo
                 </button>
             </div>
-            <div v-if="isAdmin" class="mt-4 flex flex-wrap gap-2">
+            <div v-if="can_manage" class="mt-4 flex flex-wrap gap-2">
                 <button
                     type="button"
                     class="rounded-lg border border-white/15 px-4 py-2 text-sm font-semibold hover:border-bx-cyan hover:text-bx-cyan"
@@ -319,7 +320,7 @@ function isMyMatch(match) {
                 </button>
             </div>
 
-            <form v-if="isAdmin && showEditForm" class="mt-4 max-w-sm space-y-4 border-t border-white/10 pt-4" @submit.prevent="updateTournament">
+            <form v-if="can_manage && showEditForm" class="mt-4 max-w-sm space-y-4 border-t border-white/10 pt-4" @submit.prevent="updateTournament">
                 <div>
                     <label class="mb-1 block text-sm font-medium text-zinc-300">Nombre</label>
                     <input
@@ -417,7 +418,7 @@ function isMyMatch(match) {
                                 <span class="text-xs text-zinc-500">vs</span>
                                 <span :class="match.winner_entry_id === match.entry_two_id ? 'font-bold text-bx-cyan' : 'text-zinc-200'">{{ match.entry_two_nickname }}</span>
                             </div>
-                            <div v-if="isAdmin && !match.winner_entry_id" class="flex gap-2">
+                            <div v-if="can_manage && !match.winner_entry_id" class="flex gap-2">
                                 <button type="button" class="rounded border border-white/15 px-2 py-1 text-xs font-semibold transition hover:border-bx-cyan hover:text-bx-cyan" @click="reportWinner(match.id, match.entry_one_id)">
                                     {{ match.entry_one_nickname }} gana
                                 </button>
@@ -425,7 +426,7 @@ function isMyMatch(match) {
                                     {{ match.entry_two_nickname }} gana
                                 </button>
                             </div>
-                            <div v-else-if="isAdmin && match.winner_entry_id" class="flex flex-wrap items-center gap-2">
+                            <div v-else-if="can_manage && match.winner_entry_id" class="flex flex-wrap items-center gap-2">
                                 <button
                                     v-if="editingMatchId !== match.id"
                                     type="button"
@@ -450,7 +451,7 @@ function isMyMatch(match) {
                     </div>
                 </div>
 
-                <template v-if="isAdmin">
+                <template v-if="can_manage">
                     <button
                         v-if="tournament.status === 'swiss' && tournament.current_round < tournament.swiss_rounds"
                         type="button"

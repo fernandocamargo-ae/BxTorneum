@@ -21,19 +21,19 @@ class TournamentUpdateTest extends TestCase
 
     public function test_guests_are_redirected_to_login(): void
     {
-        $this->registrationTournament();
+        $tournament = $this->registrationTournament();
 
-        $this->patch('/tournament', ['name' => 'Copa Y', 'swiss_rounds' => 2, 'cut_size' => 2])
+        $this->patch("/tournament/{$tournament->id}", ['name' => 'Copa Y', 'swiss_rounds' => 2, 'cut_size' => 2])
             ->assertRedirect('/login');
     }
 
     public function test_non_admin_cannot_edit_the_tournament(): void
     {
-        $this->registrationTournament();
+        $tournament = $this->registrationTournament();
         $user = User::factory()->create(['is_admin' => false]);
 
         $this->actingAs($user)
-            ->patch('/tournament', ['name' => 'Copa Y', 'swiss_rounds' => 2, 'cut_size' => 2])
+            ->patch("/tournament/{$tournament->id}", ['name' => 'Copa Y', 'swiss_rounds' => 2, 'cut_size' => 2])
             ->assertForbidden();
     }
 
@@ -43,7 +43,7 @@ class TournamentUpdateTest extends TestCase
         $admin = User::factory()->create(['is_admin' => true]);
 
         $this->actingAs($admin)
-            ->patch('/tournament', ['name' => 'Copa Y', 'swiss_rounds' => 5, 'cut_size' => 8])
+            ->patch("/tournament/{$tournament->id}", ['name' => 'Copa Y', 'swiss_rounds' => 5, 'cut_size' => 8])
             ->assertRedirect();
 
         $this->assertDatabaseHas('tournaments', [
@@ -58,7 +58,7 @@ class TournamentUpdateTest extends TestCase
         $admin = User::factory()->create(['is_admin' => true]);
 
         $this->actingAs($admin)
-            ->patch('/tournament', ['name' => 'Copa Y', 'swiss_rounds' => 5, 'cut_size' => 8])
+            ->patch("/tournament/{$tournament->id}", ['name' => 'Copa Y', 'swiss_rounds' => 5, 'cut_size' => 8])
             ->assertStatus(422);
 
         $this->assertDatabaseHas('tournaments', ['id' => $tournament->id, 'name' => 'Copa X']);
@@ -66,11 +66,11 @@ class TournamentUpdateTest extends TestCase
 
     public function test_cut_size_must_be_a_power_of_two(): void
     {
-        $this->registrationTournament();
+        $tournament = $this->registrationTournament();
         $admin = User::factory()->create(['is_admin' => true]);
 
         $this->actingAs($admin)
-            ->patch('/tournament', ['name' => 'Copa Y', 'swiss_rounds' => 3, 'cut_size' => 5])
+            ->patch("/tournament/{$tournament->id}", ['name' => 'Copa Y', 'swiss_rounds' => 3, 'cut_size' => 5])
             ->assertSessionHasErrors('cut_size');
     }
 }

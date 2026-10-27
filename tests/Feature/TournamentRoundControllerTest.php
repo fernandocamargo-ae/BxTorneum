@@ -21,8 +21,13 @@ class TournamentRoundControllerTest extends TestCase
 
     public function test_non_admin_cannot_generate_a_round(): void
     {
+        $tournament = Tournament::create([
+            'name' => 'Copa X', 'status' => 'registration', 'swiss_rounds' => 2, 'cut_size' => 2,
+            'current_round' => 0, 'created_by_user_id' => User::factory()->create()->id,
+        ]);
+
         $this->actingAs(User::factory()->create(['is_admin' => false]))
-            ->post('/tournament/rounds')
+            ->post("/tournament/{$tournament->id}/rounds")
             ->assertForbidden();
     }
 
@@ -36,7 +41,7 @@ class TournamentRoundControllerTest extends TestCase
         $this->makeEntry($tournament);
 
         $this->actingAs(User::factory()->create(['is_admin' => true]))
-            ->post('/tournament/rounds')
+            ->post("/tournament/{$tournament->id}/rounds")
             ->assertRedirect();
 
         $tournament->refresh();
@@ -57,7 +62,7 @@ class TournamentRoundControllerTest extends TestCase
         $round->matches()->create(['entry_one_id' => $a->id, 'entry_two_id' => $b->id]); // no winner yet
 
         $this->actingAs(User::factory()->create(['is_admin' => true]))
-            ->post('/tournament/rounds')
+            ->post("/tournament/{$tournament->id}/rounds")
             ->assertStatus(422);
     }
 
@@ -73,7 +78,7 @@ class TournamentRoundControllerTest extends TestCase
         $round->matches()->create(['entry_one_id' => $a->id, 'entry_two_id' => $b->id, 'winner_entry_id' => $a->id]);
 
         $this->actingAs(User::factory()->create(['is_admin' => true]))
-            ->post('/tournament/rounds')
+            ->post("/tournament/{$tournament->id}/rounds")
             ->assertRedirect();
 
         $tournament->refresh();
@@ -93,7 +98,7 @@ class TournamentRoundControllerTest extends TestCase
         $round->matches()->create(['entry_one_id' => $a->id, 'entry_two_id' => $b->id, 'winner_entry_id' => $a->id]);
 
         $this->actingAs(User::factory()->create(['is_admin' => true]))
-            ->post('/tournament/rounds')
+            ->post("/tournament/{$tournament->id}/rounds")
             ->assertStatus(422);
     }
 
@@ -112,7 +117,7 @@ class TournamentRoundControllerTest extends TestCase
         $round->matches()->create(['entry_one_id' => $c->id, 'entry_two_id' => $d->id, 'winner_entry_id' => $c->id]);
 
         $this->actingAs(User::factory()->create(['is_admin' => true]))
-            ->post('/tournament/rounds')
+            ->post("/tournament/{$tournament->id}/rounds")
             ->assertRedirect();
 
         $tournament->refresh();
@@ -135,7 +140,7 @@ class TournamentRoundControllerTest extends TestCase
         $round->matches()->create(['entry_one_id' => $a->id, 'entry_two_id' => $b->id, 'winner_entry_id' => $a->id]);
 
         $this->actingAs(User::factory()->create(['is_admin' => true]))
-            ->post('/tournament/rounds')
+            ->post("/tournament/{$tournament->id}/rounds")
             ->assertStatus(422);
     }
 }

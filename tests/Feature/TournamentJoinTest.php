@@ -33,7 +33,7 @@ class TournamentJoinTest extends TestCase
         $tournament = $this->openTournament();
         $user = User::factory()->create();
 
-        $this->actingAs($user)->post('/tournament/join')->assertStatus(422);
+        $this->actingAs($user)->post("/tournament/{$tournament->id}/join")->assertStatus(422);
         $this->assertDatabaseCount('tournament_entries', 0);
     }
 
@@ -43,7 +43,7 @@ class TournamentJoinTest extends TestCase
         $user = User::factory()->create();
         $user->decks()->create(['name' => 'Vacío', 'visibility' => 'private', 'is_tournament_deck' => true]);
 
-        $this->actingAs($user)->post('/tournament/join')->assertStatus(422);
+        $this->actingAs($user)->post("/tournament/{$tournament->id}/join")->assertStatus(422);
         $this->assertDatabaseCount('tournament_entries', 0);
     }
 
@@ -53,7 +53,7 @@ class TournamentJoinTest extends TestCase
         $user = User::factory()->create();
         $deck = $this->tournamentDeckWithACombo($user);
 
-        $this->actingAs($user)->post('/tournament/join')->assertRedirect();
+        $this->actingAs($user)->post("/tournament/{$tournament->id}/join")->assertRedirect();
 
         $this->assertDatabaseHas('tournament_entries', [
             'tournament_id' => $tournament->id, 'user_id' => $user->id, 'deck_id' => $deck->id,
@@ -66,8 +66,8 @@ class TournamentJoinTest extends TestCase
         $user = User::factory()->create();
         $this->tournamentDeckWithACombo($user);
 
-        $this->actingAs($user)->post('/tournament/join');
-        $this->actingAs($user)->post('/tournament/join')->assertStatus(422);
+        $this->actingAs($user)->post("/tournament/{$tournament->id}/join");
+        $this->actingAs($user)->post("/tournament/{$tournament->id}/join")->assertStatus(422);
 
         $this->assertDatabaseCount('tournament_entries', 1);
     }
@@ -79,6 +79,6 @@ class TournamentJoinTest extends TestCase
         $user = User::factory()->create();
         $this->tournamentDeckWithACombo($user);
 
-        $this->actingAs($user)->post('/tournament/join')->assertStatus(422);
+        $this->actingAs($user)->post("/tournament/{$tournament->id}/join")->assertStatus(422);
     }
 }
