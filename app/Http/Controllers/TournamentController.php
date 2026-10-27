@@ -227,7 +227,8 @@ class TournamentController extends Controller
 
     public function history()
     {
-        $tournaments = Tournament::where('status', 'completed')
+        $tournaments = Tournament::where('type', 'official')
+            ->where('status', 'completed')
             ->with('champion.user:id,nickname')
             ->withCount('entries')
             ->orderByDesc('created_at')

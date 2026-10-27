@@ -46,6 +46,7 @@ Route::middleware('auth')->group(function () {
     // Static tournament routes must be registered before /tournament/{tournament}
     // so literal segments ("history", "matches") aren't captured as a model binding.
     Route::post('/tournament', [TournamentController::class, 'store'])->name('tournament.store');
+    Route::post('/tournament/clandestinos', [TournamentController::class, 'storeClandestine'])->name('tournament.clandestinos.store');
     Route::get('/tournament', [TournamentController::class, 'show'])->name('tournament.show');
     Route::get('/tournament/history', [TournamentController::class, 'history'])->name('tournament.history');
     Route::get('/tournament/history/{tournament}', [TournamentController::class, 'historyShow'])->name('tournament.history.show');
