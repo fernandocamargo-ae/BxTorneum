@@ -17,7 +17,7 @@ class UserManagementController extends Controller
 
         $users = User::when(! $showGuests, fn ($query) => $query->where('is_guest', false))
             ->orderBy('nickname')
-            ->get(['id', 'name', 'nickname', 'avatar_path', 'email', 'is_admin', 'is_guest', 'is_owner']);
+            ->get(['id', 'name', 'nickname', 'avatar_path', 'email', 'is_admin', 'is_amateur', 'is_guest', 'is_owner']);
 
         return Inertia::render('Admin/Users', [
             'users' => $users,

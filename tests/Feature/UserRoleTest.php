@@ -75,6 +75,19 @@ class UserRoleTest extends TestCase
         $this->assertFalse($user->is_amateur);
     }
 
+    public function test_the_users_list_exposes_is_amateur_so_the_ui_can_show_the_role(): void
+    {
+        $owner = $this->owner();
+        User::factory()->create(['nickname' => 'Amy', 'is_admin' => false, 'is_amateur' => true, 'is_guest' => false]);
+
+        $this->actingAs($owner)
+            ->get('/admin/users')
+            ->assertInertia(fn ($page) => $page
+                ->where('users', fn ($users) => collect($users)
+                    ->firstWhere('nickname', 'Amy')['is_amateur'] === true)
+            );
+    }
+
     public function test_only_the_owner_can_set_roles(): void
     {
         $admin = User::factory()->create(['is_admin' => true]);
