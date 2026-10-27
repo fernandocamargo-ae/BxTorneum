@@ -116,8 +116,25 @@ function leave() {
     });
 }
 
-function generateRound() {
-    router.post('/tournament/rounds');
+function generateRound({ firstRound = false } = {}) {
+    const submit = () => router.post('/tournament/rounds');
+
+    if (firstRound) {
+        openConfirm({
+            title: 'Cerrar inscripción',
+            message: 'Se cerrará la inscripción y se generará la Ronda 1. ¿Quieres continuar?',
+            confirmLabel: 'Sí, generar ronda 1',
+            action: submit,
+        });
+        return;
+    }
+
+    openConfirm({
+        title: 'Pasar a la siguiente ronda',
+        message: 'Se va a pasar a la siguiente ronda. Verifica que todos los resultados de esta ronda estén bien antes de continuar, porque los emparejamientos se generan a partir de ellos.',
+        confirmLabel: 'Sí, siguiente ronda',
+        action: submit,
+    });
 }
 
 function cutToElimination() {
@@ -288,7 +305,7 @@ function isMyMatch(match) {
                 <button
                     type="button"
                     class="rounded-lg border border-white/15 px-4 py-2 text-sm font-semibold hover:border-bx-cyan hover:text-bx-cyan"
-                    @click="generateRound"
+                    @click="generateRound({ firstRound: true })"
                 >
                     Cerrar inscripción y generar ronda 1
                 </button>
@@ -438,7 +455,7 @@ function isMyMatch(match) {
                         v-if="tournament.status === 'swiss' && tournament.current_round < tournament.swiss_rounds"
                         type="button"
                         class="mt-4 block rounded-lg border border-white/15 px-4 py-2 text-sm font-semibold hover:border-bx-cyan hover:text-bx-cyan"
-                        @click="generateRound"
+                        @click="generateRound()"
                     >
                         Generar siguiente ronda
                     </button>
@@ -454,7 +471,7 @@ function isMyMatch(match) {
                         v-if="tournament.status === 'elimination' && current_round_matches.length > 1"
                         type="button"
                         class="mt-4 block rounded-lg border border-white/15 px-4 py-2 text-sm font-semibold hover:border-bx-cyan hover:text-bx-cyan"
-                        @click="generateRound"
+                        @click="generateRound()"
                     >
                         Generar siguiente ronda
                     </button>

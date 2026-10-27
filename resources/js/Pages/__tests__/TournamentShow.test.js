@@ -213,6 +213,64 @@ describe('Tournament/Show', () => {
         expect(router.patch).not.toHaveBeenCalled();
     });
 
+    it('asks an admin to confirm and verify results before generating the next round', async () => {
+        const { usePage, router } = await import('@inertiajs/vue3');
+        usePage.mockReturnValueOnce({ props: { auth: { user: { is_admin: true } } } });
+        router.post.mockClear();
+
+        const wrapper = mount(Show, {
+            props: {
+                tournament: { id: 1, name: 'Copa X', status: 'swiss', swiss_rounds: 3, cut_size: 4, current_round: 1, champion_nickname: null },
+                has_tournament_deck: true,
+                my_entry_id: null,
+                entries: [],
+                standings: [],
+                current_round_matches: [
+                    { id: 10, entry_one_id: 5, entry_one_nickname: 'Yo', entry_two_id: 6, entry_two_nickname: 'Rival', winner_entry_id: 5, is_bye: false },
+                ],
+            },
+        });
+
+        const generateButton = wrapper.findAll('button').find((b) => b.text() === 'Generar siguiente ronda');
+        await generateButton.trigger('click');
+
+        // The round is not generated until the warning is confirmed.
+        expect(router.post).not.toHaveBeenCalled();
+        expect(wrapper.text()).toContain('Verifica que todos los resultados');
+
+        const confirmButton = wrapper.findAll('button').find((b) => b.text() === 'Sí, siguiente ronda');
+        await confirmButton.trigger('click');
+
+        expect(router.post).toHaveBeenCalledWith('/tournament/rounds');
+    });
+
+    it('does not generate the next round when the warning dialog is cancelled', async () => {
+        const { usePage, router } = await import('@inertiajs/vue3');
+        usePage.mockReturnValueOnce({ props: { auth: { user: { is_admin: true } } } });
+        router.post.mockClear();
+
+        const wrapper = mount(Show, {
+            props: {
+                tournament: { id: 1, name: 'Copa X', status: 'swiss', swiss_rounds: 3, cut_size: 4, current_round: 1, champion_nickname: null },
+                has_tournament_deck: true,
+                my_entry_id: null,
+                entries: [],
+                standings: [],
+                current_round_matches: [
+                    { id: 10, entry_one_id: 5, entry_one_nickname: 'Yo', entry_two_id: 6, entry_two_nickname: 'Rival', winner_entry_id: 5, is_bye: false },
+                ],
+            },
+        });
+
+        const generateButton = wrapper.findAll('button').find((b) => b.text() === 'Generar siguiente ronda');
+        await generateButton.trigger('click');
+
+        const cancelButton = wrapper.findAll('button').find((b) => b.text() === 'Cancelar');
+        await cancelButton.trigger('click');
+
+        expect(router.post).not.toHaveBeenCalled();
+    });
+
     it('shows the champion banner when completed', () => {
         const wrapper = mount(Show, {
             props: {
