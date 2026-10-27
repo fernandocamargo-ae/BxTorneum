@@ -8,10 +8,10 @@ defineProps({
 });
 
 const page = usePage();
-// Any signed-in user who isn't an ephemeral guest can start a clandestine tournament.
+// Only amateurs and admins can start a clandestine tournament; plain players and guests can't.
 const canCreate = computed(() => {
     const user = page.props.auth?.user;
-    return !!user && !user.is_guest;
+    return !!user && (user.is_admin || user.is_amateur);
 });
 
 const showForm = ref(false);

@@ -18,4 +18,18 @@ describe('Avatar', () => {
         expect(wrapper.find('img').exists()).toBe(false);
         expect(wrapper.text()).toBe('H');
     });
+
+    it('opens an enlarged view when the photo is clicked', async () => {
+        const wrapper = mount(Avatar, {
+            props: { nickname: 'Pipo', url: 'https://x/avatars/pipo.jpg' },
+            attachTo: document.body,
+        });
+
+        expect(document.querySelector('.cursor-zoom-out')).toBeNull();
+
+        await wrapper.find('img').trigger('click');
+
+        expect(document.querySelector('.cursor-zoom-out')).not.toBeNull();
+        wrapper.unmount();
+    });
 });

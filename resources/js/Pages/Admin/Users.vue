@@ -7,14 +7,22 @@ defineProps({
     show_guests: { type: Boolean, default: false },
 });
 
-function toggleAdmin(user) {
-    router.patch(`/admin/users/${user.id}/admin`, { value: !user.is_admin }, { preserveScroll: true });
+function currentRole(user) {
+    if (user.is_admin) return 'admin';
+    if (user.is_amateur) return 'amateur';
+    return 'jugador';
 }
 
 function roleLabel(user) {
     if (user.is_admin) return 'Admin';
+    if (user.is_amateur) return 'Amateur';
     if (user.is_guest) return 'Invitado';
-    return 'Amateur';
+    return 'Jugador';
+}
+
+function setRole(user, event) {
+    const role = event.target.value;
+    router.patch(`/admin/users/${user.id}/role`, { role }, { preserveScroll: true });
 }
 </script>
 
@@ -48,7 +56,7 @@ function roleLabel(user) {
                     <th class="pb-2">Jugador</th>
                     <th class="pb-2">Email</th>
                     <th class="pb-2">Rol</th>
-                    <th class="pb-2 text-right">Acción</th>
+                    <th class="pb-2 text-right">Cambiar rol</th>
                 </tr>
             </thead>
             <tbody>
@@ -68,19 +76,28 @@ function roleLabel(user) {
                     </td>
                     <td class="py-2 text-zinc-400">{{ user.email }}</td>
                     <td class="py-2">
-                        <span v-if="user.is_admin" class="text-bx-cyan">Admin</span>
-                        <span v-else-if="user.is_guest" class="text-zinc-500">Invitado</span>
-                        <span v-else class="text-zinc-300">Amateur</span>
+                        <span
+                            :class="{
+                                'text-bx-cyan': user.is_admin,
+                                'text-bx-magenta': !user.is_admin && user.is_amateur,
+                                'text-zinc-400': !user.is_admin && !user.is_amateur,
+                            }"
+                        >
+                            {{ roleLabel(user) }}
+                        </span>
                     </td>
                     <td class="py-2 text-right">
-                        <button
+                        <select
                             v-if="!user.is_owner"
-                            type="button"
-                            class="rounded border border-white/15 px-2 py-1 text-xs font-semibold transition hover:border-bx-cyan hover:text-bx-cyan"
-                            @click="toggleAdmin(user)"
+                            :value="currentRole(user)"
+                            class="rounded-md border border-white/15 bg-zinc-900 px-2 py-1 text-xs font-semibold text-zinc-200 outline-none focus:border-bx-cyan"
+                            @change="setRole(user, $event)"
                         >
-                            {{ user.is_admin ? 'Quitar admin' : 'Hacer admin' }}
-                        </button>
+                            <option value="jugador">Jugador</option>
+                            <option value="amateur">Amateur</option>
+                            <option value="admin">Admin</option>
+                        </select>
+                        <span v-else class="text-xs text-zinc-600">—</span>
                     </td>
                 </tr>
             </tbody>

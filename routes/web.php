@@ -72,6 +72,7 @@ Route::middleware('auth')->group(function () {
     Route::middleware('owner')->group(function () {
         Route::get('/admin/users', [UserManagementController::class, 'index'])->name('admin.users.index');
         Route::patch('/admin/users/{user}/admin', [UserManagementController::class, 'updateAdmin'])->name('admin.users.update-admin');
+        Route::patch('/admin/users/{user}/role', [UserManagementController::class, 'updateRole'])->name('admin.users.update-role');
     });
 });
 

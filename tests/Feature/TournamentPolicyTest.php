@@ -27,7 +27,7 @@ class TournamentPolicyTest extends TestCase
 
     public function test_non_admin_manages_clandestine_but_not_official(): void
     {
-        $amateur = $this->user(['is_admin' => false, 'is_guest' => false]);
+        $amateur = $this->user(['is_admin' => false, 'is_amateur' => true, 'is_guest' => false]);
 
         $this->assertTrue(Gate::forUser($amateur)->allows('manage', new Tournament(['type' => 'clandestine'])));
         $this->assertFalse(Gate::forUser($amateur)->allows('manage', new Tournament(['type' => 'official'])));
@@ -45,7 +45,7 @@ class TournamentPolicyTest extends TestCase
     public function test_create_permissions(): void
     {
         $admin = $this->user(['is_admin' => true, 'is_guest' => false]);
-        $amateur = $this->user(['is_admin' => false, 'is_guest' => false]);
+        $amateur = $this->user(['is_admin' => false, 'is_amateur' => true, 'is_guest' => false]);
 
         $this->assertTrue(Gate::forUser($admin)->allows('createOfficial', Tournament::class));
         $this->assertFalse(Gate::forUser($amateur)->allows('createOfficial', Tournament::class));

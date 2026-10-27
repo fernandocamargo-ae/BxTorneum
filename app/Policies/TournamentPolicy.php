@@ -19,7 +19,7 @@ class TournamentPolicy
 
         return $tournament->isOfficial()
             ? (bool) $user->is_admin
-            : ! $user->is_guest;
+            : $this->isAmateurOrAdmin($user);
     }
 
     public function createOfficial(?User $user): bool
@@ -29,6 +29,14 @@ class TournamentPolicy
 
     public function createClandestine(?User $user): bool
     {
-        return $user !== null && ! $user->is_guest;
+        return $user !== null && $this->isAmateurOrAdmin($user);
+    }
+
+    /**
+     * Amateurs and admins may run clandestine tournaments; plain players and guests may not.
+     */
+    private function isAmateurOrAdmin(User $user): bool
+    {
+        return ! $user->is_guest && ($user->is_admin || $user->is_amateur);
     }
 }

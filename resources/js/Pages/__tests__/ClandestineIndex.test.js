@@ -8,7 +8,7 @@ vi.mock('@inertiajs/vue3', () => ({
     Link: { props: ['href'], template: '<a :href="href"><slot/></a>' },
     Head: { template: '<div><slot/></div>' },
     useForm: (data) => ({ ...data, post: formPost, processing: false, errors: {} }),
-    usePage: vi.fn(() => ({ props: { auth: { user: { id: 1, is_guest: false } } } })),
+    usePage: vi.fn(() => ({ props: { auth: { user: { id: 1, is_guest: false, is_amateur: true } } } })),
 }));
 
 describe('Tournament/Clandestine/Index', () => {
@@ -33,9 +33,9 @@ describe('Tournament/Clandestine/Index', () => {
         expect(text).toContain('+ Crear torneo clandestino');
     });
 
-    it('hides the create button from a guest', async () => {
+    it('hides the create button from a plain player (jugador)', async () => {
         const { usePage } = await import('@inertiajs/vue3');
-        usePage.mockReturnValueOnce({ props: { auth: { user: { id: 2, is_guest: true } } } });
+        usePage.mockReturnValueOnce({ props: { auth: { user: { id: 2, is_guest: false, is_admin: false, is_amateur: false } } } });
 
         const wrapper = mount(Index, { props: { tournaments: [] } });
 

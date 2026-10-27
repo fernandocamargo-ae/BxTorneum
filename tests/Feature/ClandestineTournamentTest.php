@@ -22,7 +22,7 @@ class ClandestineTournamentTest extends TestCase
 
     private function amateur(): User
     {
-        return User::factory()->create(['is_admin' => false, 'is_guest' => false]);
+        return User::factory()->create(['is_admin' => false, 'is_amateur' => true, 'is_guest' => false]);
     }
 
     private function entryIn(Tournament $tournament, ?User $user = null): TournamentEntry

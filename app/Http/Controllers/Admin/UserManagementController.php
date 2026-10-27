@@ -36,4 +36,26 @@ class UserManagementController extends Controller
             $user->is_admin ? "\"{$user->nickname}\" ahora es admin." : "\"{$user->nickname}\" ya no es admin."
         );
     }
+
+    /**
+     * Set a user's role. Only the owner may do this (owner-middleware route).
+     * jugador = plays only; amateur = may run clandestine; admin = official + clandestine.
+     */
+    public function updateRole(Request $request, User $user): RedirectResponse
+    {
+        abort_if($user->is_owner, 422, 'No puedes cambiar el rol del dueño.');
+
+        $role = $request->validate([
+            'role' => ['required', 'in:jugador,amateur,admin'],
+        ])['role'];
+
+        $user->update([
+            'is_admin' => $role === 'admin',
+            'is_amateur' => $role === 'amateur',
+        ]);
+
+        $labels = ['jugador' => 'Jugador', 'amateur' => 'Amateur', 'admin' => 'Admin'];
+
+        return back()->with('success', "\"{$user->nickname}\" ahora es {$labels[$role]}.");
+    }
 }
