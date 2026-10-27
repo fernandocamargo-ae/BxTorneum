@@ -10,12 +10,19 @@ use Inertia\Inertia;
 
 class UserManagementController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $users = User::orderBy('nickname')
-            ->get(['id', 'name', 'nickname', 'email', 'is_admin', 'is_guest', 'is_owner']);
+        // Registered profiles only by default; guests appear only when explicitly requested.
+        $showGuests = $request->boolean('guests');
 
-        return Inertia::render('Admin/Users', ['users' => $users]);
+        $users = User::when(! $showGuests, fn ($query) => $query->where('is_guest', false))
+            ->orderBy('nickname')
+            ->get(['id', 'name', 'nickname', 'avatar_path', 'email', 'is_admin', 'is_guest', 'is_owner']);
+
+        return Inertia::render('Admin/Users', [
+            'users' => $users,
+            'show_guests' => $showGuests,
+        ]);
     }
 
     public function updateAdmin(Request $request, User $user): RedirectResponse

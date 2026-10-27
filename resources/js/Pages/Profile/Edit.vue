@@ -1,6 +1,7 @@
 <script setup>
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import DeleteUserForm from './Partials/DeleteUserForm.vue';
+import UpdateAvatarForm from './Partials/UpdateAvatarForm.vue';
 import UpdatePasswordForm from './Partials/UpdatePasswordForm.vue';
 import UpdateProfileInformationForm from './Partials/UpdateProfileInformationForm.vue';
 import { Head } from '@inertiajs/vue3';
@@ -22,6 +23,10 @@ defineProps({
         <template #header>Perfil</template>
 
         <div class="space-y-6">
+            <div class="rounded-lg border border-white/10 bg-zinc-900/50 p-4 sm:p-8">
+                <UpdateAvatarForm class="max-w-xl" />
+            </div>
+
             <div class="rounded-lg border border-white/10 bg-zinc-900/50 p-4 sm:p-8">
                 <UpdateProfileInformationForm
                     :must-verify-email="mustVerifyEmail"

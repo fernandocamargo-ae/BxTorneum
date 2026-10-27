@@ -4,6 +4,7 @@ import Users from '../Admin/Users.vue';
 
 vi.mock('@inertiajs/vue3', () => ({
     Head: { template: '<div><slot/></div>' },
+    Link: { props: ['href'], template: '<a :href="href"><slot/></a>' },
     router: { patch: vi.fn() },
 }));
 
@@ -23,7 +24,16 @@ describe('Admin/Users', () => {
         expect(wrapper.text()).toContain('Jugador1');
         expect(wrapper.text()).toContain('Juan Perez');
         expect(wrapper.text()).toContain('INVITADO');
+        expect(wrapper.text()).toContain('Amateur'); // non-admin registered users are labeled Amateur
         expect(wrapper.findAll('button')).toHaveLength(2); // one per non-owner user
+    });
+
+    it('shows a filter to view guests', () => {
+        const wrapper = mount(Users, { props: { users, show_guests: false } });
+
+        const links = wrapper.findAll('a').map((a) => a.text());
+        expect(links).toContain('Registrados');
+        expect(links).toContain('Ver invitados');
     });
 
     it('promotes a non-admin user to admin when clicked', async () => {

@@ -13,11 +13,12 @@ class PlayerController extends Controller
             ->whereHas('decks', fn ($q) => $q->where('is_tournament_deck', true))
             ->withCount(['decks as public_decks_count' => fn ($q) => $q->where('visibility', 'public')])
             ->orderBy('nickname')
-            ->get(['id', 'name', 'nickname'])
+            ->get(['id', 'name', 'nickname', 'avatar_path'])
             ->map(fn (User $user) => [
                 'id' => $user->id,
                 'name' => $user->name,
                 'nickname' => $user->nickname,
+                'avatar_url' => $user->avatar_url,
                 'public_decks_count' => $user->public_decks_count,
             ]);
 
@@ -42,7 +43,7 @@ class PlayerController extends Controller
             ]);
 
         return Inertia::render('Players/Show', [
-            'player' => ['id' => $user->id, 'name' => $user->name, 'nickname' => $user->nickname],
+            'player' => ['id' => $user->id, 'name' => $user->name, 'nickname' => $user->nickname, 'avatar_url' => $user->avatar_url],
             'decks' => $decks,
         ]);
     }

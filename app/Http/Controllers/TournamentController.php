@@ -178,7 +178,7 @@ class TournamentController extends Controller
             ]);
         }
 
-        $entries = $tournament->entries()->with('user:id,nickname')->get();
+        $entries = $tournament->entries()->with('user:id,nickname,avatar_path')->get();
         $myEntry = $entries->firstWhere('user_id', auth()->id());
 
         $standings = $tournament->status !== 'registration'
@@ -187,7 +187,7 @@ class TournamentController extends Controller
 
         $currentRound = $tournament->rounds()
             ->where('number', $tournament->current_round)
-            ->with('matches.entryOne.user:id,nickname', 'matches.entryTwo.user:id,nickname')
+            ->with('matches.entryOne.user:id,nickname,avatar_path', 'matches.entryTwo.user:id,nickname,avatar_path')
             ->first();
 
         return Inertia::render('Tournament/Show', [
@@ -209,6 +209,7 @@ class TournamentController extends Controller
             'entries' => $entries->map(fn ($entry) => [
                 'id' => $entry->id,
                 'nickname' => $entry->user->nickname,
+                'avatar_url' => $entry->user->avatar_url,
             ])->values(),
             'standings' => $standings,
             'current_round_matches' => $currentRound
@@ -216,8 +217,10 @@ class TournamentController extends Controller
                     'id' => $match->id,
                     'entry_one_id' => $match->entry_one_id,
                     'entry_one_nickname' => $match->entryOne->user->nickname,
+                    'entry_one_avatar' => $match->entryOne->user->avatar_url,
                     'entry_two_id' => $match->entry_two_id,
                     'entry_two_nickname' => $match->entryTwo?->user->nickname,
+                    'entry_two_avatar' => $match->entryTwo?->user->avatar_url,
                     'winner_entry_id' => $match->winner_entry_id,
                     'is_bye' => $match->is_bye,
                 ])->values()
@@ -328,9 +331,14 @@ class TournamentController extends Controller
     private function standingsWithNicknames(Tournament $tournament, $entries): array
     {
         $nicknames = $entries->pluck('user.nickname', 'id');
+        $avatars = $entries->pluck('user.avatar_url', 'id');
 
         return collect(TournamentStandings::forTournament($tournament))
-            ->map(fn ($row) => [...$row, 'nickname' => $nicknames[$row['entry_id']] ?? '?'])
+            ->map(fn ($row) => [
+                ...$row,
+                'nickname' => $nicknames[$row['entry_id']] ?? '?',
+                'avatar_url' => $avatars[$row['entry_id']] ?? null,
+            ])
             ->values()
             ->all();
     }

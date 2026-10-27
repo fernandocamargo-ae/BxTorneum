@@ -40,6 +40,20 @@ class User extends Authenticatable
     ];
 
     /**
+     * Expose the avatar URL wherever a user is serialized (nav, players, tournaments).
+     */
+    protected $appends = [
+        'avatar_url',
+    ];
+
+    public function getAvatarUrlAttribute(): ?string
+    {
+        return $this->avatar_path
+            ? \Illuminate\Support\Facades\Storage::disk('public')->url($this->avatar_path)
+            : null;
+    }
+
+    /**
      * Get the attributes that should be cast.
      *
      * @return array<string, string>

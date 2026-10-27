@@ -1,5 +1,6 @@
 <script setup>
 import { Head, Link } from '@inertiajs/vue3';
+import Avatar from '../../Components/Avatar.vue';
 import { SLOT_LABELS, LINES } from '../../lib/beybladeLines';
 
 defineProps({ player: Object, decks: { type: Array, default: () => [] } });
@@ -13,9 +14,12 @@ function lineLabel(value) {
     <Head :title="player.nickname" />
 
     <Link href="/players" class="text-sm text-zinc-400 hover:text-bx-cyan">← Jugadores</Link>
-    <h1 class="mb-6 mt-1 text-3xl font-black">
-        {{ player.nickname }} <span class="text-lg font-medium text-zinc-400">({{ player.name }})</span>
-    </h1>
+    <div class="mb-6 mt-1 flex items-center gap-4">
+        <Avatar :nickname="player.nickname" :url="player.avatar_url" size="h-16 w-16" text="text-2xl" />
+        <h1 class="text-3xl font-black">
+            {{ player.nickname }} <span class="text-lg font-medium text-zinc-400">({{ player.name }})</span>
+        </h1>
+    </div>
 
     <div v-if="decks.length" class="space-y-6">
         <section

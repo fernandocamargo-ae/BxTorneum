@@ -1,6 +1,7 @@
 <script setup>
 import { Head, Link, router, useForm, usePage } from '@inertiajs/vue3';
 import { computed, ref } from 'vue';
+import Avatar from '../../Components/Avatar.vue';
 import ConfirmDialog from '../../Components/ConfirmDialog.vue';
 import ReportExport from '../../Components/ReportExport.vue';
 import TournamentTabs from '../../Components/TournamentTabs.vue';
@@ -19,6 +20,8 @@ const props = defineProps({
 
 const page = usePage();
 const isAdmin = computed(() => !!page.props.auth?.user?.is_admin);
+const myNickname = computed(() => page.props.auth?.user?.nickname ?? 'Tú');
+const myAvatar = computed(() => page.props.auth?.user?.avatar_url ?? null);
 const isRegistered = computed(() => props.my_entry_id !== null);
 const showCreateForm = ref(false);
 const showEditForm = ref(false);
@@ -177,6 +180,11 @@ function opponentNickname(match) {
     return match.entry_one_id === props.my_entry_id ? match.entry_two_nickname : match.entry_one_nickname;
 }
 
+function opponentAvatar(match) {
+    if (!match) return null;
+    return match.entry_one_id === props.my_entry_id ? match.entry_two_avatar : match.entry_one_avatar;
+}
+
 function isMyMatch(match) {
     return props.my_entry_id !== null && (match.entry_one_id === props.my_entry_id || match.entry_two_id === props.my_entry_id);
 }
@@ -269,11 +277,7 @@ function isMyMatch(match) {
                     :key="entry.id"
                     class="flex items-center gap-3 rounded-lg border border-white/10 bg-zinc-950/50 px-3 py-2.5 transition hover:border-bx-cyan/50"
                 >
-                    <span
-                        class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-bx-cyan to-bx-magenta text-sm font-bold text-zinc-950"
-                    >
-                        {{ entry.nickname.charAt(0).toUpperCase() }}
-                    </span>
+                    <Avatar :nickname="entry.nickname" :url="entry.avatar_url" size="h-8 w-8" />
                     <span class="min-w-0 flex-1 truncate text-sm font-medium text-zinc-200">{{ entry.nickname }}</span>
                     <button
                         v-if="can_manage"
@@ -386,16 +390,12 @@ function isMyMatch(match) {
                 <p class="mb-4 text-center text-xs font-bold uppercase tracking-widest text-zinc-400">Tu duelo esta ronda</p>
                 <div class="flex items-center justify-center gap-4 sm:gap-10">
                     <div class="flex flex-col items-center gap-2">
-                        <span class="flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-bx-cyan to-bx-magenta text-xl font-black text-zinc-950">
-                            TÚ
-                        </span>
+                        <Avatar :nickname="myNickname" :url="myAvatar" size="h-16 w-16" text="text-xl" />
                         <span class="text-sm font-bold text-zinc-100">Tú</span>
                     </div>
                     <span class="bx-gradient-text text-xl font-black">VS</span>
                     <div class="flex flex-col items-center gap-2">
-                        <span class="flex h-16 w-16 items-center justify-center rounded-full border-2 border-bx-cyan bg-zinc-800 text-xl font-black text-zinc-100">
-                            {{ opponentNickname(myMatch).charAt(0).toUpperCase() }}
-                        </span>
+                        <Avatar :nickname="opponentNickname(myMatch)" :url="opponentAvatar(myMatch)" size="h-16 w-16" text="text-xl" />
                         <span class="text-sm font-bold text-bx-cyan">{{ opponentNickname(myMatch) }}</span>
                     </div>
                 </div>
@@ -511,9 +511,14 @@ function isMyMatch(match) {
                         :class="row.entry_id === my_entry_id ? 'bg-bx-cyan/5' : ''"
                     >
                         <td class="py-2 font-semibold" :class="i < 3 ? 'text-bx-cyan' : 'text-zinc-500'">{{ i + 1 }}</td>
-                        <td class="py-2 font-medium text-zinc-100">
-                            {{ row.nickname }}
-                            <span v-if="row.entry_id === my_entry_id" class="ml-1 text-xs font-normal text-bx-cyan">(tú)</span>
+                        <td class="py-2">
+                            <div class="flex items-center gap-2">
+                                <Avatar :nickname="row.nickname" :url="row.avatar_url" size="h-6 w-6" text="text-[10px]" />
+                                <span class="font-medium text-zinc-100">
+                                    {{ row.nickname }}
+                                    <span v-if="row.entry_id === my_entry_id" class="ml-1 text-xs font-normal text-bx-cyan">(tú)</span>
+                                </span>
+                            </div>
                         </td>
                         <td class="py-2 text-right font-bold text-zinc-100">{{ row.wins }}</td>
                     </tr>

@@ -1,4 +1,5 @@
 <script setup>
+import Avatar from '@/Components/Avatar.vue';
 import { Link, usePage } from '@inertiajs/vue3';
 import { computed, ref, watch } from 'vue';
 
@@ -31,8 +32,9 @@ watch(() => page.url, () => {
                         <Link href="/tournament/history" class="text-sm font-medium text-zinc-300 transition hover:text-bx-cyan">Historial</Link>
                         <Link href="/players" class="text-sm font-medium text-zinc-300 transition hover:text-bx-cyan">Jugadores</Link>
                         <Link v-if="user.is_owner" href="/admin/users" class="text-sm font-medium text-zinc-300 transition hover:text-bx-cyan">Usuarios</Link>
-                        <div class="flex items-center gap-2 rounded-full border border-white/10 bg-zinc-900/50 py-1 pl-3 pr-1">
-                            <Link href="/profile" class="text-sm font-medium text-zinc-200 transition hover:text-bx-cyan">
+                        <div class="flex items-center gap-2 rounded-full border border-white/10 bg-zinc-900/50 py-1 pl-1 pr-1">
+                            <Link href="/profile" class="flex items-center gap-2 text-sm font-medium text-zinc-200 transition hover:text-bx-cyan">
+                                <Avatar :nickname="user.nickname" :url="user.avatar_url" size="h-7 w-7" text="text-xs" />
                                 {{ user.nickname }}
                             </Link>
                             <Link
@@ -84,7 +86,8 @@ watch(() => page.url, () => {
                         <Link href="/players" class="rounded-lg px-3 py-2 text-sm font-medium text-zinc-300 hover:bg-white/5">Jugadores</Link>
                         <Link v-if="user.is_owner" href="/admin/users" class="rounded-lg px-3 py-2 text-sm font-medium text-zinc-300 hover:bg-white/5">Usuarios</Link>
                         <div class="my-1 border-t border-white/10"></div>
-                        <Link href="/profile" class="rounded-lg px-3 py-2 text-sm font-medium text-zinc-300 hover:bg-white/5">
+                        <Link href="/profile" class="flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-zinc-300 hover:bg-white/5">
+                            <Avatar :nickname="user.nickname" :url="user.avatar_url" size="h-7 w-7" text="text-xs" />
                             {{ user.nickname }} · Perfil
                         </Link>
                         <Link
