@@ -21,13 +21,13 @@ class TournamentCutTest extends TestCase
 
     public function test_non_admin_cannot_cut_to_elimination(): void
     {
-        Tournament::create([
+        $tournament = Tournament::create([
             'name' => 'Copa X', 'status' => 'swiss', 'swiss_rounds' => 1, 'cut_size' => 2,
             'current_round' => 1, 'created_by_user_id' => User::factory()->create()->id,
         ]);
 
         $this->actingAs(User::factory()->create(['is_admin' => false]))
-            ->post('/tournament/cut')
+            ->post("/tournament/{$tournament->id}/cut")
             ->assertForbidden();
     }
 
@@ -39,7 +39,7 @@ class TournamentCutTest extends TestCase
         ]);
 
         $this->actingAs(User::factory()->create(['is_admin' => true]))
-            ->post('/tournament/cut')
+            ->post("/tournament/{$tournament->id}/cut")
             ->assertStatus(422);
     }
 
@@ -55,7 +55,7 @@ class TournamentCutTest extends TestCase
         $round->matches()->create(['entry_one_id' => $a->id, 'entry_two_id' => $b->id]);
 
         $this->actingAs(User::factory()->create(['is_admin' => true]))
-            ->post('/tournament/cut')
+            ->post("/tournament/{$tournament->id}/cut")
             ->assertStatus(422);
     }
 
@@ -74,7 +74,7 @@ class TournamentCutTest extends TestCase
         $round->matches()->create(['entry_one_id' => $c->id, 'entry_two_id' => $d->id, 'winner_entry_id' => $c->id]);
 
         $this->actingAs(User::factory()->create(['is_admin' => true]))
-            ->post('/tournament/cut')
+            ->post("/tournament/{$tournament->id}/cut")
             ->assertRedirect();
 
         $tournament->refresh();
@@ -99,7 +99,7 @@ class TournamentCutTest extends TestCase
         $round->matches()->create(['entry_one_id' => $a->id, 'entry_two_id' => $b->id, 'winner_entry_id' => $a->id]);
 
         $this->actingAs(User::factory()->create(['is_admin' => true]))
-            ->post('/tournament/cut')
+            ->post("/tournament/{$tournament->id}/cut")
             ->assertStatus(422);
     }
 }

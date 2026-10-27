@@ -12,10 +12,12 @@ class TournamentMatchController extends Controller
 {
     public function update(Request $request, TournamentMatch $match): RedirectResponse
     {
-        abort_if($match->is_bye, 422, 'Un bye no se reporta.');
-
         $round = $match->round;
         $tournament = $round->tournament;
+
+        $this->authorize('manage', $tournament);
+
+        abort_if($match->is_bye, 422, 'Un bye no se reporta.');
 
         abort_unless(
             $round->number === $tournament->current_round,
@@ -44,7 +46,9 @@ class TournamentMatchController extends Controller
                     'champion_entry_id' => $winnerId,
                 ]);
 
-                if ($isFirstReport) {
+                // Only official tournaments end guest sessions: a clandestine finishing
+                // must not log out a guest who is still playing the official one.
+                if ($isFirstReport && $tournament->isOfficial()) {
                     $this->endGuestSessions($tournament);
                 }
             }

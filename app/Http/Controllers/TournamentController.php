@@ -17,14 +17,17 @@ class TournamentController extends Controller
 {
     public function store(StoreTournamentRequest $request): RedirectResponse
     {
+        $this->authorize('createOfficial', Tournament::class);
+
         abort_if(
-            Tournament::where('status', '!=', 'completed')->exists(),
+            Tournament::where('type', 'official')->where('status', '!=', 'completed')->exists(),
             422,
-            'Ya hay un torneo activo.'
+            'Ya hay un torneo oficial activo.'
         );
 
         $tournament = Tournament::create([
             'name' => $request->validated('name'),
+            'type' => 'official',
             'status' => 'registration',
             'swiss_rounds' => $request->validated('swiss_rounds'),
             'cut_size' => $request->validated('cut_size'),
@@ -35,9 +38,26 @@ class TournamentController extends Controller
         return redirect()->route('tournament.show')->with('success', "Torneo \"{$tournament->name}\" creado.");
     }
 
-    public function update(StoreTournamentRequest $request): RedirectResponse
+    public function storeClandestine(StoreTournamentRequest $request): RedirectResponse
     {
-        $tournament = Tournament::where('status', '!=', 'completed')->firstOrFail();
+        $this->authorize('createClandestine', Tournament::class);
+
+        $tournament = Tournament::create([
+            'name' => $request->validated('name'),
+            'type' => 'clandestine',
+            'status' => 'registration',
+            'swiss_rounds' => $request->validated('swiss_rounds'),
+            'cut_size' => $request->validated('cut_size'),
+            'current_round' => 0,
+            'created_by_user_id' => auth()->id(),
+        ]);
+
+        return redirect()->route('tournament.view', $tournament)->with('success', "Torneo \"{$tournament->name}\" creado.");
+    }
+
+    public function update(StoreTournamentRequest $request, Tournament $tournament): RedirectResponse
+    {
+        $this->authorize('manage', $tournament);
 
         abort_unless($tournament->status === 'registration', 422, 'Solo puedes editar el torneo mientras las inscripciones están abiertas.');
 
@@ -50,9 +70,9 @@ class TournamentController extends Controller
         return back()->with('success', "Torneo \"{$tournament->name}\" actualizado.");
     }
 
-    public function removeEntry(Request $request, TournamentEntry $entry): RedirectResponse
+    public function removeEntry(Request $request, Tournament $tournament, TournamentEntry $entry): RedirectResponse
     {
-        $tournament = Tournament::where('status', '!=', 'completed')->firstOrFail();
+        $this->authorize('manage', $tournament);
 
         abort_unless($tournament->status === 'registration', 422, 'Solo puedes quitar jugadores mientras las inscripciones están abiertas.');
         abort_unless($entry->tournament_id === $tournament->id, 404);
@@ -68,10 +88,8 @@ class TournamentController extends Controller
         return back()->with('success', $message);
     }
 
-    public function join(Request $request): RedirectResponse
+    public function join(Request $request, Tournament $tournament): RedirectResponse
     {
-        $tournament = Tournament::where('status', '!=', 'completed')->firstOrFail();
-
         abort_unless($tournament->status === 'registration', 422, 'Las inscripciones ya cerraron.');
 
         abort_if(
@@ -92,10 +110,8 @@ class TournamentController extends Controller
         return back()->with('success', 'Te uniste al torneo.');
     }
 
-    public function leave(): RedirectResponse
+    public function leave(Tournament $tournament): RedirectResponse
     {
-        $tournament = Tournament::where('status', '!=', 'completed')->firstOrFail();
-
         abort_unless($tournament->status === 'registration', 422, 'Ya no puedes salir del torneo; las inscripciones cerraron.');
 
         $entry = TournamentEntry::where('tournament_id', $tournament->id)->where('user_id', auth()->id())->first();
@@ -106,9 +122,9 @@ class TournamentController extends Controller
         return back()->with('success', 'Saliste del torneo. Puedes volver a unirte cuando quieras.');
     }
 
-    public function cut(): RedirectResponse
+    public function cut(Tournament $tournament): RedirectResponse
     {
-        $tournament = Tournament::where('status', '!=', 'completed')->firstOrFail();
+        $this->authorize('manage', $tournament);
 
         abort_unless($tournament->status === 'swiss', 422, 'El torneo no está en fase suiza.');
         abort_unless($tournament->current_round === $tournament->swiss_rounds, 422, 'Aún faltan rondas suizas por jugar.');
@@ -126,13 +142,25 @@ class TournamentController extends Controller
         $pairs = TournamentPairing::seedEliminationBracket($standings, $tournament->cut_size);
         TournamentRoundFactory::create($tournament, 'elimination', $pairs);
 
-        return redirect()->route('tournament.show')->with('success', 'Corte a eliminatorias generado.');
+        return $this->redirectToTournament($tournament)->with('success', 'Corte a eliminatorias generado.');
     }
 
-    public function show()
+    /**
+     * Keep the official tournament at /tournament (its tab), send clandestine ones to
+     * their own page, so neither loses its navigation context after an action.
+     */
+    public function redirectToTournament(Tournament $tournament): RedirectResponse
     {
-        $tournament = Tournament::where('status', '!=', 'completed')->latest()->first()
-            ?? Tournament::where('status', 'completed')->latest()->first();
+        return $tournament->isOfficial()
+            ? redirect()->route('tournament.show')
+            : redirect()->route('tournament.view', $tournament);
+    }
+
+    public function show(?Tournament $tournament = null)
+    {
+        // No id → the "Oficial" tab: the active official, else the last completed official.
+        $tournament ??= Tournament::where('type', 'official')->where('status', '!=', 'completed')->latest()->first()
+            ?? Tournament::where('type', 'official')->where('status', 'completed')->latest()->first();
 
         $tournamentDeck = $this->eligibleTournamentDeck();
 
@@ -146,6 +174,7 @@ class TournamentController extends Controller
                 'standings' => [],
                 'current_round_matches' => [],
                 'can_create_tournament' => true,
+                'can_manage' => false,
             ]);
         }
 
@@ -165,6 +194,7 @@ class TournamentController extends Controller
             'tournament' => [
                 'id' => $tournament->id,
                 'name' => $tournament->name,
+                'type' => $tournament->type,
                 'status' => $tournament->status,
                 'swiss_rounds' => $tournament->swiss_rounds,
                 'cut_size' => $tournament->cut_size,
@@ -173,7 +203,8 @@ class TournamentController extends Controller
             ],
             'has_tournament_deck' => (bool) $tournamentDeck,
             'tournament_deck' => $this->deckSummary($tournamentDeck),
-            'can_create_tournament' => $tournament->status === 'completed',
+            'can_create_tournament' => $tournament->isOfficial() && $tournament->status === 'completed',
+            'can_manage' => (bool) auth()->user()?->can('manage', $tournament),
             'my_entry_id' => $myEntry?->id,
             'entries' => $entries->map(fn ($entry) => [
                 'id' => $entry->id,
@@ -194,9 +225,30 @@ class TournamentController extends Controller
         ]);
     }
 
+    public function clandestineIndex()
+    {
+        $tournaments = Tournament::where('type', 'clandestine')
+            ->with('createdBy:id,nickname')
+            ->withCount('entries')
+            // Active tournaments first, then most recently created.
+            ->orderByRaw("CASE WHEN status = 'completed' THEN 1 ELSE 0 END")
+            ->orderByDesc('created_at')
+            ->get()
+            ->map(fn (Tournament $tournament) => [
+                'id' => $tournament->id,
+                'name' => $tournament->name,
+                'status' => $tournament->status,
+                'entries_count' => $tournament->entries_count,
+                'creator_nickname' => $tournament->createdBy?->nickname,
+            ]);
+
+        return Inertia::render('Tournament/Clandestine/Index', ['tournaments' => $tournaments]);
+    }
+
     public function history()
     {
-        $tournaments = Tournament::where('status', 'completed')
+        $tournaments = Tournament::where('type', 'official')
+            ->where('status', 'completed')
             ->with('champion.user:id,nickname')
             ->withCount('entries')
             ->orderByDesc('created_at')

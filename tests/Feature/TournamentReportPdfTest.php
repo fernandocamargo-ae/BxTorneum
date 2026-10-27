@@ -39,7 +39,7 @@ class TournamentReportPdfTest extends TestCase
         $this->joinedEntry($tournament, 'Ricardo', 'ricardox');
 
         $response = $this->actingAs($this->viewer())
-            ->postJson('/tournament/report/pdf', ['password' => 'secret123']);
+            ->postJson("/tournament/{$tournament->id}/report/pdf", ['password' => 'secret123']);
 
         $response->assertOk();
         $this->assertSame('application/pdf', $response->headers->get('content-type'));
@@ -69,25 +69,37 @@ class TournamentReportPdfTest extends TestCase
     public function test_rejects_wrong_password(): void
     {
         config(['report.password' => 'secret123']);
+        $tournament = Tournament::create([
+            'name' => 'X', 'status' => 'registration', 'swiss_rounds' => 3, 'cut_size' => 4,
+            'current_round' => 0, 'created_by_user_id' => User::factory()->create()->id,
+        ]);
 
         $this->actingAs($this->viewer())
-            ->postJson('/tournament/report/pdf', ['password' => 'nope'])->assertForbidden();
+            ->postJson("/tournament/{$tournament->id}/report/pdf", ['password' => 'nope'])->assertForbidden();
     }
 
     public function test_requires_password(): void
     {
         config(['report.password' => 'secret123']);
+        $tournament = Tournament::create([
+            'name' => 'X', 'status' => 'registration', 'swiss_rounds' => 3, 'cut_size' => 4,
+            'current_round' => 0, 'created_by_user_id' => User::factory()->create()->id,
+        ]);
 
         $this->actingAs($this->viewer())
-            ->postJson('/tournament/report/pdf', [])->assertStatus(422);
+            ->postJson("/tournament/{$tournament->id}/report/pdf", [])->assertStatus(422);
     }
 
     public function test_rejects_when_no_password_configured(): void
     {
         config(['report.password' => null]);
+        $tournament = Tournament::create([
+            'name' => 'X', 'status' => 'registration', 'swiss_rounds' => 3, 'cut_size' => 4,
+            'current_round' => 0, 'created_by_user_id' => User::factory()->create()->id,
+        ]);
 
         $this->actingAs($this->viewer())
-            ->postJson('/tournament/report/pdf', ['password' => 'anything'])->assertForbidden();
+            ->postJson("/tournament/{$tournament->id}/report/pdf", ['password' => 'anything'])->assertForbidden();
     }
 
     public function test_404s_when_there_is_no_tournament(): void
@@ -95,13 +107,17 @@ class TournamentReportPdfTest extends TestCase
         config(['report.password' => 'secret123']);
 
         $this->actingAs($this->viewer())
-            ->postJson('/tournament/report/pdf', ['password' => 'secret123'])->assertNotFound();
+            ->postJson('/tournament/999999/report/pdf', ['password' => 'secret123'])->assertNotFound();
     }
 
     public function test_guests_are_unauthorized(): void
     {
         config(['report.password' => 'secret123']);
+        $tournament = Tournament::create([
+            'name' => 'X', 'status' => 'registration', 'swiss_rounds' => 3, 'cut_size' => 4,
+            'current_round' => 0, 'created_by_user_id' => User::factory()->create()->id,
+        ]);
 
-        $this->postJson('/tournament/report/pdf', ['password' => 'secret123'])->assertUnauthorized();
+        $this->postJson("/tournament/{$tournament->id}/report/pdf", ['password' => 'secret123'])->assertUnauthorized();
     }
 }

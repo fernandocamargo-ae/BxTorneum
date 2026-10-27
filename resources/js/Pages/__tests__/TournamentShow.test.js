@@ -42,7 +42,7 @@ describe('Tournament/Show', () => {
         const confirmButton = wrapper.findAll('button').find((b) => b.text() === 'Sí, unirme');
         await confirmButton.trigger('click');
 
-        expect(router.post).toHaveBeenCalledWith('/tournament/join');
+        expect(router.post).toHaveBeenCalledWith('/tournament/1/join');
     });
 
     it('does not join when the deck confirmation dialog is cancelled', async () => {
@@ -104,7 +104,7 @@ describe('Tournament/Show', () => {
         expect(wrapper.text()).toContain('Rival');
     });
 
-    it('shows every pairing to a non-admin player, but no report/advance buttons', () => {
+    it('shows every pairing to a player without manage rights, but no report/advance buttons', () => {
         const wrapper = mount(Show, {
             props: {
                 tournament: { id: 1, name: 'Copa X', status: 'swiss', swiss_rounds: 3, cut_size: 4, current_round: 1, champion_nickname: null },
@@ -112,6 +112,7 @@ describe('Tournament/Show', () => {
                 my_entry_id: 5,
                 entries: [],
                 standings: [],
+                can_manage: false,
                 current_round_matches: [
                     { id: 10, entry_one_id: 5, entry_one_nickname: 'Yo', entry_two_id: 6, entry_two_nickname: 'Rival', winner_entry_id: null, is_bye: false },
                     { id: 11, entry_one_id: 7, entry_one_nickname: 'Otro', entry_two_id: 8, entry_two_nickname: 'Mas', winner_entry_id: null, is_bye: false },
@@ -127,9 +128,8 @@ describe('Tournament/Show', () => {
         expect(wrapper.text()).not.toContain('Generar siguiente ronda');
     });
 
-    it('lets an admin report a result for an unplayed match directly, without a confirmation dialog', async () => {
-        const { usePage, router } = await import('@inertiajs/vue3');
-        usePage.mockReturnValueOnce({ props: { auth: { user: { is_admin: true } } } });
+    it('lets a manager report a result for an unplayed match directly, without a confirmation dialog', async () => {
+        const { router } = await import('@inertiajs/vue3');
         router.patch.mockClear();
 
         const wrapper = mount(Show, {
@@ -139,6 +139,7 @@ describe('Tournament/Show', () => {
                 my_entry_id: null,
                 entries: [],
                 standings: [],
+                can_manage: true,
                 current_round_matches: [
                     { id: 10, entry_one_id: 5, entry_one_nickname: 'Yo', entry_two_id: 6, entry_two_nickname: 'Rival', winner_entry_id: null, is_bye: false },
                 ],
@@ -151,9 +152,8 @@ describe('Tournament/Show', () => {
         expect(router.patch).toHaveBeenCalledWith('/tournament/matches/10', { winner_entry_id: 5 }, expect.any(Object));
     });
 
-    it('lets an admin correct an already-reported result after confirming in the dialog', async () => {
-        const { usePage, router } = await import('@inertiajs/vue3');
-        usePage.mockReturnValueOnce({ props: { auth: { user: { is_admin: true } } } });
+    it('lets a manager correct an already-reported result after confirming in the dialog', async () => {
+        const { router } = await import('@inertiajs/vue3');
         router.patch.mockClear();
 
         const wrapper = mount(Show, {
@@ -163,6 +163,7 @@ describe('Tournament/Show', () => {
                 my_entry_id: null,
                 entries: [],
                 standings: [],
+                can_manage: true,
                 current_round_matches: [
                     { id: 10, entry_one_id: 5, entry_one_nickname: 'Yo', entry_two_id: 6, entry_two_nickname: 'Rival', winner_entry_id: 5, is_bye: false },
                 ],
@@ -184,8 +185,7 @@ describe('Tournament/Show', () => {
     });
 
     it('does not correct a result when the correction dialog is cancelled', async () => {
-        const { usePage, router } = await import('@inertiajs/vue3');
-        usePage.mockReturnValueOnce({ props: { auth: { user: { is_admin: true } } } });
+        const { router } = await import('@inertiajs/vue3');
         router.patch.mockClear();
 
         const wrapper = mount(Show, {
@@ -195,6 +195,7 @@ describe('Tournament/Show', () => {
                 my_entry_id: null,
                 entries: [],
                 standings: [],
+                can_manage: true,
                 current_round_matches: [
                     { id: 10, entry_one_id: 5, entry_one_nickname: 'Yo', entry_two_id: 6, entry_two_nickname: 'Rival', winner_entry_id: 5, is_bye: false },
                 ],
@@ -213,9 +214,8 @@ describe('Tournament/Show', () => {
         expect(router.patch).not.toHaveBeenCalled();
     });
 
-    it('asks an admin to confirm and verify results before generating the next round', async () => {
-        const { usePage, router } = await import('@inertiajs/vue3');
-        usePage.mockReturnValueOnce({ props: { auth: { user: { is_admin: true } } } });
+    it('asks a manager to confirm and verify results before generating the next round', async () => {
+        const { router } = await import('@inertiajs/vue3');
         router.post.mockClear();
 
         const wrapper = mount(Show, {
@@ -225,6 +225,7 @@ describe('Tournament/Show', () => {
                 my_entry_id: null,
                 entries: [],
                 standings: [],
+                can_manage: true,
                 current_round_matches: [
                     { id: 10, entry_one_id: 5, entry_one_nickname: 'Yo', entry_two_id: 6, entry_two_nickname: 'Rival', winner_entry_id: 5, is_bye: false },
                 ],
@@ -241,12 +242,11 @@ describe('Tournament/Show', () => {
         const confirmButton = wrapper.findAll('button').find((b) => b.text() === 'Sí, siguiente ronda');
         await confirmButton.trigger('click');
 
-        expect(router.post).toHaveBeenCalledWith('/tournament/rounds');
+        expect(router.post).toHaveBeenCalledWith('/tournament/1/rounds');
     });
 
     it('does not generate the next round when the warning dialog is cancelled', async () => {
-        const { usePage, router } = await import('@inertiajs/vue3');
-        usePage.mockReturnValueOnce({ props: { auth: { user: { is_admin: true } } } });
+        const { router } = await import('@inertiajs/vue3');
         router.post.mockClear();
 
         const wrapper = mount(Show, {
@@ -256,6 +256,7 @@ describe('Tournament/Show', () => {
                 my_entry_id: null,
                 entries: [],
                 standings: [],
+                can_manage: true,
                 current_round_matches: [
                     { id: 10, entry_one_id: 5, entry_one_nickname: 'Yo', entry_two_id: 6, entry_two_nickname: 'Rival', winner_entry_id: 5, is_bye: false },
                 ],
@@ -332,10 +333,7 @@ describe('Tournament/Show', () => {
         expect(wrapper.findAll('form').length).toBe(0);
     });
 
-    it('reveals the edit-tournament form for an admin during registration', async () => {
-        const { usePage } = await import('@inertiajs/vue3');
-        usePage.mockReturnValueOnce({ props: { auth: { user: { is_admin: true } } } });
-
+    it('reveals the edit-tournament form for a manager during registration', async () => {
         const wrapper = mount(Show, {
             props: {
                 tournament: { id: 1, name: 'Copa X', status: 'registration', swiss_rounds: 3, cut_size: 4, current_round: 0, champion_nickname: null },
@@ -343,6 +341,7 @@ describe('Tournament/Show', () => {
                 my_entry_id: null,
                 entries: [],
                 standings: [],
+                can_manage: true,
                 current_round_matches: [],
             },
         });
@@ -356,7 +355,7 @@ describe('Tournament/Show', () => {
         expect(wrapper.findAll('form').length).toBe(1);
     });
 
-    it('hides the "Editar torneo" and "Quitar" controls from a non-admin', () => {
+    it('hides the "Editar torneo" and "Quitar" controls from a player without manage rights', () => {
         const wrapper = mount(Show, {
             props: {
                 tournament: { id: 1, name: 'Copa X', status: 'registration', swiss_rounds: 3, cut_size: 4, current_round: 0, champion_nickname: null },
@@ -364,6 +363,7 @@ describe('Tournament/Show', () => {
                 my_entry_id: null,
                 entries: [{ id: 1, nickname: 'Jugador1' }],
                 standings: [],
+                can_manage: false,
                 current_round_matches: [],
             },
         });
@@ -372,9 +372,8 @@ describe('Tournament/Show', () => {
         expect(wrapper.text()).not.toContain('Quitar');
     });
 
-    it('lets an admin remove a participant, sending the reason typed into the dialog', async () => {
-        const { usePage, router } = await import('@inertiajs/vue3');
-        usePage.mockReturnValueOnce({ props: { auth: { user: { is_admin: true } } } });
+    it('lets a manager remove a participant, sending the reason typed into the dialog', async () => {
+        const { router } = await import('@inertiajs/vue3');
         router.visit.mockClear();
 
         const wrapper = mount(Show, {
@@ -384,6 +383,7 @@ describe('Tournament/Show', () => {
                 my_entry_id: null,
                 entries: [{ id: 7, nickname: 'Jugador1' }],
                 standings: [],
+                can_manage: true,
                 current_round_matches: [],
             },
         });
@@ -399,7 +399,7 @@ describe('Tournament/Show', () => {
         const confirmButton = wrapper.findAll('button').find((b) => b.text() === 'Sí, quitar');
         await confirmButton.trigger('click');
 
-        expect(router.visit).toHaveBeenCalledWith('/tournament/entries/7', {
+        expect(router.visit).toHaveBeenCalledWith('/tournament/1/entries/7', {
             method: 'delete',
             data: { reason: 'Se salió del torneo' },
             preserveScroll: true,
@@ -407,8 +407,7 @@ describe('Tournament/Show', () => {
     });
 
     it('does not remove a participant when the dialog is cancelled', async () => {
-        const { usePage, router } = await import('@inertiajs/vue3');
-        usePage.mockReturnValueOnce({ props: { auth: { user: { is_admin: true } } } });
+        const { router } = await import('@inertiajs/vue3');
         router.visit.mockClear();
 
         const wrapper = mount(Show, {
@@ -418,6 +417,7 @@ describe('Tournament/Show', () => {
                 my_entry_id: null,
                 entries: [{ id: 7, nickname: 'Jugador1' }],
                 standings: [],
+                can_manage: true,
                 current_round_matches: [],
             },
         });
@@ -456,7 +456,7 @@ describe('Tournament/Show', () => {
         const confirmButton = wrapper.findAll('button').find((b) => b.text() === 'Sí, salir');
         await confirmButton.trigger('click');
 
-        expect(router.delete).toHaveBeenCalledWith('/tournament/leave', { preserveScroll: true });
+        expect(router.delete).toHaveBeenCalledWith('/tournament/1/leave', { preserveScroll: true });
     });
 
     it('does not leave the tournament when the dialog is cancelled', async () => {

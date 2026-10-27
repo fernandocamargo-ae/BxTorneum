@@ -25,14 +25,16 @@ class TournamentFullSimulationTest extends TestCase
             ->post('/tournament', ['name' => 'Copa X', 'swiss_rounds' => 3, 'cut_size' => 4])
             ->assertRedirect();
 
+        $tournament = Tournament::firstOrFail();
+
         foreach ($players as $player) {
-            $this->actingAs($player)->post('/tournament/join')->assertRedirect();
+            $this->actingAs($player)->post("/tournament/{$tournament->id}/join")->assertRedirect();
         }
 
         // Three Swiss rounds: after each, report every match by declaring entry_one the winner
         // (arbitrary but deterministic), then generate the next round.
         for ($round = 1; $round <= 3; $round++) {
-            $this->actingAs($admin)->post('/tournament/rounds')->assertRedirect();
+            $this->actingAs($admin)->post("/tournament/{$tournament->id}/rounds")->assertRedirect();
 
             $tournament = Tournament::where('status', '!=', 'completed')->firstOrFail();
             $currentRound = $tournament->rounds()->where('number', $round)->firstOrFail();
@@ -51,7 +53,7 @@ class TournamentFullSimulationTest extends TestCase
         $this->assertSame('swiss', $tournament->status);
         $this->assertSame(3, $tournament->current_round);
 
-        $this->actingAs($admin)->post('/tournament/cut')->assertRedirect();
+        $this->actingAs($admin)->post("/tournament/{$tournament->id}/cut")->assertRedirect();
 
         $tournament->refresh();
         $this->assertSame('elimination', $tournament->status);
@@ -66,7 +68,7 @@ class TournamentFullSimulationTest extends TestCase
                 ->assertRedirect();
         }
 
-        $this->actingAs($admin)->post('/tournament/rounds')->assertRedirect();
+        $this->actingAs($admin)->post("/tournament/{$tournament->id}/rounds")->assertRedirect();
 
         $tournament->refresh();
         $this->assertSame(5, $tournament->current_round);
@@ -85,6 +87,8 @@ class TournamentFullSimulationTest extends TestCase
         $this->assertSame($finalMatch->entry_one_id, $tournament->champion_entry_id);
 
         // No further round can be generated once the tournament is completed.
-        $this->actingAs($admin)->post('/tournament/rounds')->assertStatus(404);
+        // Per-id routing binds the completed tournament, so the controller rejects it
+        // with 422 ("El torneo ya terminó") instead of the old 404 (no active tournament).
+        $this->actingAs($admin)->post("/tournament/{$tournament->id}/rounds")->assertStatus(422);
     }
 }

@@ -33,7 +33,7 @@ class TournamentEntryRemovalTest extends TestCase
         $tournament = $this->registrationTournament();
         $entry = $this->entryFor($tournament, User::factory()->create());
 
-        $this->delete("/tournament/entries/{$entry->id}")->assertRedirect('/login');
+        $this->delete("/tournament/{$tournament->id}/entries/{$entry->id}")->assertRedirect('/login');
     }
 
     public function test_non_admin_cannot_remove_a_participant(): void
@@ -42,7 +42,7 @@ class TournamentEntryRemovalTest extends TestCase
         $entry = $this->entryFor($tournament, User::factory()->create());
         $user = User::factory()->create(['is_admin' => false]);
 
-        $this->actingAs($user)->delete("/tournament/entries/{$entry->id}")->assertForbidden();
+        $this->actingAs($user)->delete("/tournament/{$tournament->id}/entries/{$entry->id}")->assertForbidden();
         $this->assertDatabaseHas('tournament_entries', ['id' => $entry->id]);
     }
 
@@ -54,7 +54,7 @@ class TournamentEntryRemovalTest extends TestCase
         $admin = User::factory()->create(['is_admin' => true]);
 
         $this->actingAs($admin)
-            ->delete("/tournament/entries/{$entry->id}", ['reason' => 'Se salió del torneo'])
+            ->delete("/tournament/{$tournament->id}/entries/{$entry->id}", ['reason' => 'Se salió del torneo'])
             ->assertRedirect();
 
         $this->assertDatabaseMissing('tournament_entries', ['id' => $entry->id]);
@@ -67,9 +67,9 @@ class TournamentEntryRemovalTest extends TestCase
         $entry = $this->entryFor($tournament, $player);
         $admin = User::factory()->create(['is_admin' => true]);
 
-        $this->actingAs($admin)->delete("/tournament/entries/{$entry->id}");
+        $this->actingAs($admin)->delete("/tournament/{$tournament->id}/entries/{$entry->id}");
 
-        $this->actingAs($player)->post('/tournament/join')->assertRedirect();
+        $this->actingAs($player)->post("/tournament/{$tournament->id}/join")->assertRedirect();
 
         $this->assertDatabaseHas('tournament_entries', ['tournament_id' => $tournament->id, 'user_id' => $player->id]);
     }
@@ -81,7 +81,7 @@ class TournamentEntryRemovalTest extends TestCase
         $tournament->update(['status' => 'swiss', 'current_round' => 1]);
         $admin = User::factory()->create(['is_admin' => true]);
 
-        $this->actingAs($admin)->delete("/tournament/entries/{$entry->id}")->assertStatus(422);
+        $this->actingAs($admin)->delete("/tournament/{$tournament->id}/entries/{$entry->id}")->assertStatus(422);
         $this->assertDatabaseHas('tournament_entries', ['id' => $entry->id]);
     }
 
@@ -95,7 +95,7 @@ class TournamentEntryRemovalTest extends TestCase
         $entry = $this->entryFor($other, User::factory()->create());
         $admin = User::factory()->create(['is_admin' => true]);
 
-        $this->actingAs($admin)->delete("/tournament/entries/{$entry->id}")->assertNotFound();
+        $this->actingAs($admin)->delete("/tournament/{$tournament->id}/entries/{$entry->id}")->assertNotFound();
         $this->assertDatabaseHas('tournament_entries', ['id' => $entry->id]);
     }
 }

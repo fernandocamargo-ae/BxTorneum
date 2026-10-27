@@ -27,4 +27,14 @@ class Tournament extends Model
     {
         return $this->belongsTo(User::class, 'created_by_user_id');
     }
+
+    public function isOfficial(): bool
+    {
+        return $this->type === 'official';
+    }
+
+    public function isClandestine(): bool
+    {
+        return $this->type === 'clandestine';
+    }
 }

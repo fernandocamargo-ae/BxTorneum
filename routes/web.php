@@ -43,21 +43,27 @@ Route::middleware('auth')->group(function () {
     Route::get('/players', [PlayerController::class, 'index'])->name('players.index');
     Route::get('/players/{user}', [PlayerController::class, 'show'])->name('players.show');
 
+    // Static tournament routes must be registered before /tournament/{tournament}
+    // so literal segments ("history", "matches") aren't captured as a model binding.
+    Route::post('/tournament', [TournamentController::class, 'store'])->name('tournament.store');
+    Route::post('/tournament/clandestinos', [TournamentController::class, 'storeClandestine'])->name('tournament.clandestinos.store');
     Route::get('/tournament', [TournamentController::class, 'show'])->name('tournament.show');
-    Route::post('/tournament/join', [TournamentController::class, 'join'])->name('tournament.join');
-    Route::delete('/tournament/leave', [TournamentController::class, 'leave'])->name('tournament.leave');
+    Route::get('/tournament/clandestinos', [TournamentController::class, 'clandestineIndex'])->name('tournament.clandestinos.index');
     Route::get('/tournament/history', [TournamentController::class, 'history'])->name('tournament.history');
     Route::get('/tournament/history/{tournament}', [TournamentController::class, 'historyShow'])->name('tournament.history.show');
-    Route::post('/tournament/report/pdf', [TournamentReportController::class, 'download'])->middleware('throttle:5,1')->name('tournament.report.pdf');
+    Route::patch('/tournament/matches/{match}', [TournamentMatchController::class, 'update'])->name('tournament.matches.update');
+
+    // Per-tournament routes. Authorization lives in the controllers via TournamentPolicy.
+    Route::get('/tournament/{tournament}', [TournamentController::class, 'show'])->name('tournament.view');
+    Route::patch('/tournament/{tournament}', [TournamentController::class, 'update'])->name('tournament.update');
+    Route::post('/tournament/{tournament}/join', [TournamentController::class, 'join'])->name('tournament.join');
+    Route::delete('/tournament/{tournament}/leave', [TournamentController::class, 'leave'])->name('tournament.leave');
+    Route::delete('/tournament/{tournament}/entries/{entry}', [TournamentController::class, 'removeEntry'])->name('tournament.entries.destroy');
+    Route::post('/tournament/{tournament}/rounds', [TournamentRoundController::class, 'store'])->name('tournament.rounds.store');
+    Route::post('/tournament/{tournament}/cut', [TournamentController::class, 'cut'])->name('tournament.cut');
+    Route::post('/tournament/{tournament}/report/pdf', [TournamentReportController::class, 'download'])->middleware('throttle:5,1')->name('tournament.report.pdf');
 
     Route::middleware('admin')->group(function () {
-        Route::post('/tournament', [TournamentController::class, 'store'])->name('tournament.store');
-        Route::patch('/tournament', [TournamentController::class, 'update'])->name('tournament.update');
-        Route::delete('/tournament/entries/{entry}', [TournamentController::class, 'removeEntry'])->name('tournament.entries.destroy');
-        Route::patch('/tournament/matches/{match}', [TournamentMatchController::class, 'update'])->name('tournament.matches.update');
-        Route::post('/tournament/rounds', [TournamentRoundController::class, 'store'])->name('tournament.rounds.store');
-        Route::post('/tournament/cut', [TournamentController::class, 'cut'])->name('tournament.cut');
-
         Route::post('/campeones-mensuales', [MonthlyChampionController::class, 'store'])->name('monthly-champions.store');
     });
 
