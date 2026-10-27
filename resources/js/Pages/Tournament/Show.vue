@@ -3,6 +3,7 @@ import { Head, Link, router, useForm, usePage } from '@inertiajs/vue3';
 import { computed, ref } from 'vue';
 import ConfirmDialog from '../../Components/ConfirmDialog.vue';
 import ReportExport from '../../Components/ReportExport.vue';
+import TournamentTabs from '../../Components/TournamentTabs.vue';
 
 const props = defineProps({
     tournament: { type: Object, default: null },
@@ -186,6 +187,8 @@ function isMyMatch(match) {
 
     <h1 class="mb-6 text-3xl font-black"><span class="bx-gradient-text">Torneo</span></h1>
 
+    <TournamentTabs active="oficial" />
+
     <div v-if="!tournament" class="rounded-xl border border-dashed border-white/15 p-12 text-center text-zinc-400">
         <p class="mb-4">No hay torneo activo.</p>
         <form v-if="isAdmin" class="mx-auto max-w-sm space-y-4 text-left" @submit.prevent="createTournament">
@@ -233,7 +236,15 @@ function isMyMatch(match) {
         <div class="rounded-xl border border-white/10 bg-zinc-900/50 p-5">
             <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <div>
-                    <h2 class="text-xl font-bold">{{ tournament.name }}</h2>
+                    <div class="flex flex-wrap items-center gap-2">
+                        <h2 class="text-xl font-bold">{{ tournament.name }}</h2>
+                        <span
+                            class="rounded-full px-2 py-0.5 text-xs font-bold uppercase tracking-wide"
+                            :class="tournament.type === 'clandestine' ? 'bg-zinc-700 text-zinc-200' : 'bg-amber-600 text-white'"
+                        >
+                            {{ tournament.type === 'clandestine' ? 'Clandestino' : 'Oficial' }}
+                        </span>
+                    </div>
                     <p class="mt-1 text-sm text-zinc-400">
                         <span v-if="tournament.status === 'registration'">Inscripciones abiertas · {{ entries.length }} inscrito(s)</span>
                         <span v-else-if="tournament.status === 'swiss'">Fase suiza · Ronda {{ tournament.current_round }} de {{ tournament.swiss_rounds }}</span>

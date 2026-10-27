@@ -48,6 +48,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/tournament', [TournamentController::class, 'store'])->name('tournament.store');
     Route::post('/tournament/clandestinos', [TournamentController::class, 'storeClandestine'])->name('tournament.clandestinos.store');
     Route::get('/tournament', [TournamentController::class, 'show'])->name('tournament.show');
+    Route::get('/tournament/clandestinos', [TournamentController::class, 'clandestineIndex'])->name('tournament.clandestinos.index');
     Route::get('/tournament/history', [TournamentController::class, 'history'])->name('tournament.history');
     Route::get('/tournament/history/{tournament}', [TournamentController::class, 'historyShow'])->name('tournament.history.show');
     Route::patch('/tournament/matches/{match}', [TournamentMatchController::class, 'update'])->name('tournament.matches.update');
