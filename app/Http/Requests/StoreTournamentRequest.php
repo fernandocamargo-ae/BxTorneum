@@ -8,7 +8,7 @@ class StoreTournamentRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return true; // the 'admin' route middleware already gates this action
+        return true; // authorization is enforced in the controller via TournamentPolicy (createOfficial/createClandestine/manage)
     }
 
     public function rules(): array
