@@ -51,6 +51,26 @@ class TeamTournamentController extends Controller
         ]);
     }
 
+    public function clandestineIndex()
+    {
+        $tournaments = Tournament::where('type', 'clandestine')
+            ->where('format', 'teams')
+            ->with('createdBy:id,nickname')
+            ->withCount('entries')
+            ->orderByRaw("CASE WHEN status = 'completed' THEN 1 ELSE 0 END")
+            ->orderByDesc('created_at')
+            ->get()
+            ->map(fn (Tournament $tournament) => [
+                'id' => $tournament->id,
+                'name' => $tournament->name,
+                'status' => $tournament->status,
+                'entries_count' => $tournament->entries_count,
+                'creator_nickname' => $tournament->createdBy?->nickname,
+            ]);
+
+        return Inertia::render('Tournament/Teams/Index', ['tournaments' => $tournaments]);
+    }
+
     public function addTeam(Request $request, Tournament $tournament): RedirectResponse
     {
         $this->authorize('manage', $tournament);

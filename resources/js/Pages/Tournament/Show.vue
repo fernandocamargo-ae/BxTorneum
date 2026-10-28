@@ -22,6 +22,16 @@ const props = defineProps({
 
 const isTeams = computed(() => props.format === 'teams');
 
+const selectedTeamId = ref(null);
+function addTeam() {
+    if (!selectedTeamId.value) return;
+    router.post(
+        `/torneo-equipos/${props.tournament.id}/equipos`,
+        { team_id: selectedTeamId.value },
+        { preserveScroll: true, onSuccess: () => { selectedTeamId.value = null; } },
+    );
+}
+
 const page = usePage();
 const isAdmin = computed(() => !!page.props.auth?.user?.is_admin);
 const myNickname = computed(() => page.props.auth?.user?.nickname ?? 'Tú');
@@ -39,7 +49,7 @@ const editForm = useForm({
 });
 
 function createTournament() {
-    createForm.post('/tournament');
+    createForm.post(isTeams.value ? '/torneo-equipos' : '/tournament');
 }
 
 function updateTournament() {
@@ -197,9 +207,10 @@ function isMyMatch(match) {
 <template>
     <Head title="Torneo" />
 
-    <h1 class="mb-6 text-3xl font-black"><span class="bx-gradient-text">Torneo</span></h1>
+    <h1 class="mb-6 text-3xl font-black"><span class="bx-gradient-text">{{ isTeams ? 'Torneo por equipos' : 'Torneo' }}</span></h1>
 
-    <TournamentTabs active="oficial" />
+    <TournamentTabs v-if="!isTeams" active="oficial" />
+    <TournamentTabs v-else variant="teams" :active="tournament && tournament.type === 'clandestine' ? 'clandestinos' : 'oficial'" />
 
     <div v-if="!tournament" class="rounded-xl border border-dashed border-white/15 p-12 text-center text-zinc-400">
         <p class="mb-4">No hay torneo activo.</p>
@@ -274,7 +285,7 @@ function isMyMatch(match) {
         </div>
 
         <div v-if="tournament.status === 'registration'" class="rounded-xl border border-white/10 bg-zinc-900/50 p-5">
-            <h3 class="mb-3 text-sm font-semibold text-zinc-400">Jugadores inscritos ({{ entries.length }})</h3>
+            <h3 class="mb-3 text-sm font-semibold text-zinc-400">{{ isTeams ? 'Equipos inscritos' : 'Jugadores inscritos' }} ({{ entries.length }})</h3>
             <div v-if="entries.length" class="mb-6 grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
                 <div
                     v-for="entry in entries"
@@ -294,32 +305,58 @@ function isMyMatch(match) {
                 </div>
             </div>
             <p v-else class="mb-6 text-sm text-zinc-500">Todavía no hay inscritos.</p>
-            <p v-if="!isRegistered && tournament_deck" class="mb-2 text-xs text-zinc-400">
-                Te vas a unir con: <span class="font-semibold text-zinc-200">"{{ tournament_deck.name }}"</span>
-                ({{ tournament_deck.combos_count }} combo(s)). ¿No es el correcto?
-                <Link href="/decks" class="text-bx-cyan hover:underline">Corrígelo aquí</Link>.
-            </p>
-            <button
-                v-if="!isRegistered"
-                type="button"
-                :disabled="!has_tournament_deck"
-                class="rounded-lg bg-gradient-to-r from-bx-cyan to-bx-magenta px-4 py-2 text-sm font-bold text-zinc-950 transition hover:opacity-90 disabled:opacity-50"
-                @click="join"
-            >
-                Unirme
-            </button>
-            <p v-if="!isRegistered && !has_tournament_deck" class="mt-2 text-xs text-zinc-400">
-                Necesitas <Link href="/decks" class="text-bx-cyan hover:underline">un deck de torneo con al menos un combo</Link> antes de unirte.
-            </p>
-            <div v-else-if="isRegistered" class="flex items-center gap-3">
-                <p class="text-sm text-bx-cyan">Ya estás inscrito.</p>
+            <template v-if="!isTeams">
+                <p v-if="!isRegistered && tournament_deck" class="mb-2 text-xs text-zinc-400">
+                    Te vas a unir con: <span class="font-semibold text-zinc-200">"{{ tournament_deck.name }}"</span>
+                    ({{ tournament_deck.combos_count }} combo(s)). ¿No es el correcto?
+                    <Link href="/decks" class="text-bx-cyan hover:underline">Corrígelo aquí</Link>.
+                </p>
                 <button
+                    v-if="!isRegistered"
                     type="button"
-                    class="text-xs font-semibold text-zinc-500 underline transition hover:text-bx-magenta"
-                    @click="leave"
+                    :disabled="!has_tournament_deck"
+                    class="rounded-lg bg-gradient-to-r from-bx-cyan to-bx-magenta px-4 py-2 text-sm font-bold text-zinc-950 transition hover:opacity-90 disabled:opacity-50"
+                    @click="join"
                 >
-                    Salir del torneo
+                    Unirme
                 </button>
+                <p v-if="!isRegistered && !has_tournament_deck" class="mt-2 text-xs text-zinc-400">
+                    Necesitas <Link href="/decks" class="text-bx-cyan hover:underline">un deck de torneo con al menos un combo</Link> antes de unirte.
+                </p>
+                <div v-else-if="isRegistered" class="flex items-center gap-3">
+                    <p class="text-sm text-bx-cyan">Ya estás inscrito.</p>
+                    <button
+                        type="button"
+                        class="text-xs font-semibold text-zinc-500 underline transition hover:text-bx-magenta"
+                        @click="leave"
+                    >
+                        Salir del torneo
+                    </button>
+                </div>
+            </template>
+
+            <div v-else-if="can_manage">
+                <label class="mb-1 block text-xs font-semibold uppercase tracking-wide text-zinc-400">Agregar equipo</label>
+                <div class="flex flex-wrap items-center gap-2">
+                    <select
+                        v-model="selectedTeamId"
+                        class="min-w-[220px] flex-1 rounded-md border border-white/10 bg-zinc-900 px-3 py-2 text-sm outline-none focus:border-bx-cyan"
+                    >
+                        <option :value="null" disabled>Selecciona un equipo completo…</option>
+                        <option v-for="team in teams_pool" :key="team.id" :value="team.id">{{ team.name }}</option>
+                    </select>
+                    <button
+                        type="button"
+                        :disabled="!selectedTeamId"
+                        class="rounded-lg bg-gradient-to-r from-bx-cyan to-bx-magenta px-4 py-2 text-sm font-bold text-zinc-950 transition hover:opacity-90 disabled:opacity-50"
+                        @click="addTeam"
+                    >
+                        + Agregar al torneo
+                    </button>
+                </div>
+                <p v-if="!teams_pool.length" class="mt-2 text-xs text-zinc-500">
+                    No hay equipos completos disponibles. Regístralos en <Link href="/teams" class="text-bx-cyan hover:underline">Equipos</Link> con sus 9 beys.
+                </p>
             </div>
             <div v-if="can_manage" class="mt-4 flex flex-wrap gap-2">
                 <button
@@ -503,7 +540,7 @@ function isMyMatch(match) {
                 <thead class="text-xs uppercase tracking-wide text-zinc-500">
                     <tr>
                         <th class="pb-2">#</th>
-                        <th class="pb-2">Jugador</th>
+                        <th class="pb-2">{{ isTeams ? 'Equipo' : 'Jugador' }}</th>
                         <th class="pb-2 text-right">V</th>
                     </tr>
                 </thead>

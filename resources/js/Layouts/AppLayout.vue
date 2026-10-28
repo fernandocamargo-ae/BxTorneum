@@ -29,6 +29,7 @@ watch(() => page.url, () => {
                     <template v-if="user">
                         <Link href="/decks" class="text-sm font-medium text-zinc-300 transition hover:text-bx-cyan">Mis decks</Link>
                         <Link href="/tournament" class="text-sm font-medium text-zinc-300 transition hover:text-bx-cyan">Torneo</Link>
+                        <Link href="/torneo-equipos" class="text-sm font-medium text-zinc-300 transition hover:text-bx-cyan">Torneo por equipos</Link>
                         <Link href="/tournament/history" class="text-sm font-medium text-zinc-300 transition hover:text-bx-cyan">Historial</Link>
                         <Link href="/players" class="text-sm font-medium text-zinc-300 transition hover:text-bx-cyan">Jugadores</Link>
                         <Link href="/teams" class="text-sm font-medium text-zinc-300 transition hover:text-bx-cyan">Equipos</Link>
@@ -83,6 +84,7 @@ watch(() => page.url, () => {
                     <template v-if="user">
                         <Link href="/decks" class="rounded-lg px-3 py-2 text-sm font-medium text-zinc-300 hover:bg-white/5">Mis decks</Link>
                         <Link href="/tournament" class="rounded-lg px-3 py-2 text-sm font-medium text-zinc-300 hover:bg-white/5">Torneo</Link>
+                        <Link href="/torneo-equipos" class="rounded-lg px-3 py-2 text-sm font-medium text-zinc-300 hover:bg-white/5">Torneo por equipos</Link>
                         <Link href="/tournament/history" class="rounded-lg px-3 py-2 text-sm font-medium text-zinc-300 hover:bg-white/5">Historial</Link>
                         <Link href="/players" class="rounded-lg px-3 py-2 text-sm font-medium text-zinc-300 hover:bg-white/5">Jugadores</Link>
                         <Link href="/teams" class="rounded-lg px-3 py-2 text-sm font-medium text-zinc-300 hover:bg-white/5">Equipos</Link>

@@ -69,6 +69,7 @@ Route::middleware('auth')->group(function () {
     // tournament routes above; only creation, listing and the team-aware show live here.
     Route::post('/torneo-equipos', [TeamTournamentController::class, 'storeOfficial'])->name('team-tournament.store');
     Route::post('/torneo-equipos/clandestinos', [TeamTournamentController::class, 'storeClandestine'])->name('team-tournament.clandestinos.store');
+    Route::get('/torneo-equipos/clandestinos', [TeamTournamentController::class, 'clandestineIndex'])->name('team-tournament.clandestinos.index');
     Route::get('/torneo-equipos', [TeamTournamentController::class, 'show'])->name('team-tournament.show');
     Route::get('/torneo-equipos/{tournament}', [TeamTournamentController::class, 'show'])->name('team-tournament.view');
     Route::post('/torneo-equipos/{tournament}/equipos', [TeamTournamentController::class, 'addTeam'])->name('team-tournament.teams.add');
