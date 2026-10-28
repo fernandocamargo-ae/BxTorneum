@@ -44,6 +44,20 @@ class TeamController extends Controller
         return redirect()->route('teams.show', $team)->with('success', 'Equipo creado. Eres el capitán.');
     }
 
+    public function join(Team $team)
+    {
+        $user = auth()->user();
+
+        abort_if(Member::where('user_id', $user->id)->exists(), 422, 'Ya perteneces a un equipo. Sal del actual antes de unirte a otro.');
+
+        $role = $team->firstOpenRole();
+        abort_unless($role, 422, 'El equipo ya está completo.');
+
+        $team->members()->create(['user_id' => $user->id, 'role' => $role]);
+
+        return back()->with('success', "Te uniste al equipo \"{$team->name}\".");
+    }
+
     public function show(Team $team)
     {
         return Inertia::render('Teams/Show', [
