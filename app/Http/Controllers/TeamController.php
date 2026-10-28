@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Requests\TeamRequest;
 use App\Models\Member;
 use App\Models\Team;
+use Illuminate\Http\Request;
 use Inertia\Inertia;
 
 class TeamController extends Controller
@@ -74,6 +75,19 @@ class TeamController extends Controller
         }
 
         return redirect()->route('teams.index')->with('success', 'Saliste del equipo.');
+    }
+
+    public function expelMember(Team $team, Member $member)
+    {
+        $captain = auth()->user();
+        abort_unless($team->captain()?->is($captain), 403, 'Solo el capitán gestiona el equipo.');
+        abort_unless($member->team_id === $team->id, 404);
+        abort_if($member->user_id === $captain->id, 422, 'El capitán no puede expulsarse a sí mismo.');
+        abort_if($team->isLockedByActiveTournament(), 422, 'El equipo está inscrito en un torneo en curso.');
+
+        $member->delete();
+
+        return back()->with('success', 'Integrante expulsado del equipo.');
     }
 
     public function show(Team $team)
