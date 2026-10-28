@@ -19,6 +19,8 @@ class TournamentReportController extends Controller
             abort(403, 'Contraseña incorrecta.');
         }
 
+        abort_if($tournament->isTeams(), 422, 'El reporte de jugadores no aplica a torneos por equipos.');
+
         $players = $this->playersFor($tournament);
 
         $pdf = Pdf::loadView('reports.players', [

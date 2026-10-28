@@ -16,7 +16,11 @@ const props = defineProps({
     current_round_matches: { type: Array, default: () => [] },
     can_create_tournament: { type: Boolean, default: false },
     can_manage: { type: Boolean, default: false },
+    format: { type: String, default: 'individual' },
+    teams_pool: { type: Array, default: () => [] },
 });
+
+const isTeams = computed(() => props.format === 'teams');
 
 const page = usePage();
 const isAdmin = computed(() => !!page.props.auth?.user?.is_admin);
@@ -260,7 +264,7 @@ function isMyMatch(match) {
                         <span v-else>Torneo finalizado</span>
                     </p>
                 </div>
-                <ReportExport :endpoint="`/tournament/${tournament.id}/report/pdf`" filename="reporte-torneo.pdf" />
+                <ReportExport v-if="!isTeams" :endpoint="`/tournament/${tournament.id}/report/pdf`" filename="reporte-torneo.pdf" />
             </div>
         </div>
 
