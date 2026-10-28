@@ -2,6 +2,7 @@
 import { Head, Link, router, useForm, usePage } from '@inertiajs/vue3';
 import { computed, ref } from 'vue';
 import Avatar from '../../Components/Avatar.vue';
+import Bracket from '../../Components/Bracket.vue';
 import ConfirmDialog from '../../Components/ConfirmDialog.vue';
 import ReportExport from '../../Components/ReportExport.vue';
 import TournamentTabs from '../../Components/TournamentTabs.vue';
@@ -14,6 +15,7 @@ const props = defineProps({
     entries: { type: Array, default: () => [] },
     standings: { type: Array, default: () => [] },
     current_round_matches: { type: Array, default: () => [] },
+    bracket: { type: Array, default: () => [] },
     can_create_tournament: { type: Boolean, default: false },
     can_manage: { type: Boolean, default: false },
     format: { type: String, default: 'individual' },
@@ -426,8 +428,8 @@ function isMyMatch(match) {
             </form>
         </div>
 
-        <template v-if="tournament.status === 'swiss' || tournament.status === 'elimination'">
-            <div v-if="myMatch && !myMatch.is_bye" class="overflow-hidden rounded-xl border border-bx-cyan/40 bg-gradient-to-br from-bx-cyan/10 via-zinc-900/50 to-bx-magenta/10 p-6">
+        <template v-if="tournament.status === 'swiss' || tournament.status === 'elimination' || tournament.status === 'completed'">
+            <div v-if="tournament.status !== 'completed' && myMatch && !myMatch.is_bye" class="overflow-hidden rounded-xl border border-bx-cyan/40 bg-gradient-to-br from-bx-cyan/10 via-zinc-900/50 to-bx-magenta/10 p-6">
                 <p class="mb-4 text-center text-xs font-bold uppercase tracking-widest text-zinc-400">Tu duelo esta ronda</p>
                 <div class="flex items-center justify-center gap-4 sm:gap-10">
                     <div class="flex flex-col items-center gap-2">
@@ -441,16 +443,26 @@ function isMyMatch(match) {
                     </div>
                 </div>
             </div>
-            <div v-else-if="myMatch && myMatch.is_bye" class="rounded-xl border border-bx-cyan/40 bg-bx-cyan/10 p-6 text-center">
+            <div v-else-if="tournament.status !== 'completed' && myMatch && myMatch.is_bye" class="rounded-xl border border-bx-cyan/40 bg-bx-cyan/10 p-6 text-center">
                 <p class="text-lg font-bold text-bx-cyan">Bye esta ronda — avanzas automáticamente</p>
             </div>
-            <div v-else-if="isRegistered" class="rounded-xl border border-white/10 bg-zinc-900/50 p-6 text-center text-zinc-400">
+            <div v-else-if="tournament.status === 'elimination' && isRegistered && !myMatch" class="rounded-xl border border-white/10 bg-zinc-900/50 p-6 text-center text-zinc-400">
                 No clasificaste al corte esta ronda.
             </div>
 
-            <div v-if="current_round_matches.length" class="rounded-xl border border-white/10 bg-zinc-900/50 p-5">
+            <div v-if="bracket.length" class="rounded-xl border border-white/10 bg-zinc-900/50 p-5">
+                <h3 class="mb-4 text-xs font-bold uppercase tracking-widest text-zinc-500">Eliminación</h3>
+                <Bracket
+                    :bracket="bracket"
+                    :current-round="tournament.current_round"
+                    :can-manage="can_manage && tournament.status === 'elimination'"
+                    @report="(e) => reportWinner(e.matchId, e.winnerEntryId, e.isCorrection)"
+                />
+            </div>
+
+            <div v-if="tournament.status === 'swiss' && current_round_matches.length" class="rounded-xl border border-white/10 bg-zinc-900/50 p-5">
                 <h3 class="mb-3 text-sm font-semibold text-zinc-400">
-                    {{ tournament.status === 'swiss' ? `Emparejamientos · Ronda ${tournament.current_round} de ${tournament.swiss_rounds}` : 'Emparejamientos' }}
+                    Emparejamientos · Ronda {{ tournament.current_round }} de {{ tournament.swiss_rounds }}
                 </h3>
                 <div class="space-y-2">
                     <div
@@ -503,32 +515,33 @@ function isMyMatch(match) {
                     </div>
                 </div>
 
-                <template v-if="can_manage">
-                    <button
-                        v-if="tournament.status === 'swiss' && tournament.current_round < tournament.swiss_rounds"
-                        type="button"
-                        class="mt-4 block rounded-lg border border-white/15 px-4 py-2 text-sm font-semibold hover:border-bx-cyan hover:text-bx-cyan"
-                        @click="generateRound()"
-                    >
-                        Generar siguiente ronda
-                    </button>
-                    <button
-                        v-if="tournament.status === 'swiss' && tournament.current_round === tournament.swiss_rounds"
-                        type="button"
-                        class="mt-4 block rounded-lg border border-white/15 px-4 py-2 text-sm font-semibold hover:border-bx-cyan hover:text-bx-cyan"
-                        @click="cutToElimination"
-                    >
-                        Cortar a eliminatorias
-                    </button>
-                    <button
-                        v-if="tournament.status === 'elimination' && current_round_matches.length > 1"
-                        type="button"
-                        class="mt-4 block rounded-lg border border-white/15 px-4 py-2 text-sm font-semibold hover:border-bx-cyan hover:text-bx-cyan"
-                        @click="generateRound()"
-                    >
-                        Generar siguiente ronda
-                    </button>
-                </template>
+            </div>
+
+            <div v-if="can_manage && tournament.status !== 'completed'" class="flex flex-wrap gap-2">
+                <button
+                    v-if="tournament.status === 'swiss' && tournament.current_round < tournament.swiss_rounds"
+                    type="button"
+                    class="rounded-lg border border-white/15 px-4 py-2 text-sm font-semibold hover:border-bx-cyan hover:text-bx-cyan"
+                    @click="generateRound()"
+                >
+                    Generar siguiente ronda
+                </button>
+                <button
+                    v-if="tournament.status === 'swiss' && tournament.current_round === tournament.swiss_rounds"
+                    type="button"
+                    class="rounded-lg border border-white/15 px-4 py-2 text-sm font-semibold hover:border-bx-cyan hover:text-bx-cyan"
+                    @click="cutToElimination"
+                >
+                    Cortar a eliminatorias
+                </button>
+                <button
+                    v-if="tournament.status === 'elimination' && current_round_matches.length > 1"
+                    type="button"
+                    class="rounded-lg border border-white/15 px-4 py-2 text-sm font-semibold hover:border-bx-cyan hover:text-bx-cyan"
+                    @click="generateRound()"
+                >
+                    Generar siguiente ronda
+                </button>
             </div>
         </template>
 

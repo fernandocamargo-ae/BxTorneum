@@ -111,6 +111,7 @@ class TeamTournamentController extends Controller
                 'entries' => [],
                 'standings' => [],
                 'current_round_matches' => [],
+                'bracket' => [],
                 'teams_pool' => $this->teamsPool(collect()),
                 'my_entry_id' => null,
                 'has_tournament_deck' => false,
@@ -164,13 +165,51 @@ class TeamTournamentController extends Controller
                 ])->values()
                 : [],
             'teams_pool' => $this->teamsPool($entries),
+            'bracket' => $this->buildBracket($tournament),
             'my_entry_id' => null,
             'has_tournament_deck' => false,
             'tournament_deck' => null,
         ]);
     }
 
-    /** Complete teams (9 beys) not already enrolled, ordered by name. */
+    private function buildBracket(Tournament $tournament): array
+    {
+        if (! in_array($tournament->status, ['elimination', 'completed'], true)) {
+            return [];
+        }
+
+        return $tournament->rounds()->where('phase', 'elimination')->orderBy('number')
+            ->with('matches.entryOne.team:id,name', 'matches.entryTwo.team:id,name')
+            ->get()
+            ->map(fn ($round) => [
+                'number' => $round->number,
+                'title' => $this->bracketTitle($round->matches->count()),
+                'matches' => $round->matches->map(fn ($match) => [
+                    'id' => $match->id,
+                    'entry_one_id' => $match->entry_one_id,
+                    'entry_one_nickname' => $match->entryOne->team?->name,
+                    'entry_one_avatar' => null,
+                    'entry_two_id' => $match->entry_two_id,
+                    'entry_two_nickname' => $match->entryTwo?->team?->name,
+                    'entry_two_avatar' => null,
+                    'winner_entry_id' => $match->winner_entry_id,
+                    'is_bye' => $match->is_bye,
+                ])->values(),
+            ])->values()->all();
+    }
+
+    private function bracketTitle(int $matchCount): string
+    {
+        return match (true) {
+            $matchCount <= 1 => 'Final',
+            $matchCount === 2 => 'Semifinal',
+            $matchCount <= 4 => 'Cuartos',
+            $matchCount <= 8 => 'Octavos',
+            default => 'Ronda',
+        };
+    }
+
+    /** Ready teams (3 members, each with a tournament deck) not already enrolled, ordered by name. */
     private function teamsPool($entries): array
     {
         $enrolledTeamIds = collect($entries)->pluck('team_id')->filter()->all();

@@ -181,6 +181,7 @@ class TournamentController extends Controller
                 'entries' => [],
                 'standings' => [],
                 'current_round_matches' => [],
+                'bracket' => [],
                 'can_create_tournament' => true,
                 'can_manage' => false,
             ]);
@@ -233,7 +234,45 @@ class TournamentController extends Controller
                     'is_bye' => $match->is_bye,
                 ])->values()
                 : [],
+            'bracket' => $this->buildBracket($tournament),
         ]);
+    }
+
+    private function buildBracket(Tournament $tournament): array
+    {
+        if (! in_array($tournament->status, ['elimination', 'completed'], true)) {
+            return [];
+        }
+
+        return $tournament->rounds()->where('phase', 'elimination')->orderBy('number')
+            ->with('matches.entryOne.user:id,nickname,avatar_path', 'matches.entryTwo.user:id,nickname,avatar_path')
+            ->get()
+            ->map(fn ($round) => [
+                'number' => $round->number,
+                'title' => $this->bracketTitle($round->matches->count()),
+                'matches' => $round->matches->map(fn ($match) => [
+                    'id' => $match->id,
+                    'entry_one_id' => $match->entry_one_id,
+                    'entry_one_nickname' => $match->entryOne->user->nickname,
+                    'entry_one_avatar' => $match->entryOne->user->avatar_url,
+                    'entry_two_id' => $match->entry_two_id,
+                    'entry_two_nickname' => $match->entryTwo?->user->nickname,
+                    'entry_two_avatar' => $match->entryTwo?->user->avatar_url,
+                    'winner_entry_id' => $match->winner_entry_id,
+                    'is_bye' => $match->is_bye,
+                ])->values(),
+            ])->values()->all();
+    }
+
+    private function bracketTitle(int $matchCount): string
+    {
+        return match (true) {
+            $matchCount <= 1 => 'Final',
+            $matchCount === 2 => 'Semifinal',
+            $matchCount <= 4 => 'Cuartos',
+            $matchCount <= 8 => 'Octavos',
+            default => 'Ronda',
+        };
     }
 
     public function clandestineIndex()
