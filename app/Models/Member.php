@@ -13,8 +13,8 @@ class Member extends Model
         return $this->belongsTo(Team::class);
     }
 
-    public function beyblades()
+    public function user()
     {
-        return $this->hasMany(Beyblade::class);
+        return $this->belongsTo(User::class);
     }
 }

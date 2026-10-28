@@ -13,14 +13,10 @@ class Team extends Model
         return $this->hasMany(Member::class);
     }
 
-    public function beybladesCount(): int
+    /** The user who is this team's captain. */
+    public function captain(): ?User
     {
-        return $this->members()->withCount('beyblades')->get()->sum('beyblades_count');
-    }
-
-    public function isComplete(): bool
-    {
-        return $this->beybladesCount() === 9;
+        return $this->members()->where('role', 'captain')->first()?->user;
     }
 
     /** True once the team has entered any tournament — its brackets reference it. */
