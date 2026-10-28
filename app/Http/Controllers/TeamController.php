@@ -3,22 +3,24 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\TeamRequest;
+use App\Models\Member;
 use App\Models\Team;
-use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 
 class TeamController extends Controller
 {
     public function index()
     {
-        $teams = Team::orderBy('name')->get(['id', 'name'])->map(fn (Team $team) => [
+        $myTeamId = Member::where('user_id', auth()->id())->value('team_id');
+
+        $teams = Team::withCount('members')->orderBy('name')->get()->map(fn (Team $team) => [
             'id' => $team->id,
             'name' => $team->name,
-            'beyblades_count' => $team->beybladesCount(),
-            'is_complete' => $team->isComplete(),
+            'members_count' => $team->members_count,
+            'has_room' => $team->members_count < 3,
         ]);
 
-        return Inertia::render('Teams/Index', ['teams' => $teams]);
+        return Inertia::render('Teams/Index', ['teams' => $teams, 'my_team_id' => $myTeamId]);
     }
 
     public function create()
@@ -28,76 +30,64 @@ class TeamController extends Controller
 
     public function store(TeamRequest $request)
     {
-        $team = DB::transaction(fn () => $this->persistNames(new Team(), $request->validated()));
+        $userId = auth()->id();
 
-        return redirect()->route('teams.show', $team)->with('success', 'Equipo registrado.');
+        abort_if(
+            Member::where('user_id', $userId)->exists(),
+            422,
+            'Ya perteneces a un equipo. Sal del actual antes de crear otro.'
+        );
+
+        $team = Team::create(['name' => $request->validated('name'), 'created_by_user_id' => $userId]);
+        $team->members()->create(['user_id' => $userId, 'role' => 'captain']);
+
+        return redirect()->route('teams.show', $team)->with('success', 'Equipo creado. Eres el capitán.');
     }
 
     public function show(Team $team)
     {
-        return Inertia::render('Teams/Show', ['team' => $this->transform($team)]);
+        return Inertia::render('Teams/Show', [
+            'team' => $this->teamPayload($team),
+            'viewer' => $this->viewerFlags($team),
+        ]);
     }
 
-    public function edit(Team $team)
+    private function teamPayload(Team $team): array
     {
-        return Inertia::render('Teams/Edit', ['team' => $this->transform($team)]);
-    }
+        $roleOrder = ['captain' => 0, 'subcaptain' => 1, 'official' => 2];
 
-    public function update(TeamRequest $request, Team $team)
-    {
-        abort_if($team->isLockedByActiveTournament(), 422, 'El equipo está inscrito en un torneo en curso; no puede editarse hasta que termine.');
-
-        DB::transaction(fn () => $this->persistNames($team, $request->validated()));
-
-        return redirect()->route('teams.show', $team)->with('success', 'Equipo actualizado.');
-    }
-
-    public function destroy(Team $team)
-    {
-        abort_if($team->hasAnyTournamentEntry(), 422, 'El equipo participó en torneos; no puede borrarse sin romper el historial.');
-
-        $team->delete();
-
-        return redirect()->route('teams.index')->with('success', 'Equipo eliminado.');
-    }
-
-    private function persistNames(Team $team, array $data): Team
-    {
-        $team->fill(['name' => $data['name']])->save();
-
-        foreach ($data['members'] as $memberData) {
-            $team->members()->updateOrCreate(
-                ['role' => $memberData['role']],
-                ['name' => $memberData['name']],
-            );
-        }
-
-        return $team;
-    }
-
-    private function transform(Team $team): array
-    {
-        $team->load('members.beyblades.parts');
+        $members = $team->members()->with('user:id,nickname,avatar_path')->get()
+            ->sortBy(fn (Member $member) => $roleOrder[$member->role] ?? 9)
+            ->values()
+            ->map(fn (Member $member) => [
+                'id' => $member->id,
+                'role' => $member->role,
+                'nickname' => $member->user?->nickname,
+                'avatar_url' => $member->user?->avatar_url,
+                'has_tournament_deck' => (bool) $member->user?->decks()
+                    ->where('is_tournament_deck', true)->whereHas('deckBeyblades')->exists(),
+            ]);
 
         return [
             'id' => $team->id,
             'name' => $team->name,
-            'beyblades_count' => $team->beybladesCount(),
-            'is_complete' => $team->isComplete(),
-            'members' => $team->members->sortBy('id')->values()->map(fn ($member) => [
-                'id' => $member->id,
-                'role' => $member->role,
-                'name' => $member->name,
-                'beyblades' => $member->beyblades
-                    ->sortBy('position')
-                    ->values()
-                    ->map(fn ($b) => [
-                        'id' => $b->id,
-                        'line' => $b->line,
-                        'position' => $b->position,
-                        'parts' => $b->partsBySlot(),
-                    ]),
-            ]),
+            'members' => $members,
+            'has_room' => $team->hasRoom(),
+            'is_tournament_ready' => $team->isTournamentReady(),
+        ];
+    }
+
+    private function viewerFlags(Team $team): array
+    {
+        $user = auth()->user();
+        $myMember = $user ? $team->memberFor($user) : null;
+        $inAnyTeam = $user ? Member::where('user_id', $user->id)->exists() : false;
+
+        return [
+            'is_member' => (bool) $myMember,
+            'is_captain' => $myMember?->role === 'captain',
+            'can_join' => $user && ! $inAnyTeam && $team->hasRoom(),
+            'locked_by_tournament' => $team->isLockedByActiveTournament(),
         ];
     }
 }

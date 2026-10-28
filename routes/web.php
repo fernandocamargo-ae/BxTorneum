@@ -24,10 +24,16 @@ Route::post('/report/players/pdf', [PlayerReportController::class, 'download'])-
 Route::get('/campeones-mensuales', [MonthlyChampionController::class, 'index'])->name('monthly-champions.index');
 
 Route::middleware('auth')->group(function () {
-    Route::resource('teams', TeamController::class);
-
-    Route::get('/teams/{team}/combos', [TeamComboController::class, 'edit'])->name('combos.edit');
-    Route::put('/teams/{team}/combos', [TeamComboController::class, 'update'])->name('combos.update');
+    // Teams are rosters of users: a creator is the captain; players join/leave; the
+    // captain expels members and sets their roles. (Static routes before /teams/{team}.)
+    Route::get('/teams', [TeamController::class, 'index'])->name('teams.index');
+    Route::get('/teams/create', [TeamController::class, 'create'])->name('teams.create');
+    Route::post('/teams', [TeamController::class, 'store'])->name('teams.store');
+    Route::get('/teams/{team}', [TeamController::class, 'show'])->name('teams.show');
+    Route::post('/teams/{team}/join', [TeamController::class, 'join'])->name('teams.join');
+    Route::delete('/teams/{team}/leave', [TeamController::class, 'leave'])->name('teams.leave');
+    Route::delete('/teams/{team}/members/{member}', [TeamController::class, 'expelMember'])->name('teams.members.expel');
+    Route::patch('/teams/{team}/members/{member}/role', [TeamController::class, 'updateMemberRole'])->name('teams.members.role');
 
     Route::get('/parts/search', [PartController::class, 'search'])->name('parts.search');
 
