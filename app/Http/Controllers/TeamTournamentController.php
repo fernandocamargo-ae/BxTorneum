@@ -3,7 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreTournamentRequest;
+use App\Models\Team;
 use App\Models\Tournament;
+use App\Support\TournamentStandings;
 use Illuminate\Http\RedirectResponse;
 use Inertia\Inertia;
 
@@ -47,17 +49,41 @@ class TeamTournamentController extends Controller
         ]);
     }
 
-    /**
-     * Minimal render so the store redirects resolve; Task 6 fills entries,
-     * standings, teams_pool and the team champion name.
-     */
     public function show(?Tournament $tournament = null)
     {
+        // No id → the active team official, else the last completed team official.
         $tournament ??= Tournament::where('type', 'official')->where('format', 'teams')->where('status', '!=', 'completed')->latest()->first()
             ?? Tournament::where('type', 'official')->where('format', 'teams')->where('status', 'completed')->latest()->first();
 
+        if (! $tournament) {
+            return Inertia::render('Tournament/Show', [
+                'tournament' => null,
+                'format' => 'teams',
+                'can_manage' => false,
+                'can_create_tournament' => true,
+                'entries' => [],
+                'standings' => [],
+                'current_round_matches' => [],
+                'teams_pool' => $this->teamsPool(collect()),
+                'my_entry_id' => null,
+                'has_tournament_deck' => false,
+                'tournament_deck' => null,
+            ]);
+        }
+
+        $entries = $tournament->entries()->with('team:id,name')->get();
+
+        $standings = $tournament->status !== 'registration'
+            ? $this->standingsWithTeamNames($tournament, $entries)
+            : [];
+
+        $currentRound = $tournament->rounds()
+            ->where('number', $tournament->current_round)
+            ->with('matches.entryOne.team:id,name', 'matches.entryTwo.team:id,name')
+            ->first();
+
         return Inertia::render('Tournament/Show', [
-            'tournament' => $tournament ? [
+            'tournament' => [
                 'id' => $tournament->id,
                 'name' => $tournament->name,
                 'type' => $tournament->type,
@@ -66,18 +92,60 @@ class TeamTournamentController extends Controller
                 'swiss_rounds' => $tournament->swiss_rounds,
                 'cut_size' => $tournament->cut_size,
                 'current_round' => $tournament->current_round,
-                'champion_nickname' => null,
-            ] : null,
+                'champion_nickname' => $tournament->champion?->team?->name,
+            ],
             'format' => 'teams',
-            'can_manage' => $tournament ? (bool) auth()->user()?->can('manage', $tournament) : false,
-            'can_create_tournament' => true,
-            'entries' => [],
-            'standings' => [],
-            'current_round_matches' => [],
-            'teams_pool' => [],
+            'can_manage' => (bool) auth()->user()?->can('manage', $tournament),
+            'can_create_tournament' => $tournament->status === 'completed',
+            'entries' => $entries->map(fn ($entry) => [
+                'id' => $entry->id,
+                'nickname' => $entry->team?->name,
+                'avatar_url' => null,
+            ])->values(),
+            'standings' => $standings,
+            'current_round_matches' => $currentRound
+                ? $currentRound->matches->map(fn ($match) => [
+                    'id' => $match->id,
+                    'entry_one_id' => $match->entry_one_id,
+                    'entry_one_nickname' => $match->entryOne->team?->name,
+                    'entry_one_avatar' => null,
+                    'entry_two_id' => $match->entry_two_id,
+                    'entry_two_nickname' => $match->entryTwo?->team?->name,
+                    'entry_two_avatar' => null,
+                    'winner_entry_id' => $match->winner_entry_id,
+                    'is_bye' => $match->is_bye,
+                ])->values()
+                : [],
+            'teams_pool' => $this->teamsPool($entries),
             'my_entry_id' => null,
             'has_tournament_deck' => false,
             'tournament_deck' => null,
         ]);
+    }
+
+    /** Complete teams (9 beys) not already enrolled, ordered by name. */
+    private function teamsPool($entries): array
+    {
+        $enrolledTeamIds = collect($entries)->pluck('team_id')->filter()->all();
+
+        return Team::orderBy('name')->get()
+            ->filter(fn (Team $team) => $team->isComplete() && ! in_array($team->id, $enrolledTeamIds, true))
+            ->map(fn (Team $team) => ['id' => $team->id, 'name' => $team->name])
+            ->values()
+            ->all();
+    }
+
+    private function standingsWithTeamNames(Tournament $tournament, $entries): array
+    {
+        $names = $entries->pluck('team.name', 'id');
+
+        return collect(TournamentStandings::forTournament($tournament))
+            ->map(fn ($row) => [
+                ...$row,
+                'nickname' => $names[$row['entry_id']] ?? '?',
+                'avatar_url' => null,
+            ])
+            ->values()
+            ->all();
     }
 }
