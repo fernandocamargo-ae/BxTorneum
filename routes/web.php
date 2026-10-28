@@ -7,8 +7,6 @@ use App\Http\Controllers\PartController;
 use App\Http\Controllers\PlayerController;
 use App\Http\Controllers\PlayerReportController;
 use App\Http\Controllers\ProfileController;
-use App\Http\Controllers\ReportController;
-use App\Http\Controllers\TeamComboController;
 use App\Http\Controllers\TeamController;
 use App\Http\Controllers\TeamTournamentController;
 use App\Http\Controllers\TournamentController;
@@ -36,8 +34,6 @@ Route::middleware('auth')->group(function () {
     Route::patch('/teams/{team}/members/{member}/role', [TeamController::class, 'updateMemberRole'])->name('teams.members.role');
 
     Route::get('/parts/search', [PartController::class, 'search'])->name('parts.search');
-
-    Route::post('/report/pdf', [ReportController::class, 'download'])->middleware('throttle:5,1')->name('report.pdf');
 
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
