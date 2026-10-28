@@ -151,6 +151,12 @@ class TournamentController extends Controller
      */
     public function redirectToTournament(Tournament $tournament): RedirectResponse
     {
+        if ($tournament->isTeams()) {
+            return $tournament->isOfficial()
+                ? redirect()->route('team-tournament.show')
+                : redirect()->route('team-tournament.view', $tournament);
+        }
+
         return $tournament->isOfficial()
             ? redirect()->route('tournament.show')
             : redirect()->route('tournament.view', $tournament);
