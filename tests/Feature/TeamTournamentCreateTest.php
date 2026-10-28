@@ -2,7 +2,9 @@
 
 namespace Tests\Feature;
 
+use App\Models\Team;
 use App\Models\Tournament;
+use App\Models\TournamentEntry;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -32,5 +34,20 @@ class TeamTournamentCreateTest extends TestCase
 
         $teams = Tournament::create($this->tournamentAttributes(['format' => 'teams']));
         $this->assertTrue($teams->isTeams());
+    }
+
+    public function test_a_tournament_entry_can_reference_a_team_without_user_or_deck(): void
+    {
+        $team = Team::create(['name' => 'Equipo E']);
+        $tournament = Tournament::create($this->tournamentAttributes(['format' => 'teams']));
+
+        $entry = TournamentEntry::create([
+            'tournament_id' => $tournament->id,
+            'team_id' => $team->id,
+        ]);
+
+        $this->assertNull($entry->user_id);
+        $this->assertNull($entry->deck_id);
+        $this->assertTrue($entry->team->is($team));
     }
 }
