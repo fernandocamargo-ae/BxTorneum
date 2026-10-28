@@ -24,6 +24,12 @@ const filtered = computed(() =>
                 class="w-full rounded-md border border-white/10 bg-zinc-900 px-3 py-2 text-sm outline-none focus:border-bx-cyan focus:bx-glow sm:w-56"
             />
             <ReportExport />
+            <Link
+                href="/teams/create"
+                class="rounded-lg bg-gradient-to-r from-bx-cyan to-bx-magenta px-4 py-2 text-center text-sm font-bold text-zinc-950 transition hover:opacity-90"
+            >
+                + Registrar equipo
+            </Link>
         </div>
     </div>
 

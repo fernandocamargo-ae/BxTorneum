@@ -25,4 +25,11 @@ describe('Teams/Index', () => {
         expect(wrapper.text()).toContain('Storm Riders');
         expect(wrapper.text()).not.toContain('Dran Squad');
     });
+
+    it('always offers a link to register a team, even when teams already exist', () => {
+        const wrapper = mount(Index, { props: { teams } });
+        const createLink = wrapper.findAll('a').find((a) => a.attributes('href') === '/teams/create');
+        expect(createLink).toBeTruthy();
+        expect(createLink.text()).toContain('Registrar equipo');
+    });
 });
