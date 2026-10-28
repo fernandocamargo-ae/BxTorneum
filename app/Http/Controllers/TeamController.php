@@ -58,6 +58,24 @@ class TeamController extends Controller
         return back()->with('success', "Te uniste al equipo \"{$team->name}\".");
     }
 
+    public function leave(Team $team)
+    {
+        $member = $team->memberFor(auth()->user());
+        abort_unless($member, 422, 'No perteneces a este equipo.');
+        abort_if($team->isLockedByActiveTournament(), 422, 'El equipo está inscrito en un torneo en curso; no puedes salir hasta que termine.');
+
+        $wasCaptain = $member->role === 'captain';
+        $member->delete();
+
+        if ($team->members()->count() === 0) {
+            $team->delete();
+        } elseif ($wasCaptain) {
+            $team->promoteOldestToCaptain();
+        }
+
+        return redirect()->route('teams.index')->with('success', 'Saliste del equipo.');
+    }
+
     public function show(Team $team)
     {
         return Inertia::render('Teams/Show', [

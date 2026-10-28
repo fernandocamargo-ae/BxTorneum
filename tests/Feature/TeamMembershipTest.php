@@ -3,6 +3,8 @@
 namespace Tests\Feature;
 
 use App\Models\Team;
+use App\Models\Tournament;
+use App\Models\TournamentEntry;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -75,5 +77,68 @@ class TeamMembershipTest extends TestCase
         $team->members()->create(['user_id' => User::factory()->create()->id, 'role' => 'official']);
 
         $this->actingAs(User::factory()->create())->post("/teams/{$team->id}/join")->assertStatus(422);
+    }
+
+    private function enrollInActiveTournament(Team $team): void
+    {
+        $tournament = Tournament::create([
+            'name' => 'Copa', 'type' => 'official', 'format' => 'teams', 'status' => 'registration',
+            'swiss_rounds' => 3, 'cut_size' => 4, 'current_round' => 0, 'created_by_user_id' => User::factory()->create()->id,
+        ]);
+        TournamentEntry::create(['tournament_id' => $tournament->id, 'team_id' => $team->id]);
+    }
+
+    public function test_a_non_captain_member_can_leave(): void
+    {
+        $captain = User::factory()->create();
+        $team = $this->teamOwnedBy($captain);
+        $sub = User::factory()->create();
+        $team->members()->create(['user_id' => $sub->id, 'role' => 'subcaptain']);
+
+        $this->actingAs($sub)->delete("/teams/{$team->id}/leave")->assertRedirect();
+
+        $this->assertNull($team->fresh()->memberFor($sub));
+        $this->assertTrue($team->fresh()->captain()->is($captain));
+    }
+
+    public function test_when_the_captain_leaves_the_oldest_remaining_member_becomes_captain(): void
+    {
+        $captain = User::factory()->create();
+        $team = $this->teamOwnedBy($captain);
+        $sub = User::factory()->create();
+        $official = User::factory()->create();
+        $team->members()->create(['user_id' => $sub->id, 'role' => 'subcaptain']);
+        $team->members()->create(['user_id' => $official->id, 'role' => 'official']);
+
+        $this->actingAs($captain)->delete("/teams/{$team->id}/leave")->assertRedirect();
+
+        $this->assertTrue($team->fresh()->captain()->is($sub));
+    }
+
+    public function test_when_the_last_member_leaves_the_team_is_deleted(): void
+    {
+        $captain = User::factory()->create();
+        $team = $this->teamOwnedBy($captain);
+
+        $this->actingAs($captain)->delete("/teams/{$team->id}/leave")->assertRedirect();
+
+        $this->assertDatabaseMissing('teams', ['id' => $team->id]);
+    }
+
+    public function test_cannot_leave_while_enrolled_in_an_active_tournament(): void
+    {
+        $captain = User::factory()->create();
+        $team = $this->teamOwnedBy($captain);
+        $this->enrollInActiveTournament($team);
+
+        $this->actingAs($captain)->delete("/teams/{$team->id}/leave")->assertStatus(422);
+        $this->assertNotNull($team->fresh()->memberFor($captain));
+    }
+
+    public function test_a_non_member_cannot_leave(): void
+    {
+        $team = $this->teamOwnedBy(User::factory()->create());
+
+        $this->actingAs(User::factory()->create())->delete("/teams/{$team->id}/leave")->assertStatus(422);
     }
 }
