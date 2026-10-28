@@ -5,8 +5,10 @@ namespace App\Http\Controllers;
 use App\Http\Requests\StoreTournamentRequest;
 use App\Models\Team;
 use App\Models\Tournament;
+use App\Models\TournamentEntry;
 use App\Support\TournamentStandings;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Inertia\Inertia;
 
 class TeamTournamentController extends Controller
@@ -47,6 +49,27 @@ class TeamTournamentController extends Controller
             'current_round' => 0,
             'created_by_user_id' => auth()->id(),
         ]);
+    }
+
+    public function addTeam(Request $request, Tournament $tournament): RedirectResponse
+    {
+        $this->authorize('manage', $tournament);
+
+        abort_unless($tournament->status === 'registration', 422, 'Las inscripciones ya cerraron.');
+
+        $teamId = $request->validate(['team_id' => ['required', 'integer', 'exists:teams,id']])['team_id'];
+        $team = Team::findOrFail($teamId);
+
+        abort_unless($team->isComplete(), 422, 'El equipo debe estar completo (9 beys) para entrar.');
+        abort_if(
+            TournamentEntry::where('tournament_id', $tournament->id)->where('team_id', $team->id)->exists(),
+            422,
+            'Ese equipo ya está inscrito.'
+        );
+
+        TournamentEntry::create(['tournament_id' => $tournament->id, 'team_id' => $team->id]);
+
+        return back()->with('success', "Se agregó \"{$team->name}\".");
     }
 
     public function show(?Tournament $tournament = null)

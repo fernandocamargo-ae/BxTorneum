@@ -71,6 +71,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/torneo-equipos/clandestinos', [TeamTournamentController::class, 'storeClandestine'])->name('team-tournament.clandestinos.store');
     Route::get('/torneo-equipos', [TeamTournamentController::class, 'show'])->name('team-tournament.show');
     Route::get('/torneo-equipos/{tournament}', [TeamTournamentController::class, 'show'])->name('team-tournament.view');
+    Route::post('/torneo-equipos/{tournament}/equipos', [TeamTournamentController::class, 'addTeam'])->name('team-tournament.teams.add');
 
     Route::middleware('admin')->group(function () {
         Route::post('/campeones-mensuales', [MonthlyChampionController::class, 'store'])->name('monthly-champions.store');

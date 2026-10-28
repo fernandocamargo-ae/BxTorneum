@@ -77,7 +77,7 @@ class TournamentController extends Controller
         abort_unless($tournament->status === 'registration', 422, 'Solo puedes quitar jugadores mientras las inscripciones están abiertas.');
         abort_unless($entry->tournament_id === $tournament->id, 404);
 
-        $nickname = $entry->user->nickname;
+        $nickname = $entry->user?->nickname ?? $entry->team?->name ?? '?';
         $reason = trim((string) $request->input('reason', ''));
         $entry->delete();
 
