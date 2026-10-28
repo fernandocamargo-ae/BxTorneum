@@ -8,8 +8,10 @@ const flash = computed(() => page.props.flash?.success);
 const user = computed(() => page.props.auth?.user);
 
 const mobileOpen = ref(false);
+const tournamentsOpen = ref(false);
 watch(() => page.url, () => {
     mobileOpen.value = false;
+    tournamentsOpen.value = false;
 });
 </script>
 
@@ -28,9 +30,28 @@ watch(() => page.url, () => {
                     <Link href="/campeones-mensuales" class="text-sm font-medium text-zinc-300 transition hover:text-bx-cyan">Campeones</Link>
                     <template v-if="user">
                         <Link href="/decks" class="text-sm font-medium text-zinc-300 transition hover:text-bx-cyan">Mis decks</Link>
-                        <Link href="/tournament" class="text-sm font-medium text-zinc-300 transition hover:text-bx-cyan">Torneo</Link>
-                        <Link href="/torneo-equipos" class="text-sm font-medium text-zinc-300 transition hover:text-bx-cyan">Torneo por equipos</Link>
-                        <Link href="/tournament/history" class="text-sm font-medium text-zinc-300 transition hover:text-bx-cyan">Historial</Link>
+                        <div class="relative">
+                            <button
+                                type="button"
+                                class="flex items-center gap-1 text-sm font-medium text-zinc-300 transition hover:text-bx-cyan"
+                                :class="{ 'text-bx-cyan': tournamentsOpen }"
+                                :aria-expanded="tournamentsOpen"
+                                @click="tournamentsOpen = !tournamentsOpen"
+                            >
+                                Torneos
+                                <svg class="h-3 w-3 transition" :class="{ 'rotate-180': tournamentsOpen }" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
+                                </svg>
+                            </button>
+                            <template v-if="tournamentsOpen">
+                                <button type="button" class="fixed inset-0 z-10 cursor-default" aria-hidden="true" tabindex="-1" @click="tournamentsOpen = false"></button>
+                                <div class="absolute left-0 top-full z-20 mt-2 min-w-48 rounded-lg border border-white/10 bg-zinc-900 p-1 shadow-xl">
+                                    <Link href="/tournament" class="block rounded-md px-3 py-2 text-sm font-medium text-zinc-300 transition hover:bg-white/5 hover:text-bx-cyan">Individual</Link>
+                                    <Link href="/torneo-equipos" class="block rounded-md px-3 py-2 text-sm font-medium text-zinc-300 transition hover:bg-white/5 hover:text-bx-cyan">Por equipos</Link>
+                                    <Link href="/tournament/history" class="block rounded-md px-3 py-2 text-sm font-medium text-zinc-300 transition hover:bg-white/5 hover:text-bx-cyan">Historial</Link>
+                                </div>
+                            </template>
+                        </div>
                         <Link href="/players" class="text-sm font-medium text-zinc-300 transition hover:text-bx-cyan">Jugadores</Link>
                         <Link href="/teams" class="text-sm font-medium text-zinc-300 transition hover:text-bx-cyan">Equipos</Link>
                         <Link v-if="user.is_owner" href="/admin/users" class="text-sm font-medium text-zinc-300 transition hover:text-bx-cyan">Usuarios</Link>
@@ -83,9 +104,11 @@ watch(() => page.url, () => {
                     <Link href="/campeones-mensuales" class="rounded-lg px-3 py-2 text-sm font-medium text-zinc-300 hover:bg-white/5">Campeones</Link>
                     <template v-if="user">
                         <Link href="/decks" class="rounded-lg px-3 py-2 text-sm font-medium text-zinc-300 hover:bg-white/5">Mis decks</Link>
-                        <Link href="/tournament" class="rounded-lg px-3 py-2 text-sm font-medium text-zinc-300 hover:bg-white/5">Torneo</Link>
-                        <Link href="/torneo-equipos" class="rounded-lg px-3 py-2 text-sm font-medium text-zinc-300 hover:bg-white/5">Torneo por equipos</Link>
-                        <Link href="/tournament/history" class="rounded-lg px-3 py-2 text-sm font-medium text-zinc-300 hover:bg-white/5">Historial</Link>
+                        <p class="px-3 pb-1 pt-2 text-xs font-semibold uppercase tracking-wide text-zinc-500">Torneos</p>
+                        <Link href="/tournament" class="rounded-lg px-3 py-2 pl-5 text-sm font-medium text-zinc-300 hover:bg-white/5">Individual</Link>
+                        <Link href="/torneo-equipos" class="rounded-lg px-3 py-2 pl-5 text-sm font-medium text-zinc-300 hover:bg-white/5">Por equipos</Link>
+                        <Link href="/tournament/history" class="rounded-lg px-3 py-2 pl-5 text-sm font-medium text-zinc-300 hover:bg-white/5">Historial</Link>
+                        <div class="my-1 border-t border-white/10"></div>
                         <Link href="/players" class="rounded-lg px-3 py-2 text-sm font-medium text-zinc-300 hover:bg-white/5">Jugadores</Link>
                         <Link href="/teams" class="rounded-lg px-3 py-2 text-sm font-medium text-zinc-300 hover:bg-white/5">Equipos</Link>
                         <Link v-if="user.is_owner" href="/admin/users" class="rounded-lg px-3 py-2 text-sm font-medium text-zinc-300 hover:bg-white/5">Usuarios</Link>
