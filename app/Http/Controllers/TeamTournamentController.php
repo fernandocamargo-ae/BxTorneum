@@ -81,7 +81,7 @@ class TeamTournamentController extends Controller
         $teamId = $request->validate(['team_id' => ['required', 'integer', 'exists:teams,id']])['team_id'];
         $team = Team::findOrFail($teamId);
 
-        abort_unless($team->isComplete(), 422, 'El equipo debe estar completo (9 beys) para entrar.');
+        abort_unless($team->isTournamentReady(), 422, 'El equipo debe tener 3 integrantes, cada uno con su deck de torneo.');
         abort_if(
             TournamentEntry::where('tournament_id', $tournament->id)->where('team_id', $team->id)->exists(),
             422,
@@ -176,7 +176,7 @@ class TeamTournamentController extends Controller
         $enrolledTeamIds = collect($entries)->pluck('team_id')->filter()->all();
 
         return Team::orderBy('name')->get()
-            ->filter(fn (Team $team) => $team->isComplete() && ! in_array($team->id, $enrolledTeamIds, true))
+            ->filter(fn (Team $team) => $team->isTournamentReady() && ! in_array($team->id, $enrolledTeamIds, true))
             ->map(fn (Team $team) => ['id' => $team->id, 'name' => $team->name])
             ->values()
             ->all();

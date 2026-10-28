@@ -23,15 +23,22 @@ class TeamTournamentFormatGuardTest extends TestCase
 
     private function completeTeam(string $name): Team
     {
-        $team = Team::create(['name' => $name]);
-        foreach (['captain', 'subcaptain', 'official'] as $role) {
-            $member = $team->members()->create(['role' => $role, 'name' => $role]);
-            for ($position = 1; $position <= 3; $position++) {
-                $member->beyblades()->create(['line' => 'bx', 'position' => $position]);
-            }
-        }
+        $captain = $this->playerWithTournamentDeck();
+        $team = Team::create(['name' => $name, 'created_by_user_id' => $captain->id]);
+        $team->members()->create(['user_id' => $captain->id, 'role' => 'captain']);
+        $team->members()->create(['user_id' => $this->playerWithTournamentDeck()->id, 'role' => 'subcaptain']);
+        $team->members()->create(['user_id' => $this->playerWithTournamentDeck()->id, 'role' => 'official']);
 
         return $team;
+    }
+
+    private function playerWithTournamentDeck(): User
+    {
+        $user = User::factory()->create();
+        $deck = $user->decks()->create(['name' => 'D', 'visibility' => 'private', 'is_tournament_deck' => true]);
+        $deck->deckBeyblades()->create(['line' => 'bx', 'position' => 1]);
+
+        return $user;
     }
 
     public function test_an_individual_join_is_blocked_on_a_team_tournament(): void

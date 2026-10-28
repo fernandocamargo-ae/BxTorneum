@@ -20,15 +20,22 @@ class TeamTournamentRegistrationTest extends TestCase
 
     private function completeTeam(string $name): Team
     {
-        $team = Team::create(['name' => $name]);
-        foreach (['captain', 'subcaptain', 'official'] as $role) {
-            $member = $team->members()->create(['role' => $role, 'name' => $role]);
-            for ($position = 1; $position <= 3; $position++) {
-                $member->beyblades()->create(['line' => 'bx', 'position' => $position]);
-            }
-        }
+        $captain = $this->playerWithTournamentDeck();
+        $team = Team::create(['name' => $name, 'created_by_user_id' => $captain->id]);
+        $team->members()->create(['user_id' => $captain->id, 'role' => 'captain']);
+        $team->members()->create(['user_id' => $this->playerWithTournamentDeck()->id, 'role' => 'subcaptain']);
+        $team->members()->create(['user_id' => $this->playerWithTournamentDeck()->id, 'role' => 'official']);
 
         return $team;
+    }
+
+    private function playerWithTournamentDeck(): User
+    {
+        $user = User::factory()->create();
+        $deck = $user->decks()->create(['name' => 'D', 'visibility' => 'private', 'is_tournament_deck' => true]);
+        $deck->deckBeyblades()->create(['line' => 'bx', 'position' => 1]);
+
+        return $user;
     }
 
     private function teamTournament(array $overrides = []): Tournament
@@ -60,7 +67,23 @@ class TeamTournamentRegistrationTest extends TestCase
     public function test_an_incomplete_team_cannot_be_added(): void
     {
         $tournament = $this->teamTournament();
-        $team = Team::create(['name' => 'Incompleto']);
+        $team = Team::create(['name' => 'Incompleto']); // 0 members
+
+        $this->actingAs($this->admin())
+            ->post("/torneo-equipos/{$tournament->id}/equipos", ['team_id' => $team->id])
+            ->assertStatus(422);
+
+        $this->assertDatabaseMissing('tournament_entries', ['team_id' => $team->id]);
+    }
+
+    public function test_a_team_whose_member_lacks_a_tournament_deck_cannot_be_added(): void
+    {
+        $tournament = $this->teamTournament();
+        $captain = $this->playerWithTournamentDeck();
+        $team = Team::create(['name' => 'Casi', 'created_by_user_id' => $captain->id]);
+        $team->members()->create(['user_id' => $captain->id, 'role' => 'captain']);
+        $team->members()->create(['user_id' => $this->playerWithTournamentDeck()->id, 'role' => 'subcaptain']);
+        $team->members()->create(['user_id' => User::factory()->create()->id, 'role' => 'official']); // no deck
 
         $this->actingAs($this->admin())
             ->post("/torneo-equipos/{$tournament->id}/equipos", ['team_id' => $team->id])
