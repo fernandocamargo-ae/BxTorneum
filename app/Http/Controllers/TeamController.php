@@ -45,6 +45,8 @@ class TeamController extends Controller
 
     public function update(TeamRequest $request, Team $team)
     {
+        abort_if($team->isLockedByActiveTournament(), 422, 'El equipo está inscrito en un torneo en curso; no puede editarse hasta que termine.');
+
         DB::transaction(fn () => $this->persistNames($team, $request->validated()));
 
         return redirect()->route('teams.show', $team)->with('success', 'Equipo actualizado.');
@@ -52,6 +54,8 @@ class TeamController extends Controller
 
     public function destroy(Team $team)
     {
+        abort_if($team->hasAnyTournamentEntry(), 422, 'El equipo participó en torneos; no puede borrarse sin romper el historial.');
+
         $team->delete();
 
         return redirect()->route('teams.index')->with('success', 'Equipo eliminado.');

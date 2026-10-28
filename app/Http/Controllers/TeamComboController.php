@@ -40,6 +40,8 @@ class TeamComboController extends Controller
 
     public function update(TeamComboRequest $request, Team $team)
     {
+        abort_if($team->isLockedByActiveTournament(), 422, 'El equipo está inscrito en un torneo en curso; no puedes cambiar sus combos hasta que termine.');
+
         $data = $request->validated();
 
         DB::transaction(function () use ($team, $data) {
