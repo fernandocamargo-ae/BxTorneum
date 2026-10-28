@@ -10,6 +10,7 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\TeamComboController;
 use App\Http\Controllers\TeamController;
+use App\Http\Controllers\TeamTournamentController;
 use App\Http\Controllers\TournamentController;
 use App\Http\Controllers\TournamentMatchController;
 use App\Http\Controllers\TournamentReportController;
@@ -63,6 +64,13 @@ Route::middleware('auth')->group(function () {
     Route::post('/tournament/{tournament}/rounds', [TournamentRoundController::class, 'store'])->name('tournament.rounds.store');
     Route::post('/tournament/{tournament}/cut', [TournamentController::class, 'cut'])->name('tournament.cut');
     Route::post('/tournament/{tournament}/report/pdf', [TournamentReportController::class, 'download'])->middleware('throttle:5,1')->name('tournament.report.pdf');
+
+    // Team tournaments (format = teams). Round/cut/match actions reuse the per-id
+    // tournament routes above; only creation, listing and the team-aware show live here.
+    Route::post('/torneo-equipos', [TeamTournamentController::class, 'storeOfficial'])->name('team-tournament.store');
+    Route::post('/torneo-equipos/clandestinos', [TeamTournamentController::class, 'storeClandestine'])->name('team-tournament.clandestinos.store');
+    Route::get('/torneo-equipos', [TeamTournamentController::class, 'show'])->name('team-tournament.show');
+    Route::get('/torneo-equipos/{tournament}', [TeamTournamentController::class, 'show'])->name('team-tournament.view');
 
     Route::middleware('admin')->group(function () {
         Route::post('/campeones-mensuales', [MonthlyChampionController::class, 'store'])->name('monthly-champions.store');

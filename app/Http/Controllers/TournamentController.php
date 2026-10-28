@@ -20,7 +20,7 @@ class TournamentController extends Controller
         $this->authorize('createOfficial', Tournament::class);
 
         abort_if(
-            Tournament::where('type', 'official')->where('status', '!=', 'completed')->exists(),
+            Tournament::where('type', 'official')->where('format', 'individual')->where('status', '!=', 'completed')->exists(),
             422,
             'Ya hay un torneo oficial activo.'
         );
@@ -159,8 +159,8 @@ class TournamentController extends Controller
     public function show(?Tournament $tournament = null)
     {
         // No id → the "Oficial" tab: the active official, else the last completed official.
-        $tournament ??= Tournament::where('type', 'official')->where('status', '!=', 'completed')->latest()->first()
-            ?? Tournament::where('type', 'official')->where('status', 'completed')->latest()->first();
+        $tournament ??= Tournament::where('type', 'official')->where('format', 'individual')->where('status', '!=', 'completed')->latest()->first()
+            ?? Tournament::where('type', 'official')->where('format', 'individual')->where('status', 'completed')->latest()->first();
 
         $tournamentDeck = $this->eligibleTournamentDeck();
 
@@ -231,6 +231,7 @@ class TournamentController extends Controller
     public function clandestineIndex()
     {
         $tournaments = Tournament::where('type', 'clandestine')
+            ->where('format', 'individual')
             ->with('createdBy:id,nickname')
             ->withCount('entries')
             // Active tournaments first, then most recently created.
@@ -251,6 +252,7 @@ class TournamentController extends Controller
     public function history()
     {
         $tournaments = Tournament::where('type', 'official')
+            ->where('format', 'individual')
             ->where('status', 'completed')
             ->with('champion.user:id,nickname')
             ->withCount('entries')

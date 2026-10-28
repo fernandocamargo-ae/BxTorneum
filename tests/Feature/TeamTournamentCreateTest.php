@@ -50,4 +50,58 @@ class TeamTournamentCreateTest extends TestCase
         $this->assertNull($entry->deck_id);
         $this->assertTrue($entry->team->is($team));
     }
+
+    public function test_an_admin_creates_an_official_team_tournament(): void
+    {
+        $admin = User::factory()->create(['is_admin' => true]);
+
+        $this->actingAs($admin)
+            ->post('/torneo-equipos', ['name' => 'Copa', 'swiss_rounds' => 3, 'cut_size' => 4])
+            ->assertRedirect();
+
+        $this->assertDatabaseHas('tournaments', ['name' => 'Copa', 'type' => 'official', 'format' => 'teams']);
+    }
+
+    public function test_an_amateur_creates_a_clandestine_team_tournament(): void
+    {
+        $amateur = User::factory()->create(['is_admin' => false, 'is_amateur' => true, 'is_guest' => false]);
+
+        $this->actingAs($amateur)
+            ->post('/torneo-equipos/clandestinos', ['name' => 'Under', 'swiss_rounds' => 3, 'cut_size' => 4])
+            ->assertRedirect();
+
+        $this->assertDatabaseHas('tournaments', ['name' => 'Under', 'type' => 'clandestine', 'format' => 'teams']);
+    }
+
+    public function test_a_plain_player_cannot_create_team_tournaments(): void
+    {
+        $jugador = User::factory()->create(['is_admin' => false, 'is_amateur' => false, 'is_guest' => false]);
+
+        $this->actingAs($jugador)->post('/torneo-equipos', ['name' => 'X', 'swiss_rounds' => 3, 'cut_size' => 4])->assertForbidden();
+        $this->actingAs($jugador)->post('/torneo-equipos/clandestinos', ['name' => 'X', 'swiss_rounds' => 3, 'cut_size' => 4])->assertForbidden();
+    }
+
+    public function test_an_active_team_official_does_not_block_an_individual_official(): void
+    {
+        $admin = User::factory()->create(['is_admin' => true]);
+        Tournament::create($this->tournamentAttributes(['name' => 'TeamOff', 'format' => 'teams']));
+
+        $this->actingAs($admin)
+            ->post('/tournament', ['name' => 'IndOff', 'swiss_rounds' => 3, 'cut_size' => 4])
+            ->assertRedirect();
+
+        $this->assertDatabaseHas('tournaments', ['name' => 'IndOff', 'type' => 'official', 'format' => 'individual']);
+    }
+
+    public function test_an_active_individual_official_does_not_block_a_team_official(): void
+    {
+        $admin = User::factory()->create(['is_admin' => true]);
+        Tournament::create($this->tournamentAttributes(['name' => 'IndOff', 'format' => 'individual']));
+
+        $this->actingAs($admin)
+            ->post('/torneo-equipos', ['name' => 'TeamOff', 'swiss_rounds' => 3, 'cut_size' => 4])
+            ->assertRedirect();
+
+        $this->assertDatabaseHas('tournaments', ['name' => 'TeamOff', 'type' => 'official', 'format' => 'teams']);
+    }
 }
