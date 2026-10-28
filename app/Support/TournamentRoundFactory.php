@@ -61,6 +61,11 @@ class TournamentRoundFactory
 
     private static function notifyOne(TournamentEntry $entry, TournamentEntry $opponent, int $roundNumber): void
     {
+        // Team entries have no user account to notify; pairing already happened.
+        if ($entry->user === null) {
+            return;
+        }
+
         try {
             $entry->user->notify(new PairedForRound($opponent->user->nickname, $roundNumber));
         } catch (Throwable $e) {
