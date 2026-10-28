@@ -6,6 +6,7 @@ use App\Http\Requests\TeamRequest;
 use App\Models\Member;
 use App\Models\Team;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 
 class TeamController extends Controller
@@ -88,6 +89,34 @@ class TeamController extends Controller
         $member->delete();
 
         return back()->with('success', 'Integrante expulsado del equipo.');
+    }
+
+    public function updateMemberRole(Request $request, Team $team, Member $member)
+    {
+        abort_unless($team->captain()?->is(auth()->user()), 403, 'Solo el capitán gestiona el equipo.');
+        abort_unless($member->team_id === $team->id, 404);
+
+        $role = $request->validate(['role' => ['required', 'in:subcaptain,official']])['role'];
+
+        abort_if($member->role === 'captain', 422, 'No puedes cambiar el rol del capitán.');
+        abort_if($team->isLockedByActiveTournament(), 422, 'El equipo está inscrito en un torneo en curso.');
+
+        DB::transaction(function () use ($team, $member, $role) {
+            if ($member->role === $role) {
+                return;
+            }
+
+            $occupant = $team->members()->where('role', $role)->where('id', '!=', $member->id)->first();
+            if ($occupant) {
+                $oldRole = $member->role;
+                $member->update(['role' => '__swapping']); // temp slot to dodge unique(team_id, role)
+                $occupant->update(['role' => $oldRole]);
+            }
+
+            $member->update(['role' => $role]);
+        });
+
+        return back()->with('success', 'Rol actualizado.');
     }
 
     public function show(Team $team)

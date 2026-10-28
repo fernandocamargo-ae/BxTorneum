@@ -74,4 +74,58 @@ class TeamCaptainManagementTest extends TestCase
 
         $this->actingAs($captainA)->delete("/teams/{$teamA->id}/members/{$subB->id}")->assertNotFound();
     }
+
+    public function test_a_captain_swaps_subcaptain_and_official(): void
+    {
+        $captain = User::factory()->create();
+        $team = Team::create(['name' => 'Dragones', 'created_by_user_id' => $captain->id]);
+        $team->members()->create(['user_id' => $captain->id, 'role' => 'captain']);
+        $subMember = $team->members()->create(['user_id' => User::factory()->create()->id, 'role' => 'subcaptain']);
+        $officialMember = $team->members()->create(['user_id' => User::factory()->create()->id, 'role' => 'official']);
+
+        $this->actingAs($captain)
+            ->patch("/teams/{$team->id}/members/{$subMember->id}/role", ['role' => 'official'])
+            ->assertRedirect();
+
+        $this->assertSame('official', $subMember->fresh()->role);
+        $this->assertSame('subcaptain', $officialMember->fresh()->role);
+    }
+
+    public function test_role_must_be_subcaptain_or_official(): void
+    {
+        [$team, $captain, $sub] = $this->teamWithSub();
+
+        $this->actingAs($captain)
+            ->patch("/teams/{$team->id}/members/{$sub->id}/role", ['role' => 'captain'])
+            ->assertSessionHasErrors('role');
+    }
+
+    public function test_the_captains_role_cannot_be_changed(): void
+    {
+        [$team, $captain] = $this->teamWithSub();
+        $captainMember = $team->members()->where('role', 'captain')->first();
+
+        $this->actingAs($captain)
+            ->patch("/teams/{$team->id}/members/{$captainMember->id}/role", ['role' => 'official'])
+            ->assertStatus(422);
+    }
+
+    public function test_a_non_captain_cannot_change_roles(): void
+    {
+        [$team, , $sub] = $this->teamWithSub();
+
+        $this->actingAs($sub->user)
+            ->patch("/teams/{$team->id}/members/{$sub->id}/role", ['role' => 'official'])
+            ->assertForbidden();
+    }
+
+    public function test_cannot_change_roles_while_enrolled_in_an_active_tournament(): void
+    {
+        [$team, $captain, $sub] = $this->teamWithSub();
+        $this->enrollInActiveTournament($team);
+
+        $this->actingAs($captain)
+            ->patch("/teams/{$team->id}/members/{$sub->id}/role", ['role' => 'official'])
+            ->assertStatus(422);
+    }
 }
