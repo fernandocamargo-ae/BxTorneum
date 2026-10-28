@@ -37,4 +37,9 @@ class Tournament extends Model
     {
         return $this->type === 'clandestine';
     }
+
+    public function isTeams(): bool
+    {
+        return $this->format === 'teams';
+    }
 }
