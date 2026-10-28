@@ -90,6 +90,7 @@ class TournamentController extends Controller
 
     public function join(Request $request, Tournament $tournament): RedirectResponse
     {
+        abort_if($tournament->isTeams(), 422, 'Este torneo es por equipos; se inscriben equipos desde su panel.');
         abort_unless($tournament->status === 'registration', 422, 'Las inscripciones ya cerraron.');
 
         abort_if(
@@ -112,6 +113,7 @@ class TournamentController extends Controller
 
     public function leave(Tournament $tournament): RedirectResponse
     {
+        abort_if($tournament->isTeams(), 422, 'Este torneo es por equipos.');
         abort_unless($tournament->status === 'registration', 422, 'Ya no puedes salir del torneo; las inscripciones cerraron.');
 
         $entry = TournamentEntry::where('tournament_id', $tournament->id)->where('user_id', auth()->id())->first();

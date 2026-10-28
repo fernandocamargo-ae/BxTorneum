@@ -75,6 +75,7 @@ class TeamTournamentController extends Controller
     {
         $this->authorize('manage', $tournament);
 
+        abort_unless($tournament->isTeams(), 422, 'Este torneo no es por equipos.');
         abort_unless($tournament->status === 'registration', 422, 'Las inscripciones ya cerraron.');
 
         $teamId = $request->validate(['team_id' => ['required', 'integer', 'exists:teams,id']])['team_id'];
@@ -95,6 +96,9 @@ class TeamTournamentController extends Controller
     public function show(?Tournament $tournament = null)
     {
         // No id → the active team official, else the last completed team official.
+        // A bound {tournament} from the URL must be a team tournament; this route never exposes individual ones.
+        abort_if($tournament && ! $tournament->isTeams(), 404);
+
         $tournament ??= Tournament::where('type', 'official')->where('format', 'teams')->where('status', '!=', 'completed')->latest()->first()
             ?? Tournament::where('type', 'official')->where('format', 'teams')->where('status', 'completed')->latest()->first();
 
