@@ -11,7 +11,18 @@ return new class extends Migration
     {
         // The old team model (text members + per-member beys) is incompatible with
         // user-based membership. Reset team data (owner-approved "start clean").
-        DB::table('tournaments')->where('format', 'teams')->delete(); // cascades rounds/matches/entries
+        // Delete children in order: matches reference entries with RESTRICT, so a plain
+        // cascade from tournaments is not reliable.
+        $teamTournamentIds = DB::table('tournaments')->where('format', 'teams')->pluck('id');
+        if ($teamTournamentIds->isNotEmpty()) {
+            $roundIds = DB::table('tournament_rounds')->whereIn('tournament_id', $teamTournamentIds)->pluck('id');
+            DB::table('tournament_matches')->whereIn('tournament_round_id', $roundIds)->delete();
+            DB::table('tournament_rounds')->whereIn('tournament_id', $teamTournamentIds)->delete();
+            DB::table('tournament_entries')->whereIn('tournament_id', $teamTournamentIds)->delete();
+            DB::table('tournaments')->whereIn('id', $teamTournamentIds)->delete();
+        }
+
+        Schema::dropIfExists('beyblade_part'); // team-beyblade ↔ part pivot (decks use deck_beyblade_part)
         Schema::dropIfExists('beyblades');
         Schema::dropIfExists('members');
         DB::table('teams')->delete();
