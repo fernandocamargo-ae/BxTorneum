@@ -23,11 +23,10 @@ Route::post('/report/players/pdf', [PlayerReportController::class, 'download'])-
 Route::get('/campeones-mensuales', [MonthlyChampionController::class, 'index'])->name('monthly-champions.index');
 
 Route::middleware('auth')->group(function () {
-    // Equipos deshabilitados temporalmente (no se usan por ahora). Lógica y vistas se conservan intactas.
-    // Route::resource('teams', TeamController::class);
+    Route::resource('teams', TeamController::class);
 
-    // Route::get('/teams/{team}/combos', [TeamComboController::class, 'edit'])->name('combos.edit');
-    // Route::put('/teams/{team}/combos', [TeamComboController::class, 'update'])->name('combos.update');
+    Route::get('/teams/{team}/combos', [TeamComboController::class, 'edit'])->name('combos.edit');
+    Route::put('/teams/{team}/combos', [TeamComboController::class, 'update'])->name('combos.update');
 
     Route::get('/parts/search', [PartController::class, 'search'])->name('parts.search');
 

@@ -11,13 +11,6 @@ class TeamNamesTest extends TestCase
 {
     use RefreshDatabase;
 
-    protected function setUp(): void
-    {
-        parent::setUp();
-
-        $this->markTestSkipped('Equipos deshabilitados temporalmente (rutas comentadas en routes/web.php).');
-    }
-
     private function payload(): array
     {
         return [
