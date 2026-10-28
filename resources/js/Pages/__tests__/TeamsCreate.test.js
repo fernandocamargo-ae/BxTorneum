@@ -3,18 +3,14 @@ import { mount } from '@vue/test-utils';
 import Create from '../Teams/Create.vue';
 
 vi.mock('@inertiajs/vue3', () => ({
-    useForm: (data) => ({ ...data, post: vi.fn(), processing: false, errors: {} }),
-    Link: { template: '<a><slot/></a>' },
     Head: { template: '<div><slot/></div>' },
+    useForm: (data) => ({ ...data, post: vi.fn(), processing: false, errors: {} }),
 }));
 
 describe('Teams/Create', () => {
-    it('renders a team name field and three member name fields', () => {
+    it('asks only for the team name', () => {
         const wrapper = mount(Create);
-        // 1 team name + 3 member names = 4 text inputs
-        expect(wrapper.findAll('input[type="text"]')).toHaveLength(4);
-        expect(wrapper.text()).toContain('Capitán');
-        expect(wrapper.text()).toContain('Subcapitán');
-        expect(wrapper.text()).toContain('Oficial');
+        expect(wrapper.findAll('input')).toHaveLength(1);
+        expect(wrapper.text()).toContain('Nombre del equipo');
     });
 });

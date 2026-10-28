@@ -141,4 +141,19 @@ class TeamMembershipTest extends TestCase
 
         $this->actingAs(User::factory()->create())->delete("/teams/{$team->id}/leave")->assertStatus(422);
     }
+
+    public function test_the_team_page_shows_members_and_viewer_flags(): void
+    {
+        $captain = User::factory()->create();
+        $team = $this->teamOwnedBy($captain, 'Dragones');
+        $team->members()->create(['user_id' => User::factory()->create()->id, 'role' => 'subcaptain']);
+
+        $this->actingAs($captain)
+            ->get("/teams/{$team->id}")
+            ->assertInertia(fn ($page) => $page
+                ->component('Teams/Show')
+                ->where('team.name', 'Dragones')
+                ->where('team.members.0.role', 'captain')
+                ->where('viewer.is_captain', true));
+    }
 }

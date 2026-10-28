@@ -9,27 +9,29 @@ vi.mock('@inertiajs/vue3', () => ({
 
 describe('Teams/Index', () => {
     const teams = [
-        { id: 1, name: 'Storm Riders', beyblades_count: 9, is_complete: true },
-        { id: 2, name: 'Dran Squad', beyblades_count: 4, is_complete: false },
+        { id: 1, name: 'Dragones', members_count: 2, has_room: true },
+        { id: 2, name: 'Fénix', members_count: 3, has_room: false },
     ];
 
-    it('shows completeness badges', () => {
-        const wrapper = mount(Index, { props: { teams } });
-        expect(wrapper.text()).toContain('Completo');
-        expect(wrapper.text()).toContain('Incompleto 4/9');
+    it('shows member counts out of three', () => {
+        const wrapper = mount(Index, { props: { teams, my_team_id: null } });
+        expect(wrapper.text()).toContain('Dragones');
+        expect(wrapper.text()).toContain('2/3');
+        expect(wrapper.text()).toContain('3/3');
+    });
+
+    it('offers Registrar equipo only when the viewer has no team', () => {
+        const withTeam = mount(Index, { props: { teams, my_team_id: 1 } });
+        expect(withTeam.findAll('a').find((a) => a.attributes('href') === '/teams/create')).toBeUndefined();
+
+        const without = mount(Index, { props: { teams, my_team_id: null } });
+        expect(without.findAll('a').find((a) => a.attributes('href') === '/teams/create')).toBeTruthy();
     });
 
     it('filters by name', async () => {
-        const wrapper = mount(Index, { props: { teams } });
-        await wrapper.find('input').setValue('storm');
-        expect(wrapper.text()).toContain('Storm Riders');
-        expect(wrapper.text()).not.toContain('Dran Squad');
-    });
-
-    it('always offers a link to register a team, even when teams already exist', () => {
-        const wrapper = mount(Index, { props: { teams } });
-        const createLink = wrapper.findAll('a').find((a) => a.attributes('href') === '/teams/create');
-        expect(createLink).toBeTruthy();
-        expect(createLink.text()).toContain('Registrar equipo');
+        const wrapper = mount(Index, { props: { teams, my_team_id: null } });
+        await wrapper.find('input').setValue('drag');
+        expect(wrapper.text()).toContain('Dragones');
+        expect(wrapper.text()).not.toContain('Fénix');
     });
 });

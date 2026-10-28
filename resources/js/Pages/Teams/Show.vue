@@ -1,95 +1,113 @@
 <script setup>
 import { Head, Link, router } from '@inertiajs/vue3';
-import { SLOT_LABELS, LINES } from '../../lib/beybladeLines';
+import Avatar from '../../Components/Avatar.vue';
 
-const props = defineProps({ team: { type: Object, required: true } });
+const props = defineProps({
+    team: { type: Object, required: true },
+    viewer: { type: Object, default: () => ({}) },
+});
 
-const ROLE_LABELS = { captain: 'Capitán', subcaptain: 'Subcapitán', official: 'Oficial' };
+const roleLabels = { captain: 'Capitán', subcaptain: 'Subcapitán', official: 'Oficial' };
 
-function lineLabel(value) {
-    return LINES.find((l) => l.value === value)?.label ?? value;
+function join() {
+    router.post(`/teams/${props.team.id}/join`, {}, { preserveScroll: true });
 }
 
-function destroy() {
-    if (confirm('¿Eliminar este equipo? Esta acción no se puede deshacer.')) {
-        router.delete(`/teams/${props.team.id}`);
-    }
+function leave() {
+    router.delete(`/teams/${props.team.id}/leave`);
+}
+
+function expel(member) {
+    router.delete(`/teams/${props.team.id}/members/${member.id}`, { preserveScroll: true });
+}
+
+function setRole(member, role) {
+    router.patch(`/teams/${props.team.id}/members/${member.id}/role`, { role }, { preserveScroll: true });
 }
 </script>
 
 <template>
     <Head :title="team.name" />
 
-    <div class="mb-6 flex flex-wrap items-center justify-between gap-4">
+    <div class="mb-6 flex flex-wrap items-center justify-between gap-3">
         <div>
-            <Link href="/teams" class="text-sm text-zinc-400 hover:text-bx-cyan">← Equipos</Link>
-            <div class="mt-1 flex items-center gap-3">
-                <h1 class="text-3xl font-black">{{ team.name }}</h1>
-                <span
-                    v-if="team.is_complete"
-                    class="rounded-full bg-bx-cyan/15 px-2 py-0.5 text-xs font-bold text-bx-cyan"
-                >
-                    Completo
-                </span>
-                <span
-                    v-else
-                    class="rounded-full bg-bx-orange/15 px-2 py-0.5 text-xs font-bold text-bx-orange"
-                >
-                    Incompleto {{ team.beyblades_count }}/9
-                </span>
-            </div>
+            <h1 class="text-3xl font-black"><span class="bx-gradient-text">{{ team.name }}</span></h1>
+            <p class="mt-1 text-sm">
+                <span v-if="team.is_tournament_ready" class="font-semibold text-bx-cyan">Listo para torneos (3 integrantes con deck)</span>
+                <span v-else class="text-bx-orange">Aún no está listo para torneos: faltan integrantes o decks de torneo.</span>
+            </p>
         </div>
         <div class="flex gap-2">
-            <Link
-                :href="`/teams/${team.id}/combos`"
-                class="rounded-lg bg-gradient-to-r from-bx-cyan to-bx-magenta px-4 py-2 text-sm font-bold text-zinc-950 transition hover:opacity-90"
-            >
-                Registrar combos
-            </Link>
-            <Link
-                :href="`/teams/${team.id}/edit`"
-                class="rounded-lg border border-white/15 px-4 py-2 text-sm font-semibold hover:border-bx-cyan hover:text-bx-cyan"
-            >
-                Editar nombres
-            </Link>
             <button
-                class="rounded-lg border border-bx-magenta/50 px-4 py-2 text-sm font-semibold text-bx-magenta hover:bg-bx-magenta/10"
-                @click="destroy"
+                v-if="viewer.can_join"
+                type="button"
+                class="rounded-lg bg-gradient-to-r from-bx-cyan to-bx-magenta px-4 py-2 text-sm font-bold text-zinc-950 transition hover:opacity-90"
+                @click="join"
             >
-                Eliminar
+                Unirme
+            </button>
+            <button
+                v-if="viewer.is_member"
+                type="button"
+                class="rounded-lg border border-white/15 px-4 py-2 text-sm font-semibold text-zinc-300 transition hover:border-bx-magenta hover:text-bx-magenta"
+                @click="leave"
+            >
+                Salir del equipo
             </button>
         </div>
     </div>
 
-    <div class="space-y-6">
-        <section
+    <p v-if="viewer.locked_by_tournament" class="mb-4 rounded-lg border border-bx-orange/40 bg-bx-orange/10 px-4 py-2 text-xs text-bx-orange">
+        El equipo está inscrito en un torneo en curso: no se pueden cambiar integrantes hasta que termine.
+    </p>
+
+    <div class="space-y-3">
+        <div
             v-for="member in team.members"
             :key="member.id"
-            class="rounded-xl border border-white/10 bg-zinc-900/40 p-5"
+            class="flex flex-wrap items-center gap-3 rounded-xl border border-white/10 bg-zinc-900/50 p-4"
         >
-            <div class="mb-4 flex items-center gap-3">
-                <span class="rounded bg-gradient-to-r from-bx-cyan to-bx-magenta px-2 py-0.5 text-xs font-black uppercase text-zinc-950">
-                    {{ ROLE_LABELS[member.role] }}
-                </span>
-                <span class="text-lg font-bold">{{ member.name }}</span>
+            <Avatar :nickname="member.nickname" :url="member.avatar_url" size="h-10 w-10" />
+            <div class="min-w-0 flex-1">
+                <p class="font-bold text-zinc-100">{{ member.nickname }}</p>
+                <p class="text-xs text-zinc-400">
+                    {{ roleLabels[member.role] ?? member.role }}
+                    <span v-if="member.has_tournament_deck" class="ml-1 text-bx-cyan">· deck de torneo ✓</span>
+                    <span v-else class="ml-1 text-bx-orange">· sin deck de torneo</span>
+                </p>
             </div>
-
-            <div v-if="member.beyblades.length" class="grid gap-4 sm:grid-cols-3">
-                <div
-                    v-for="combo in member.beyblades"
-                    :key="combo.id"
-                    class="rounded-lg border border-white/10 bg-zinc-950/60 p-4"
+            <div
+                v-if="viewer.is_captain && member.role !== 'captain' && !viewer.locked_by_tournament"
+                class="flex flex-wrap gap-2"
+            >
+                <button
+                    v-if="member.role !== 'subcaptain'"
+                    type="button"
+                    class="rounded border border-white/15 px-2 py-1 text-xs font-semibold transition hover:border-bx-cyan hover:text-bx-cyan"
+                    @click="setRole(member, 'subcaptain')"
                 >
-                    <p class="mb-2 text-xs font-bold uppercase tracking-widest text-bx-cyan">{{ lineLabel(combo.line) }}</p>
-                    <dl class="space-y-1 text-sm">
-                        <div v-for="(name, slot) in combo.parts" :key="slot" class="flex justify-between gap-2">
-                            <dt class="text-zinc-500">{{ SLOT_LABELS[slot] ?? slot }}</dt>
-                            <dd class="font-medium text-zinc-200">{{ name }}</dd>
-                        </div>
-                    </dl>
-                </div>
+                    Hacer subcapitán
+                </button>
+                <button
+                    v-if="member.role !== 'official'"
+                    type="button"
+                    class="rounded border border-white/15 px-2 py-1 text-xs font-semibold transition hover:border-bx-cyan hover:text-bx-cyan"
+                    @click="setRole(member, 'official')"
+                >
+                    Hacer oficial
+                </button>
+                <button
+                    type="button"
+                    class="rounded border border-white/15 px-2 py-1 text-xs font-semibold text-zinc-400 transition hover:border-bx-magenta hover:text-bx-magenta"
+                    @click="expel(member)"
+                >
+                    Expulsar
+                </button>
             </div>
-            <p v-else class="text-sm text-zinc-500">Pendiente — sin combos registrados.</p>
-        </section>
+        </div>
     </div>
+
+    <p class="mt-6 text-xs text-zinc-500">
+        Los beys de cada integrante son su <Link href="/decks" class="text-bx-cyan hover:underline">deck de torneo</Link> personal.
+    </p>
 </template>
