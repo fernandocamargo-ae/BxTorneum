@@ -142,6 +142,28 @@ class TeamMembershipTest extends TestCase
         $this->actingAs(User::factory()->create())->delete("/teams/{$team->id}/leave")->assertStatus(422);
     }
 
+    public function test_deleting_a_captains_account_promotes_the_oldest_member(): void
+    {
+        $captain = User::factory()->create();
+        $team = $this->teamOwnedBy($captain);
+        $sub = User::factory()->create();
+        $team->members()->create(['user_id' => $sub->id, 'role' => 'subcaptain']);
+
+        $captain->delete();
+
+        $this->assertTrue($team->fresh()->captain()->is($sub));
+    }
+
+    public function test_deleting_the_last_members_account_disbands_the_team(): void
+    {
+        $captain = User::factory()->create();
+        $team = $this->teamOwnedBy($captain);
+
+        $captain->delete();
+
+        $this->assertDatabaseMissing('teams', ['id' => $team->id]);
+    }
+
     public function test_the_team_page_shows_members_and_viewer_flags(): void
     {
         $captain = User::factory()->create();

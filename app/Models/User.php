@@ -13,6 +13,28 @@ class User extends Authenticatable
     /** @use HasFactory<UserFactory> */
     use HasFactory, Notifiable;
 
+    protected static function booted(): void
+    {
+        // When a user is deleted, hand off or disband their team the same way leaving
+        // does, so a captain's departure never leaves a captainless, unmanageable team.
+        static::deleting(function (User $user) {
+            $member = Member::where('user_id', $user->id)->first();
+            if (! $member) {
+                return;
+            }
+
+            $team = $member->team;
+            $wasCaptain = $member->role === 'captain';
+            $member->delete();
+
+            if ($team->members()->count() === 0) {
+                $team->delete();
+            } elseif ($wasCaptain) {
+                $team->promoteOldestToCaptain();
+            }
+        });
+    }
+
     /**
      * The attributes that are mass assignable.
      *
