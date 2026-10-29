@@ -106,12 +106,10 @@ class TeamController extends Controller
                 return;
             }
 
+            // If another member holds the target role, swap: give them this member's
+            // current role first, then set this member to the target role.
             $occupant = $team->members()->where('role', $role)->where('id', '!=', $member->id)->first();
-            if ($occupant) {
-                $oldRole = $member->role;
-                $member->update(['role' => '__swapping']); // temp slot to dodge unique(team_id, role)
-                $occupant->update(['role' => $oldRole]);
-            }
+            $occupant?->update(['role' => $member->role]);
 
             $member->update(['role' => $role]);
         });
