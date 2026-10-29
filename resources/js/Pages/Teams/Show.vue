@@ -17,12 +17,17 @@ function leave() {
     router.delete(`/teams/${props.team.id}/leave`);
 }
 
+function refreshTeam() {
+    // Pull the roster fresh so the page never shows a stale (cached) role/order.
+    router.reload({ only: ['team', 'viewer'] });
+}
+
 function expel(member) {
-    router.delete(`/teams/${props.team.id}/members/${member.id}`, { preserveScroll: true });
+    router.delete(`/teams/${props.team.id}/members/${member.id}`, { preserveScroll: true, onSuccess: refreshTeam });
 }
 
 function setRole(member, role) {
-    router.patch(`/teams/${props.team.id}/members/${member.id}/role`, { role }, { preserveScroll: true });
+    router.patch(`/teams/${props.team.id}/members/${member.id}/role`, { role }, { preserveScroll: true, onSuccess: refreshTeam });
 }
 </script>
 
