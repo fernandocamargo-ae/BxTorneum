@@ -28,6 +28,8 @@ Route::middleware('auth')->group(function () {
     Route::get('/teams/create', [TeamController::class, 'create'])->name('teams.create');
     Route::post('/teams', [TeamController::class, 'store'])->name('teams.store');
     Route::get('/teams/{team}', [TeamController::class, 'show'])->name('teams.show');
+    Route::post('/teams/{team}/logo', [TeamController::class, 'updateLogo'])->name('teams.logo.update');
+    Route::delete('/teams/{team}/logo', [TeamController::class, 'destroyLogo'])->name('teams.logo.destroy');
     Route::post('/teams/{team}/join', [TeamController::class, 'join'])->name('teams.join');
     Route::delete('/teams/{team}/leave', [TeamController::class, 'leave'])->name('teams.leave');
     Route::delete('/teams/{team}/members/{member}', [TeamController::class, 'expelMember'])->name('teams.members.expel');

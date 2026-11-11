@@ -5,7 +5,8 @@ import Show from '../Teams/Show.vue';
 vi.mock('@inertiajs/vue3', () => ({
     Link: { props: ['href'], template: '<a :href="href"><slot/></a>' },
     Head: { template: '<div><slot/></div>' },
-    router: { post: vi.fn(), delete: vi.fn(), patch: vi.fn() },
+    router: { post: vi.fn(), delete: vi.fn(), patch: vi.fn(), reload: vi.fn() },
+    useForm: (data) => ({ ...data, post: vi.fn(), delete: vi.fn(), reset: vi.fn(), processing: false, errors: {} }),
 }));
 
 const team = {
@@ -38,5 +39,14 @@ describe('Teams/Show', () => {
 
         const asMember = mount(Show, { props: { team, viewer: { is_member: true, is_captain: false, can_join: false, locked_by_tournament: false } } });
         expect(asMember.text()).not.toContain('Expulsar');
+    });
+
+    it('offers the logo upload to any member, but not to a non-member', () => {
+        const asMember = mount(Show, { props: { team, viewer: { is_member: true, is_captain: false, can_join: false, locked_by_tournament: false } } });
+        expect(asMember.text()).toContain('Logo del equipo');
+        expect(asMember.find('input[type="file"]').exists()).toBe(true);
+
+        const nonMember = mount(Show, { props: { team, viewer: { is_member: false, is_captain: false, can_join: true, locked_by_tournament: false } } });
+        expect(nonMember.text()).not.toContain('Logo del equipo');
     });
 });

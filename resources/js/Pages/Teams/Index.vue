@@ -1,6 +1,7 @@
 <script setup>
 import { Head, Link } from '@inertiajs/vue3';
 import { computed, ref } from 'vue';
+import Avatar from '../../Components/Avatar.vue';
 
 const props = defineProps({
     teams: { type: Array, default: () => [] },
@@ -49,10 +50,13 @@ const hasTeam = computed(() => props.my_team_id !== null);
             :class="team.id === my_team_id ? 'border-bx-cyan/60 bg-bx-cyan/5' : 'border-white/10 bg-zinc-900/50'"
         >
             <div class="flex items-start justify-between gap-2">
-                <h2 class="text-lg font-bold group-hover:text-bx-cyan">
-                    {{ team.name }}
-                    <span v-if="team.id === my_team_id" class="ml-1 text-xs font-semibold text-bx-cyan">(mi equipo)</span>
-                </h2>
+                <div class="flex min-w-0 items-center gap-2">
+                    <Avatar :nickname="team.name" :url="team.logo_url" size="h-9 w-9" :zoom="false" />
+                    <h2 class="truncate text-lg font-bold group-hover:text-bx-cyan">
+                        {{ team.name }}
+                        <span v-if="team.id === my_team_id" class="ml-1 text-xs font-semibold text-bx-cyan">(mi equipo)</span>
+                    </h2>
+                </div>
                 <span
                     class="shrink-0 rounded-full px-2 py-0.5 text-xs font-bold"
                     :class="team.has_room ? 'bg-bx-cyan/15 text-bx-cyan' : 'bg-zinc-700 text-zinc-300'"

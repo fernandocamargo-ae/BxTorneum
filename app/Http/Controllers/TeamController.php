@@ -7,6 +7,7 @@ use App\Models\Member;
 use App\Models\Team;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 
 class TeamController extends Controller
@@ -18,6 +19,7 @@ class TeamController extends Controller
         $teams = Team::withCount('members')->orderBy('name')->get()->map(fn (Team $team) => [
             'id' => $team->id,
             'name' => $team->name,
+            'logo_url' => $team->logo_url,
             'members_count' => $team->members_count,
             'has_room' => $team->members_count < 3,
         ]);
@@ -117,6 +119,38 @@ class TeamController extends Controller
         return back()->with('success', 'Rol actualizado.');
     }
 
+    public function updateLogo(Request $request, Team $team)
+    {
+        abort_unless($team->memberFor($request->user()), 403, 'Solo los integrantes del equipo pueden cambiar el logo.');
+
+        $request->validate([
+            'logo' => ['required', 'image', 'mimes:jpg,jpeg,png,webp', 'max:2048'],
+        ]);
+
+        $previous = $team->logo_path;
+        $team->logo_path = $request->file('logo')->store('team-logos', 'public');
+        $team->save();
+
+        if ($previous) {
+            Storage::disk('public')->delete($previous);
+        }
+
+        return back()->with('success', 'Logo del equipo actualizado.');
+    }
+
+    public function destroyLogo(Request $request, Team $team)
+    {
+        abort_unless($team->memberFor($request->user()), 403, 'Solo los integrantes del equipo pueden cambiar el logo.');
+
+        if ($team->logo_path) {
+            Storage::disk('public')->delete($team->logo_path);
+            $team->logo_path = null;
+            $team->save();
+        }
+
+        return back()->with('success', 'Logo del equipo eliminado.');
+    }
+
     public function show(Team $team)
     {
         return Inertia::render('Teams/Show', [
@@ -144,6 +178,7 @@ class TeamController extends Controller
         return [
             'id' => $team->id,
             'name' => $team->name,
+            'logo_url' => $team->logo_url,
             'members' => $members,
             'has_room' => $team->hasRoom(),
             'is_tournament_ready' => $team->isTournamentReady(),

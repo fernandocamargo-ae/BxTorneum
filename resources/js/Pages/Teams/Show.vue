@@ -1,5 +1,6 @@
 <script setup>
-import { Head, Link, router } from '@inertiajs/vue3';
+import { Head, Link, router, useForm } from '@inertiajs/vue3';
+import { ref } from 'vue';
 import Avatar from '../../Components/Avatar.vue';
 
 const props = defineProps({
@@ -8,6 +9,40 @@ const props = defineProps({
 });
 
 const roleLabels = { captain: 'Capitán', subcaptain: 'Subcapitán', official: 'Oficial' };
+
+const logoPreview = ref(null);
+const logoInput = ref(null);
+const logoForm = useForm({ logo: null });
+
+function pickLogo(event) {
+    const file = event.target.files?.[0] ?? null;
+    logoForm.logo = file;
+    logoPreview.value = file ? URL.createObjectURL(file) : null;
+}
+
+function submitLogo() {
+    logoForm.post(`/teams/${props.team.id}/logo`, {
+        forceFormData: true,
+        preserveScroll: true,
+        onSuccess: () => {
+            logoForm.reset();
+            logoPreview.value = null;
+            if (logoInput.value) logoInput.value.value = '';
+            refreshTeam();
+        },
+    });
+}
+
+function removeLogo() {
+    router.delete(`/teams/${props.team.id}/logo`, {
+        preserveScroll: true,
+        onSuccess: () => {
+            logoPreview.value = null;
+            if (logoInput.value) logoInput.value.value = '';
+            refreshTeam();
+        },
+    });
+}
 
 function join() {
     router.post(`/teams/${props.team.id}/join`, {}, { preserveScroll: true });
@@ -35,12 +70,15 @@ function setRole(member, role) {
     <Head :title="team.name" />
 
     <div class="mb-6 flex flex-wrap items-center justify-between gap-3">
-        <div>
-            <h1 class="text-3xl font-black"><span class="bx-gradient-text">{{ team.name }}</span></h1>
-            <p class="mt-1 text-sm">
-                <span v-if="team.is_tournament_ready" class="font-semibold text-bx-cyan">Listo para torneos (3 integrantes con deck)</span>
-                <span v-else class="text-bx-orange">Aún no está listo para torneos: faltan integrantes o decks de torneo.</span>
-            </p>
+        <div class="flex items-center gap-4">
+            <Avatar :nickname="team.name" :url="logoPreview ?? team.logo_url" size="h-16 w-16" text="text-2xl" :zoom="!!team.logo_url" />
+            <div>
+                <h1 class="text-3xl font-black"><span class="bx-gradient-text">{{ team.name }}</span></h1>
+                <p class="mt-1 text-sm">
+                    <span v-if="team.is_tournament_ready" class="font-semibold text-bx-cyan">Listo para torneos (3 integrantes con deck)</span>
+                    <span v-else class="text-bx-orange">Aún no está listo para torneos: faltan integrantes o decks de torneo.</span>
+                </p>
+            </div>
         </div>
         <div class="flex gap-2">
             <button
@@ -60,6 +98,37 @@ function setRole(member, role) {
                 Salir del equipo
             </button>
         </div>
+    </div>
+
+    <div v-if="viewer.is_member" class="mb-6 rounded-xl border border-white/10 bg-zinc-900/50 p-4">
+        <p class="mb-1 text-xs font-semibold uppercase tracking-wide text-zinc-400">Logo del equipo</p>
+        <p class="mb-3 text-xs text-zinc-500">Cualquier integrante puede cambiarlo (JPG, PNG o WEBP, máx 2&nbsp;MB).</p>
+        <div class="flex flex-wrap items-center gap-2">
+            <input
+                ref="logoInput"
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                class="block text-sm text-zinc-400 file:mr-3 file:rounded-lg file:border-0 file:bg-white/10 file:px-3 file:py-2 file:text-sm file:font-semibold file:text-zinc-200 hover:file:bg-white/20"
+                @change="pickLogo"
+            />
+            <button
+                type="button"
+                :disabled="!logoForm.logo || logoForm.processing"
+                class="rounded-lg bg-gradient-to-r from-bx-cyan to-bx-magenta px-4 py-2 text-sm font-bold text-zinc-950 transition hover:opacity-90 disabled:opacity-50"
+                @click="submitLogo"
+            >
+                Guardar logo
+            </button>
+            <button
+                v-if="team.logo_url"
+                type="button"
+                class="rounded-lg border border-white/15 px-4 py-2 text-sm font-semibold text-zinc-300 transition hover:border-bx-magenta hover:text-bx-magenta"
+                @click="removeLogo"
+            >
+                Quitar logo
+            </button>
+        </div>
+        <p v-if="logoForm.errors.logo" class="mt-2 text-xs text-bx-magenta">{{ logoForm.errors.logo }}</p>
     </div>
 
     <p v-if="viewer.locked_by_tournament" class="mb-4 rounded-lg border border-bx-orange/40 bg-bx-orange/10 px-4 py-2 text-xs text-bx-orange">

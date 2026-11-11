@@ -119,7 +119,7 @@ class TeamTournamentController extends Controller
             ]);
         }
 
-        $entries = $tournament->entries()->with('team:id,name')->get();
+        $entries = $tournament->entries()->with('team:id,name,logo_path')->get();
 
         $standings = $tournament->status !== 'registration'
             ? $this->standingsWithTeamNames($tournament, $entries)
@@ -127,7 +127,7 @@ class TeamTournamentController extends Controller
 
         $currentRound = $tournament->rounds()
             ->where('number', $tournament->current_round)
-            ->with('matches.entryOne.team:id,name', 'matches.entryTwo.team:id,name')
+            ->with('matches.entryOne.team:id,name,logo_path', 'matches.entryTwo.team:id,name,logo_path')
             ->first();
 
         return Inertia::render('Tournament/Show', [
@@ -148,7 +148,7 @@ class TeamTournamentController extends Controller
             'entries' => $entries->map(fn ($entry) => [
                 'id' => $entry->id,
                 'nickname' => $entry->team?->name,
-                'avatar_url' => null,
+                'avatar_url' => $entry->team?->logo_url,
             ])->values(),
             'standings' => $standings,
             'current_round_matches' => $currentRound
@@ -156,10 +156,10 @@ class TeamTournamentController extends Controller
                     'id' => $match->id,
                     'entry_one_id' => $match->entry_one_id,
                     'entry_one_nickname' => $match->entryOne->team?->name,
-                    'entry_one_avatar' => null,
+                    'entry_one_avatar' => $match->entryOne->team?->logo_url,
                     'entry_two_id' => $match->entry_two_id,
                     'entry_two_nickname' => $match->entryTwo?->team?->name,
-                    'entry_two_avatar' => null,
+                    'entry_two_avatar' => $match->entryTwo?->team?->logo_url,
                     'winner_entry_id' => $match->winner_entry_id,
                     'is_bye' => $match->is_bye,
                 ])->values()
@@ -179,7 +179,7 @@ class TeamTournamentController extends Controller
         }
 
         return $tournament->rounds()->where('phase', 'elimination')->orderBy('number')
-            ->with('matches.entryOne.team:id,name', 'matches.entryTwo.team:id,name')
+            ->with('matches.entryOne.team:id,name,logo_path', 'matches.entryTwo.team:id,name,logo_path')
             ->get()
             ->map(fn ($round) => [
                 'number' => $round->number,
@@ -188,10 +188,10 @@ class TeamTournamentController extends Controller
                     'id' => $match->id,
                     'entry_one_id' => $match->entry_one_id,
                     'entry_one_nickname' => $match->entryOne->team?->name,
-                    'entry_one_avatar' => null,
+                    'entry_one_avatar' => $match->entryOne->team?->logo_url,
                     'entry_two_id' => $match->entry_two_id,
                     'entry_two_nickname' => $match->entryTwo?->team?->name,
-                    'entry_two_avatar' => null,
+                    'entry_two_avatar' => $match->entryTwo?->team?->logo_url,
                     'winner_entry_id' => $match->winner_entry_id,
                     'is_bye' => $match->is_bye,
                 ])->values(),
@@ -224,12 +224,13 @@ class TeamTournamentController extends Controller
     private function standingsWithTeamNames(Tournament $tournament, $entries): array
     {
         $names = $entries->pluck('team.name', 'id');
+        $logos = $entries->pluck('team.logo_url', 'id');
 
         return collect(TournamentStandings::forTournament($tournament))
             ->map(fn ($row) => [
                 ...$row,
                 'nickname' => $names[$row['entry_id']] ?? '?',
-                'avatar_url' => null,
+                'avatar_url' => $logos[$row['entry_id']] ?? null,
             ])
             ->values()
             ->all();
