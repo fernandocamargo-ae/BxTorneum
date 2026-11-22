@@ -40,10 +40,13 @@ class Team extends Model
         return $this->members()->where('user_id', $user->id)->first();
     }
 
-    /** The lowest unfilled role for a joining member: subcaptain, then official, else null (full). */
+    /**
+     * The role a joining member takes: subcaptain, then official, else null (full).
+     * A team left without a captain (emptied after playing) hands it to the joiner.
+     */
     public function firstOpenRole(): ?string
     {
-        foreach (['subcaptain', 'official'] as $role) {
+        foreach (['captain', 'subcaptain', 'official'] as $role) {
             if (! $this->members()->where('role', $role)->exists()) {
                 return $role;
             }
@@ -69,6 +72,29 @@ class Team extends Model
     public function promoteOldestToCaptain(): void
     {
         $this->members()->orderBy('id')->first()?->update(['role' => 'captain']);
+    }
+
+    /**
+     * Take a member out the way leaving works: the oldest member inherits the captaincy,
+     * and an emptied team dissolves. A team that already played keeps its row — brackets
+     * and history point at it — and just stops being listed.
+     */
+    public function removeMember(Member $member): void
+    {
+        $wasCaptain = $member->role === 'captain';
+        $member->delete();
+
+        if ($this->members()->count() === 0) {
+            if (! $this->hasAnyTournamentEntry()) {
+                $this->delete();
+            }
+
+            return;
+        }
+
+        if ($wasCaptain) {
+            $this->promoteOldestToCaptain();
+        }
     }
 
     /** True once the team has entered any tournament — its brackets reference it. */

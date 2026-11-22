@@ -16,7 +16,8 @@ class TeamController extends Controller
     {
         $myTeamId = Member::where('user_id', auth()->id())->value('team_id');
 
-        $teams = Team::withCount('members')->orderBy('name')->get()->map(fn (Team $team) => [
+        // Teams emptied after playing stay in the database for their history, not in the list.
+        $teams = Team::has('members')->withCount('members')->orderBy('name')->get()->map(fn (Team $team) => [
             'id' => $team->id,
             'name' => $team->name,
             'logo_url' => $team->logo_url,
@@ -68,14 +69,7 @@ class TeamController extends Controller
         abort_unless($member, 422, 'No perteneces a este equipo.');
         abort_if($team->isLockedByActiveTournament(), 422, 'El equipo está inscrito en un torneo en curso; no puedes salir hasta que termine.');
 
-        $wasCaptain = $member->role === 'captain';
-        $member->delete();
-
-        if ($team->members()->count() === 0) {
-            $team->delete();
-        } elseif ($wasCaptain) {
-            $team->promoteOldestToCaptain();
-        }
+        $team->removeMember($member);
 
         return redirect()->route('teams.index')->with('success', 'Saliste del equipo.');
     }

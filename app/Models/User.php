@@ -19,19 +19,8 @@ class User extends Authenticatable
         // does, so a captain's departure never leaves a captainless, unmanageable team.
         static::deleting(function (User $user) {
             $member = Member::where('user_id', $user->id)->first();
-            if (! $member) {
-                return;
-            }
 
-            $team = $member->team;
-            $wasCaptain = $member->role === 'captain';
-            $member->delete();
-
-            if ($team->members()->count() === 0) {
-                $team->delete();
-            } elseif ($wasCaptain) {
-                $team->promoteOldestToCaptain();
-            }
+            $member?->team->removeMember($member);
         });
     }
 
