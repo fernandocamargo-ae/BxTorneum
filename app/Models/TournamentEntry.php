@@ -25,6 +25,7 @@ class TournamentEntry extends Model
 
     public function deck()
     {
-        return $this->belongsTo(Deck::class);
+        // Un deck borrado después de jugar sigue formando parte del historial del torneo.
+        return $this->belongsTo(Deck::class)->withTrashed();
     }
 }

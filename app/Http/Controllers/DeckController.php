@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Requests\DeckRequest;
 use App\Models\Deck;
 use App\Models\Part;
+use App\Models\Tournament;
 use App\Support\BeybladeLines;
 use App\Support\PartCatalog;
 use Illuminate\Http\RedirectResponse;
@@ -109,7 +110,16 @@ class DeckController extends Controller
     {
         abort_unless($deck->user_id === auth()->id(), 403);
 
-        $deck->delete();
+        $open = Tournament::where('status', '!=', 'completed')
+            ->whereHas('entries', fn ($entries) => $entries->where('deck_id', $deck->id))
+            ->first();
+
+        if ($open) {
+            return redirect()->route('decks.index')->with('error', "No puedes eliminar \"{$deck->name}\": está inscrito en \"{$open->name}\". Podrás hacerlo cuando salgas del torneo o termine.");
+        }
+
+        // Si ya jugó un torneo se oculta, para no romper su historial ni su PDF; si no, se borra del todo.
+        $deck->tournamentEntries()->exists() ? $deck->delete() : $deck->forceDelete();
 
         return redirect()->route('decks.index')->with('success', 'Deck eliminado.');
     }

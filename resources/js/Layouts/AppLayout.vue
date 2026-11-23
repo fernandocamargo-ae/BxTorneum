@@ -5,6 +5,7 @@ import { computed, ref, watch } from 'vue';
 
 const page = usePage();
 const flash = computed(() => page.props.flash?.success);
+const flashError = computed(() => page.props.flash?.error);
 const user = computed(() => page.props.auth?.user);
 
 const mobileOpen = ref(false);
@@ -131,6 +132,9 @@ const menuClass = (active) => [
         <main class="mx-auto w-full max-w-6xl flex-1 px-4 pb-16 pt-6">
             <div v-if="flash" role="status" class="mb-6 bg-bx-rail px-4 py-3 font-bold text-bx-ink">
                 {{ flash }}
+            </div>
+            <div v-if="flashError" role="alert" class="mb-6 bg-bx-danger px-4 py-3 font-bold text-bx-ink">
+                {{ flashError }}
             </div>
             <div v-if="$slots.header" class="mb-6">
                 <slot name="header" />

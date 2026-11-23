@@ -3,9 +3,12 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Deck extends Model
 {
+    use SoftDeletes;
+
     protected $guarded = [];
 
     protected function casts(): array
@@ -23,5 +26,10 @@ class Deck extends Model
     public function deckBeyblades()
     {
         return $this->hasMany(DeckBeyblade::class);
+    }
+
+    public function tournamentEntries()
+    {
+        return $this->hasMany(TournamentEntry::class);
     }
 }
