@@ -49,7 +49,7 @@ class DeckControllerTest extends TestCase
             ->where('decks.0.beyblades.0.line', 'bx')
             ->where('decks.0.beyblades.0.parts.blade', 'Dran Sword')
             ->where('decks.0.beyblades.1.line', 'ux')
-            ->where('decks.0.beyblades.1.parts.bit', 'Disc Ball'));
+            ->where('decks.0.beyblades.1.parts.bit', 'Disk Ball'));
     }
 
     public function test_a_users_first_deck_is_automatically_marked_as_the_tournament_deck(): void

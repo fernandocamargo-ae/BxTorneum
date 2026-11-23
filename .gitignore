@@ -25,3 +25,4 @@ Thumbs.db
 
 # Fotos de producto (c) TOMY: se suben directo al servidor, no al repo publico.
 /public/images/arena
+/public/images/parts

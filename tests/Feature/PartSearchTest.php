@@ -13,8 +13,8 @@ class PartSearchTest extends TestCase
 
     public function test_returns_matching_names_for_type(): void
     {
-        Part::create(['type' => 'ratchet', 'name' => '3-60']);
-        Part::create(['type' => 'ratchet', 'name' => '3-80']);
+        Part::firstOrCreate(['type' => 'ratchet', 'name' => '3-60']);
+        Part::firstOrCreate(['type' => 'ratchet', 'name' => '3-80']);
         Part::create(['type' => 'bit', 'name' => '3-60-bit-noise']);
 
         $this->actingAs(User::factory()->create())

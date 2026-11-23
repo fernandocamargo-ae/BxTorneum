@@ -1,10 +1,18 @@
-import { ROSTER } from './beyRoster';
+import { NAMES, ROSTER } from './beyRoster';
+import { nameKey } from './nameKey';
 
-const key = (name) => (name ?? '').toLowerCase().normalize('NFD').replace(/[^a-z0-9]/g, '');
-const BY_NAME = Object.fromEntries(ROSTER.map((bey) => [key(bey.name), bey.slug]));
+// "Brave" => dran-brave: con otro lock chip el bey se ve casi igual, solo cambia el emblema.
+const BY_LAST_WORD = Object.fromEntries(ROSTER.map((bey) => [nameKey(bey.name.split(' ').at(-1)), bey.slug]));
 
-// Foto del bey de un combo, si la tenemos. En CX el nombre es lock chip + main blade ("Dran" + "Brave").
+// Foto del bey de un combo, si la tenemos. En CX el nombre es lock chip + main blade ("Dran" + "Brave")
+// y en CX Infinity lock chip + metal blade ("Bahamut" + "Blitz").
 export function beyPhoto(parts = {}) {
-    const slug = BY_NAME[key(parts.blade)] ?? BY_NAME[key(`${parts.lock_chip ?? ''}${parts.main_blade ?? ''}`)];
+    const chip = parts.lock_chip ?? '';
+    const tries = [parts.blade, parts.main_blade && `${chip}${parts.main_blade}`, parts.metal_blade && `${chip}${parts.metal_blade}`];
+    for (const name of tries) {
+        const slug = name && NAMES[nameKey(name)];
+        if (slug) return `/images/arena/${slug}.webp`;
+    }
+    const slug = BY_LAST_WORD[nameKey(parts.main_blade ?? parts.metal_blade)];
     return slug ? `/images/arena/${slug}.webp` : null;
 }

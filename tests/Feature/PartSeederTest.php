@@ -18,10 +18,10 @@ class PartSeederTest extends TestCase
         $this->assertDatabaseHas('parts', ['type' => 'ratchet', 'name' => '4-60']);
         $this->assertDatabaseHas('parts', ['type' => 'bit', 'name' => 'Flat']);
         $this->assertDatabaseHas('parts', ['type' => 'lock_chip', 'name' => 'Dran']);
-        $this->assertDatabaseHas('parts', ['type' => 'main_blade', 'name' => 'Sword']);
-        $this->assertDatabaseHas('parts', ['type' => 'assist_blade', 'name' => 'Level']);
-        $this->assertDatabaseHas('parts', ['type' => 'over_blade', 'name' => 'Dran Sword']);
-        $this->assertDatabaseHas('parts', ['type' => 'metal_blade', 'name' => 'Dran']);
+        $this->assertDatabaseHas('parts', ['type' => 'main_blade', 'name' => 'Brave']);
+        $this->assertDatabaseHas('parts', ['type' => 'assist_blade', 'name' => 'Slash']);
+        $this->assertDatabaseHas('parts', ['type' => 'over_blade', 'name' => 'Guard']);
+        $this->assertDatabaseHas('parts', ['type' => 'metal_blade', 'name' => 'Blitz']);
     }
 
     public function test_seeder_is_idempotent(): void

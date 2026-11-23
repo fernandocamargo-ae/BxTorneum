@@ -6,6 +6,7 @@ use App\Http\Requests\DeckRequest;
 use App\Models\Deck;
 use App\Models\Part;
 use App\Support\BeybladeLines;
+use App\Support\PartCatalog;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -152,7 +153,7 @@ class DeckController extends Controller
                 if ($name === '') {
                     continue;
                 }
-                $part = Part::firstOrCreate(['type' => $slot, 'name' => $name]);
+                $part = Part::firstOrCreate(['type' => $slot, 'name' => PartCatalog::canonical($slot, $name)]);
                 $beyblade->parts()->attach($part->id, ['slot' => $slot]);
             }
         }

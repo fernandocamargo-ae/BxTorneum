@@ -72,7 +72,7 @@ const hasOptionalRatchet = computed(() => isOptional(props.modelValue.line, 'rat
             ¿Lleva ratchet?
         </label>
 
-        <div class="grid grid-cols-2 gap-3">
+        <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <PartAutocomplete
                 v-for="slot in visibleSlots"
                 :key="slot"

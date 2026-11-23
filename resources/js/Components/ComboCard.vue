@@ -1,7 +1,8 @@
 <script setup>
 import { computed, ref } from 'vue';
 import { beyPhoto } from '../lib/beyPhoto';
-import { LINES, SLOT_LABELS } from '../lib/beybladeLines';
+import { LINES, SLOT_LABELS, slotsFor } from '../lib/beybladeLines';
+import PartPhoto from './PartPhoto.vue';
 
 const props = defineProps({
     combo: { type: Object, required: true }, // { line, parts: { slot: nombre } }
@@ -17,11 +18,21 @@ const lineLabel = computed(() => LINES.find((line) => line.value === props.combo
 const colors = computed(() => STREAKS[props.combo.line?.split('_')[0]] ?? STREAKS.bx);
 const broken = ref(false);
 const photo = computed(() => (broken.value ? null : beyPhoto(props.combo.parts)));
+
+// En el orden en que se arma el bey, no en el que vengan guardadas.
+const parts = computed(() => {
+    const given = props.combo.parts ?? {};
+    const order = slotsFor(props.combo.line);
+    return Object.keys(given)
+        .filter((slot) => given[slot])
+        .sort((a, b) => (order.indexOf(a) + 1 || 99) - (order.indexOf(b) + 1 || 99))
+        .map((slot) => ({ slot, name: given[slot], label: SLOT_LABELS[slot] ?? slot }));
+});
 </script>
 
 <template>
     <article class="flex flex-col overflow-hidden bg-bx-ink text-white">
-        <div class="relative overflow-hidden" :class="photo ? 'h-44' : 'h-20'">
+        <div class="relative overflow-hidden" :class="photo ? 'h-48' : 'h-20'">
             <svg aria-hidden="true" viewBox="0 0 300 190" preserveAspectRatio="xMidYMid slice" class="absolute inset-0 h-full w-full">
                 <g transform="rotate(-38 150 110)">
                     <rect x="150" y="62" width="400" height="20" :fill="colors[0]" />
@@ -32,13 +43,16 @@ const photo = computed(() => (broken.value ? null : beyPhoto(props.combo.parts))
                 </g>
             </svg>
             <p class="absolute left-4 top-3 z-10 text-3xl font-black italic leading-none">{{ lineLabel }}</p>
-            <img v-if="photo" :src="photo" alt="" loading="lazy" @error="broken = true" class="absolute bottom-2 left-1/2 h-36 w-36 -translate-x-1/2 object-contain" />
+            <img v-if="photo" :src="photo" alt="" loading="lazy" class="absolute bottom-2 left-1/2 h-40 w-40 -translate-x-1/2 object-contain" @error="broken = true" />
         </div>
-        <dl class="grid flex-1 grid-cols-[6.5rem_minmax(0,1fr)] content-start gap-x-3 gap-y-1.5 bg-bx-raised p-4 text-sm">
-            <template v-for="(name, slot) in combo.parts" :key="slot">
-                <dt class="text-zinc-400">{{ SLOT_LABELS[slot] ?? slot }}</dt>
-                <dd class="font-extrabold [overflow-wrap:anywhere]">{{ name }}</dd>
-            </template>
-        </dl>
+        <ul class="flex flex-1 flex-col gap-1 bg-bx-raised p-2">
+            <li v-for="part in parts" :key="part.slot" class="flex items-center gap-3">
+                <PartPhoto :slot-name="part.slot" :name="part.name" />
+                <div class="min-w-0">
+                    <p class="text-sm leading-tight text-zinc-400">{{ part.label }}</p>
+                    <p class="font-extrabold leading-snug [overflow-wrap:anywhere]">{{ part.name }}</p>
+                </div>
+            </li>
+        </ul>
     </article>
 </template>

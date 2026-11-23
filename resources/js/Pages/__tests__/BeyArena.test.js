@@ -66,7 +66,7 @@ describe('BeyArena', () => {
 describe('beyRoster', () => {
     it('only marks the known left-spin beys as left', () => {
         expect(ROSTER.filter((bey) => bey.spin === 'left').map((bey) => bey.slug).sort()).toEqual([
-            'cobalt-dragoon', 'dragoon-storm', 'lightning-l-drago', 'luster-dragoon', 'meteor-dragoon',
+            'cobalt-dragoon', 'dragoon-storm', 'lightning-l-drago-rapid-hit-type', 'lightning-l-drago-upper-type', 'luster-dragoon', 'meteor-dragoon',
         ]);
     });
 });

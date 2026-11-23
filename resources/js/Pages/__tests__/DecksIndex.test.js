@@ -42,6 +42,6 @@ describe('Decks/Index', () => {
         expect(wrapper.find('img').attributes('src')).toBe('/images/arena/wizard-rod.webp');
 
         await wrapper.find('img').trigger('error');
-        expect(wrapper.find('img').exists()).toBe(false); // sin foto no queda un icono roto
+        expect(wrapper.findAll('img').map((img) => img.attributes('src'))).not.toContain('/images/arena/wizard-rod.webp'); // sin icono roto
     });
 });
