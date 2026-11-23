@@ -1,5 +1,6 @@
 <script setup>
 import Avatar from '@/Components/Avatar.vue';
+import AvatarPicker from '@/Components/AvatarPicker.vue';
 import { router, useForm, usePage } from '@inertiajs/vue3';
 import { computed, ref } from 'vue';
 
@@ -45,7 +46,7 @@ function remove() {
         <header>
             <h2 class="bx-heading text-xl">Foto de perfil</h2>
             <p class="mt-1 text-sm text-zinc-400">
-                Sube una imagen (JPG, PNG o WEBP, máximo 2&nbsp;MB). Se mostrará donde aparezcas como jugador.
+                Sube una imagen (JPG, PNG o WEBP, máximo 2&nbsp;MB) o elige un avatar. Se mostrará donde aparezcas como jugador.
             </p>
         </header>
 
@@ -81,5 +82,8 @@ function remove() {
                 <p v-if="form.errors.avatar" class="text-sm text-bx-danger">{{ form.errors.avatar }}</p>
             </div>
         </div>
+
+        <h3 class="bx-heading mb-3 mt-8 text-lg">O elige un avatar</h3>
+        <AvatarPicker :current-url="currentUrl" />
     </section>
 </template>

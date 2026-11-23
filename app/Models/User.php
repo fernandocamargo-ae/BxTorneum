@@ -2,11 +2,12 @@
 
 namespace App\Models;
 
-// use Illuminate\Contracts\Auth\MustVerifyEmail;
+use App\Support\AvatarPresets;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Facades\Storage;
 
 class User extends Authenticatable
 {
@@ -60,8 +61,12 @@ class User extends Authenticatable
 
     public function getAvatarUrlAttribute(): ?string
     {
+        if (AvatarPresets::isPreset($this->avatar_path)) {
+            return AvatarPresets::url($this->avatar_path);
+        }
+
         return $this->avatar_path
-            ? \Illuminate\Support\Facades\Storage::disk('public')->url($this->avatar_path)
+            ? Storage::disk('public')->url($this->avatar_path)
             : null;
     }
 

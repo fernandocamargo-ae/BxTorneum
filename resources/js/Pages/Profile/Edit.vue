@@ -24,7 +24,7 @@ defineProps({
 
         <div class="space-y-6">
             <div class="bx-panel p-4 sm:p-8">
-                <UpdateAvatarForm class="max-w-xl" />
+                <UpdateAvatarForm />
             </div>
 
             <div class="bx-panel p-4 sm:p-8">
