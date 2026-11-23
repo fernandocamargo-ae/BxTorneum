@@ -32,7 +32,8 @@ const parts = computed(() => {
 
 <template>
     <article class="flex flex-col overflow-hidden bg-bx-ink text-white">
-        <div class="relative overflow-hidden" :class="photo ? 'h-48' : 'h-20'">
+        <!-- Letrero y foto en columnas separadas: nunca se enciman, sea cual sea la línea o el ancho -->
+        <div class="relative flex overflow-hidden" :class="photo ? 'h-48' : 'h-20'">
             <svg aria-hidden="true" viewBox="0 0 300 190" preserveAspectRatio="xMidYMid slice" class="absolute inset-0 h-full w-full">
                 <g transform="rotate(-38 150 110)">
                     <rect x="150" y="62" width="400" height="20" :fill="colors[0]" />
@@ -42,8 +43,13 @@ const parts = computed(() => {
                     <rect x="150" y="147" width="400" height="14" :fill="colors[0]" />
                 </g>
             </svg>
-            <p class="absolute left-4 top-3 z-10 text-3xl font-black italic leading-[0.95]" :class="photo ? 'max-w-24' : ''">{{ lineLabel }}</p>
-            <img v-if="photo" :src="photo" alt="" loading="lazy" class="absolute bottom-2 left-[57%] h-44 w-44 -translate-x-1/2 object-contain" @error="broken = true" />
+            <p
+                class="combo-line relative shrink-0 pl-4 pt-3.5 text-2xl font-black italic leading-none"
+                :class="photo ? 'w-30' : ''"
+            >{{ lineLabel }}</p>
+            <div v-if="photo" class="relative min-w-0 flex-1 py-2 pr-3">
+                <img :src="photo" alt="" loading="lazy" class="combo-bey h-full w-full object-contain" @error="broken = true" />
+            </div>
         </div>
         <ul class="flex flex-1 flex-col gap-1 bg-bx-raised p-2">
             <li v-for="part in parts" :key="part.slot" class="flex items-center gap-3">
