@@ -42,4 +42,13 @@ describe('Tournament/Show (teams)', () => {
 
         expect(router.post).toHaveBeenCalledWith('/torneo-equipos/7/equipos', { team_id: 5 }, expect.any(Object));
     });
+
+    it('offers the PDF export, like individual tournaments', () => {
+        for (const status of ['registration', 'swiss', 'elimination', 'completed']) {
+            const wrapper = mount(Show, {
+                props: { ...teamRegistrationProps, tournament: { ...teamRegistrationProps.tournament, status } },
+            });
+            expect(wrapper.findAll('button').find((b) => b.text() === 'Exportar PDF'), status).toBeTruthy();
+        }
+    });
 });

@@ -277,7 +277,10 @@ function isMyMatch(match) {
                         <span v-else>Torneo finalizado</span>
                     </p>
                 </div>
-                <ReportExport v-if="!isTeams" :endpoint="`/tournament/${tournament.id}/report/pdf`" filename="reporte-torneo.pdf" />
+                <ReportExport
+                    :endpoint="`/tournament/${tournament.id}/report/pdf`"
+                    :filename="isTeams ? 'reporte-torneo-equipos.pdf' : 'reporte-torneo.pdf'"
+                />
             </div>
         </div>
 
