@@ -58,22 +58,22 @@ class CleanPartsTest extends TestCase
     public function test_it_removes_made_up_parts_nobody_uses_but_never_one_in_a_deck(): void
     {
         Part::create(['type' => 'metal_blade', 'name' => 'Cobalt']);
-        $deck = $this->deckWith(['blade' => 'Tale whale', 'ratchet' => '9-90', 'bit' => 'Flat']);
+        $deck = $this->deckWith(['blade' => 'FENIX', 'ratchet' => '9-90', 'bit' => 'Flat']);
 
         $this->artisan('parts:clean')->assertSuccessful();
 
         $this->assertFalse(Part::where('type', 'metal_blade')->where('name', 'Cobalt')->exists());
-        $this->assertSame(['blade' => 'Tale whale', 'ratchet' => '9-90', 'bit' => 'Flat'], $this->partsOf($deck));
+        $this->assertSame(['blade' => 'FENIX', 'ratchet' => '9-90', 'bit' => 'Flat'], $this->partsOf($deck));
     }
 
-    public function test_the_same_name_in_another_slot_is_left_alone(): void
+    public function test_the_name_of_the_whole_bey_becomes_the_right_part_in_each_slot(): void
     {
-        $deck = $this->deckWith(['lock_chip' => 'FOX', 'main_blade' => 'Fox', 'assist_blade' => 'Slash', 'ratchet' => '3-60', 'bit' => 'Flat'], 'cx');
+        $deck = $this->deckWith(['lock_chip' => 'FOX', 'main_blade' => 'FOX', 'assist_blade' => 'Jaggy', 'ratchet' => '3-60', 'bit' => 'Flat'], 'cx');
 
         $this->artisan('parts:clean')->assertSuccessful();
 
         $this->assertSame('Fox', $this->partsOf($deck)['lock_chip']);
-        $this->assertSame('Fox', $this->partsOf($deck)['main_blade']); // no es main blade: no se adivina
+        $this->assertSame('Brush', $this->partsOf($deck)['main_blade']); // Fox Brush
     }
 
     public function test_dry_run_changes_nothing(): void
@@ -98,25 +98,60 @@ class CleanPartsTest extends TestCase
         $this->assertSame($after, Part::orderBy('id')->pluck('name')->all());
     }
 
+    private function save(array $combo, ?User $user = null)
+    {
+        return $this->actingAs($user ?? User::factory()->create())->post('/decks', [
+            'name' => 'Nuevo', 'visibility' => 'private', 'beyblades' => [$combo],
+        ]);
+    }
+
     public function test_saving_a_deck_stores_the_official_name_so_duplicates_do_not_come_back(): void
     {
-        $user = User::factory()->create();
+        $this->save(['line' => 'bx', 'parts' => ['blade' => ' aeropegasus ', 'ratchet' => '1-70', 'bit' => 'lf']])->assertRedirect('/decks');
 
-        $this->actingAs($user)->post('/decks', [
-            'name' => 'Nuevo',
-            'visibility' => 'private',
-            'beyblades' => [
-                ['line' => 'bx', 'parts' => ['blade' => ' aeropegasus ', 'ratchet' => '1-70', 'bit' => 'lf']],
-                ['line' => 'bx', 'parts' => ['blade' => 'Bey  Nuevo 2027', 'ratchet' => '3-60', 'bit' => 'Flat']],
-                ['line' => 'bx', 'parts' => ['blade' => 'bey-nuevo 2027', 'ratchet' => '3-70', 'bit' => 'Ball']],
-            ],
-        ])->assertRedirect('/decks');
+        $this->assertSame(['blade' => 'Aero Pegasus', 'ratchet' => '1-70', 'bit' => 'Low Flat'], $this->partsOf(Deck::first()));
+        $this->assertSame(1, Part::where('type', 'blade')->where('name', 'like', 'aero%peg%')->count());
+    }
 
-        $combos = Deck::first()->deckBeyblades()->with('parts')->orderBy('position')->get()->map->partsBySlot();
-        $this->assertSame(['blade' => 'Aero Pegasus', 'ratchet' => '1-70', 'bit' => 'Low Flat'], $combos[0]);
-        $this->assertSame('Bey Nuevo 2027', $combos[1]['blade']); // aún no está en el catálogo: se permite
-        $this->assertSame('Bey Nuevo 2027', $combos[2]['blade']); // pero no se duplica
-        $this->assertFalse(Part::where('name', 'like', 'aeropegasus')->exists());
+    public function test_a_part_that_does_not_exist_is_rejected_with_a_clear_message(): void
+    {
+        $this->save(['line' => 'bx', 'parts' => ['blade' => 'fenix', 'ratchet' => '3-60', 'bit' => 'Xx']])
+            ->assertSessionHasErrors([
+                'beyblades.0.parts.blade' => 'No existe la pieza "fenix". Elígela de la lista.',
+                'beyblades.0.parts.bit' => 'No existe la pieza "Xx". Elígela de la lista.',
+            ])
+            ->assertSessionDoesntHaveErrors('beyblades.0.parts.ratchet');
+
+        $this->assertSame(0, Deck::count());
+        $this->assertFalse(Part::where('name', 'fenix')->exists());
+    }
+
+    public function test_a_made_up_ratchet_explains_the_lines_without_ratchet(): void
+    {
+        $this->save(['line' => 'bx', 'parts' => ['blade' => 'Valor Bison', 'ratchet' => 'Na', 'bit' => 'Hexa']])
+            ->assertSessionHasErrors(['beyblades.0.parts.ratchet' => 'No existe la pieza "Na". Elígela de la lista. Si tu bey no lleva ratchet, elige la línea BX Infinity o UX Infinity.']);
+    }
+
+    public function test_a_part_from_another_slot_tells_which_line_to_choose(): void
+    {
+        $this->save(['line' => 'cx', 'parts' => ['lock_chip' => 'Bahamut', 'main_blade' => 'Blitz', 'assist_blade' => 'Heavy', 'ratchet' => '5-60', 'bit' => 'Zap']])
+            ->assertSessionHasErrors(['beyblades.0.parts.main_blade' => '"Blitz" es Metal Blade: elige la línea CX Infinity.']);
+
+        $this->save(['line' => 'bx', 'parts' => ['blade' => 'Brave', 'ratchet' => '5-60', 'bit' => 'Zap']])
+            ->assertSessionHasErrors(['beyblades.0.parts.blade' => '"Brave" es Main Blade: elige la línea CX.']);
+    }
+
+    public function test_an_admin_can_register_a_release_that_is_not_in_the_catalog_yet(): void
+    {
+        $admin = User::factory()->create(['is_admin' => true]);
+        $combo = ['line' => 'bx', 'parts' => ['blade' => 'Bey  Nuevo 2027', 'ratchet' => '3-60', 'bit' => 'Flat']];
+
+        $this->save($combo, $admin)->assertRedirect('/decks');
+        $this->assertSame('Bey Nuevo 2027', $this->partsOf(Deck::first())['blade']);
+
+        // A partir de ahí cualquiera puede usarla, y sin duplicarla.
+        $this->save(['line' => 'bx', 'parts' => ['blade' => 'bey-nuevo 2027', 'ratchet' => '3-60', 'bit' => 'Flat']])->assertRedirect('/decks');
+        $this->assertSame(1, Part::where('type', 'blade')->where('name', 'like', 'bey%nuevo%')->count());
     }
 
     public function test_the_search_finds_parts_by_hasbro_name_abbreviation_or_typo_and_hides_made_up_ones(): void

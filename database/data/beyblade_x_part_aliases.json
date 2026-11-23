@@ -97,7 +97,8 @@
       "valorvison": "Valor Bison",
       "wandwizard": "Wizard Rod",
       "wizzardrod": "Wizard Rod",
-      "xenoxcalius": "Xeno Xcalibur"
+      "xenoxcalius": "Xeno Xcalibur",
+      "talewhale": "Whale Wave"
     },
     "ratchet": {},
     "bit": {
@@ -180,7 +181,9 @@
       "ark": "Arc",
       "courage": "Brave",
       "soleclipse": "Eclipse",
-      "umbra": "Eclipse"
+      "umbra": "Eclipse",
+      "fox": "Brush",
+      "pegasus": "Blast"
     },
     "assist_blade": {
       "a": "Assault",
@@ -226,7 +229,6 @@
       "FENIX",
       "Kill shark",
       "Phien",
-      "Tale whale",
       "Xc"
     ],
     "ratchet": [
@@ -272,6 +274,11 @@
       "Phoenix",
       "Shark",
       "Wizard"
+    ]
+  },
+  "hidden": {
+    "blade": [
+      "Lightning L-Drago"
     ]
   }
 }

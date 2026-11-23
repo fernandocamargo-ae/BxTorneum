@@ -42,8 +42,8 @@ const parts = computed(() => {
                     <rect x="150" y="147" width="400" height="14" :fill="colors[0]" />
                 </g>
             </svg>
-            <p class="absolute left-4 top-3 z-10 text-3xl font-black italic leading-none">{{ lineLabel }}</p>
-            <img v-if="photo" :src="photo" alt="" loading="lazy" class="absolute bottom-2 left-1/2 h-40 w-40 -translate-x-1/2 object-contain" @error="broken = true" />
+            <p class="absolute left-4 top-3 z-10 text-3xl font-black italic leading-[0.95]" :class="photo ? 'max-w-24' : ''">{{ lineLabel }}</p>
+            <img v-if="photo" :src="photo" alt="" loading="lazy" class="absolute bottom-2 left-[57%] h-44 w-44 -translate-x-1/2 object-contain" @error="broken = true" />
         </div>
         <ul class="flex flex-1 flex-col gap-1 bg-bx-raised p-2">
             <li v-for="part in parts" :key="part.slot" class="flex items-center gap-3">

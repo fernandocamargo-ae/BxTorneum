@@ -44,11 +44,31 @@ class PartCatalog
             ?? $name;
     }
 
+    /** Whether a typed name is a real part of that slot: in the catalog, or registered later by an admin. */
+    public static function exists(string $type, string $name): bool
+    {
+        $official = self::canonical($type, $name);
+        if (isset(self::names($type)[self::key($official)])) {
+            return true;
+        }
+
+        $fake = array_map(self::key(...), self::data()['not_parts'][$type] ?? []);
+
+        return ! in_array(self::key($official), $fake, true) && Part::where('type', $type)->where('name', $official)->exists();
+    }
+
+    /** The other slot where that name is an official part, if any ("Blitz" => metal_blade). */
+    public static function slotOf(string $name): ?string
+    {
+        return collect(array_keys(self::all()))->first(fn ($type) => isset(self::names($type)[self::key($name)]));
+    }
+
     /** @return Collection<int, string> names for the autocomplete, best matches first */
     public static function search(string $type, string $query, int $limit = 12): Collection
     {
         $key = self::key($query);
-        $hidden = array_flip(array_map(self::key(...), self::data()['not_parts'][$type] ?? []));
+        // "hidden": nombres generales que se conservan en decks viejos, pero ya no se ofrecen.
+        $hidden = array_flip(array_map(self::key(...), [...self::data()['not_parts'][$type] ?? [], ...self::data()['hidden'][$type] ?? []]));
         $byAlias = collect(self::aliases($type))->filter(fn ($name, $alias) => $key !== '' && str_contains((string) $alias, $key))->flip();
 
         return Part::where('type', $type)->orderBy('name')->pluck('name')

@@ -3,6 +3,7 @@
 namespace App\Http\Requests;
 
 use App\Support\BeybladeLines;
+use App\Support\PartCatalog;
 use Illuminate\Foundation\Http\FormRequest;
 
 class DeckRequest extends FormRequest
@@ -48,6 +49,7 @@ class DeckRequest extends FormRequest
                 $line = $beyblade['line'] ?? null;
                 if (! $line || ! in_array($line, BeybladeLines::lines(), true)) {
                     $validator->errors()->add("beyblades.$bi.line", 'Selecciona una línea válida para el combo.');
+
                     continue;
                 }
 
@@ -60,7 +62,39 @@ class DeckRequest extends FormRequest
                         );
                     }
                 }
+
+                foreach (BeybladeLines::slotsFor($line) as $slot) {
+                    $value = $beyblade['parts'][$slot] ?? null;
+                    if (is_string($value) && trim($value) !== '' && $error = $this->partError($line, $slot, trim($value))) {
+                        $validator->errors()->add("beyblades.$bi.parts.$slot", $error);
+                    }
+                }
             }
         });
+    }
+
+    private function partError(string $line, string $slot, string $name): ?string
+    {
+        if (PartCatalog::exists($slot, $name)) {
+            return null;
+        }
+
+        $other = PartCatalog::slotOf($name);
+        if ($other) {
+            $label = BeybladeLines::slotLabel($other);
+            $lineWithIt = collect(BeybladeLines::lines())->first(fn ($option) => in_array($other, BeybladeLines::slotsFor($option), true));
+
+            return in_array($other, BeybladeLines::slotsFor($line), true)
+                ? "\"$name\" es $label: ponla en ese campo."
+                : "\"$name\" es $label: elige la línea ".BeybladeLines::lineLabel($lineWithIt).'.';
+        }
+
+        // Un lanzamiento que aún no está en el catálogo solo lo puede dar de alta un admin.
+        if ($this->user()->is_admin) {
+            return null;
+        }
+
+        return "No existe la pieza \"$name\". Elígela de la lista."
+            .($slot === 'ratchet' ? ' Si tu bey no lleva ratchet, elige la línea BX Infinity o UX Infinity.' : '');
     }
 }
