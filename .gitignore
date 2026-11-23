@@ -22,3 +22,6 @@ Homestead.json
 Homestead.yaml
 Thumbs.db
 /.superpowers
+
+# Fotos de producto (c) TOMY: se suben directo al servidor, no al repo publico.
+/public/images/arena

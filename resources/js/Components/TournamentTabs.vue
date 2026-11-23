@@ -10,23 +10,13 @@ const props = defineProps({
 const links = computed(() => (props.variant === 'teams'
     ? { oficial: '/torneo-equipos', clandestinos: '/torneo-equipos/clandestinos' }
     : { oficial: '/tournament', clandestinos: '/tournament/clandestinos' }));
+
+const tabClass = (name) => (props.active === name ? '' : 'bg-bx-raised! text-zinc-200! hover:bg-bx-line!');
 </script>
 
 <template>
-    <nav class="mb-6 flex gap-2">
-        <Link
-            :href="links.oficial"
-            class="rounded-lg px-4 py-2 text-sm font-bold transition"
-            :class="active === 'oficial' ? 'bg-gradient-to-r from-bx-cyan to-bx-magenta text-zinc-950' : 'border border-white/15 text-zinc-300 hover:border-white/30'"
-        >
-            Oficial
-        </Link>
-        <Link
-            :href="links.clandestinos"
-            class="rounded-lg px-4 py-2 text-sm font-bold transition"
-            :class="active === 'clandestinos' ? 'bg-gradient-to-r from-bx-cyan to-bx-magenta text-zinc-950' : 'border border-white/15 text-zinc-300 hover:border-white/30'"
-        >
-            Clandestinos
-        </Link>
+    <nav class="mb-6 flex flex-wrap gap-1" aria-label="Tipo de torneo">
+        <Link :href="links.oficial" class="bx-btn" :class="tabClass('oficial')" :aria-current="active === 'oficial' ? 'page' : undefined">Oficial</Link>
+        <Link :href="links.clandestinos" class="bx-btn" :class="tabClass('clandestinos')" :aria-current="active === 'clandestinos' ? 'page' : undefined">Clandestinos</Link>
     </nav>
 </template>

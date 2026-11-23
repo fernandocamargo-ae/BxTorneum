@@ -36,13 +36,30 @@ describe('MonthlyChampions/Index', () => {
         expect(wrapper.find('table').exists()).toBe(true);
         expect(text).toContain('2026');
         // Chronological: Enero appears before Octubre in the rendered rows.
-        expect(text.indexOf('Enero')).toBeLessThan(text.indexOf('Octubre'));
+        const rows = wrapper.find('table').text();
+        expect(rows.indexOf('Enero')).toBeLessThan(rows.indexOf('Octubre'));
         expect(text).toContain('Gustavo Santi');
         expect(text).toContain('ItsMrPanda');
         // Month cells drop the redundant year; the year is the heading.
         expect(text).not.toContain('Enero 2026');
         expect(wrapper.find('img').exists()).toBe(false);
         expect(text).not.toContain('Agregar campeón del mes');
+    });
+
+    it('features the most recent month of the most recent year, once', () => {
+        const champion = (id, month_name, champion_nickname) => ({ id, month: month_name, month_name, champion_nickname });
+        const wrapper = mount(Index, {
+            props: {
+                groups: [
+                    { year: 2027, champions: [champion(3, 'Enero', 'Ana'), champion(4, 'Febrero', 'Beto')] },
+                    { year: 2026, champions: [champion(1, 'Diciembre', 'Caro')] },
+                ],
+            },
+        });
+
+        expect(wrapper.findAll('canvas').length).toBe(1);
+        expect(wrapper.text().split('Beto').length - 1).toBe(2); // destacado + su fila
+        expect(wrapper.text().split('Caro').length - 1).toBe(1);
     });
 
     it('renders a separate section per year, most recent year first', () => {

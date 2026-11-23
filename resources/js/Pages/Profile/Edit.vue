@@ -23,11 +23,11 @@ defineProps({
         <template #header>Perfil</template>
 
         <div class="space-y-6">
-            <div class="rounded-lg border border-white/10 bg-zinc-900/50 p-4 sm:p-8">
+            <div class="bx-panel p-4 sm:p-8">
                 <UpdateAvatarForm class="max-w-xl" />
             </div>
 
-            <div class="rounded-lg border border-white/10 bg-zinc-900/50 p-4 sm:p-8">
+            <div class="bx-panel p-4 sm:p-8">
                 <UpdateProfileInformationForm
                     :must-verify-email="mustVerifyEmail"
                     :status="status"
@@ -35,11 +35,11 @@ defineProps({
                 />
             </div>
 
-            <div class="rounded-lg border border-white/10 bg-zinc-900/50 p-4 sm:p-8">
+            <div class="bx-panel p-4 sm:p-8">
                 <UpdatePasswordForm class="max-w-xl" />
             </div>
 
-            <div class="rounded-lg border border-white/10 bg-zinc-900/50 p-4 sm:p-8">
+            <div class="bx-panel p-4 sm:p-8">
                 <DeleteUserForm class="max-w-xl" />
             </div>
         </div>

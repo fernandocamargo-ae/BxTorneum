@@ -44,23 +44,23 @@ function submit() {
     <Head title="Crear deck" />
 
     <form class="max-w-2xl space-y-6" @submit.prevent="submit">
-        <h1 class="text-3xl font-black"><span class="bx-gradient-text">Crear deck</span></h1>
+        <h1 class="bx-title-sm">Crear deck</h1>
 
         <div>
             <label class="mb-1 block text-sm font-medium text-zinc-300">Nombre del deck</label>
             <input
                 v-model="form.name"
                 type="text"
-                class="w-full rounded-md border border-white/10 bg-zinc-900 px-3 py-2 text-sm outline-none focus:border-bx-cyan"
+                class="bx-input w-full"
             />
-            <p v-if="form.errors.name" class="mt-1 text-xs text-bx-magenta">{{ form.errors.name }}</p>
+            <p v-if="form.errors.name" class="mt-1 text-sm text-bx-danger">{{ form.errors.name }}</p>
         </div>
 
         <div>
             <label class="mb-1 block text-sm font-medium text-zinc-300">Visibilidad</label>
             <select
                 v-model="form.visibility"
-                class="w-full rounded-md border border-white/10 bg-zinc-900 px-3 py-2 text-sm outline-none focus:border-bx-cyan"
+                class="bx-input w-full"
             >
                 <option value="private">Privado</option>
                 <option value="public">Público</option>
@@ -71,7 +71,7 @@ function submit() {
             <div v-if="form.beyblades.length > 1" class="flex justify-end">
                 <button
                     type="button"
-                    class="text-xs font-semibold text-bx-magenta hover:underline"
+                    class="min-h-11 px-2 text-sm font-semibold text-bx-danger hover:underline"
                     @click="removeCombo(i)"
                 >
                     Eliminar combo
@@ -88,7 +88,7 @@ function submit() {
         <button
             v-if="form.beyblades.length < MAX_COMBOS"
             type="button"
-            class="w-full rounded-lg border border-dashed border-white/20 px-4 py-2 text-sm font-semibold text-zinc-300 transition hover:border-bx-cyan hover:text-bx-cyan"
+            class="bx-btn-ghost w-full border-dashed"
             @click="addCombo"
         >
             + Agregar combo
@@ -97,7 +97,7 @@ function submit() {
         <button
             type="submit"
             :disabled="form.processing"
-            class="rounded-lg bg-gradient-to-r from-bx-cyan to-bx-magenta px-6 py-3 font-bold text-zinc-950 transition hover:opacity-90 disabled:opacity-50"
+            class="bx-btn"
         >
             Guardar deck
         </button>

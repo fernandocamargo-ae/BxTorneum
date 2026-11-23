@@ -31,6 +31,27 @@ class DeckControllerTest extends TestCase
         $this->assertCount(1, $deck->deckBeyblades);
     }
 
+    public function test_the_deck_list_includes_each_combo_with_its_parts_in_order(): void
+    {
+        $user = User::factory()->create();
+        $this->actingAs($user)->post('/decks', [
+            'name' => 'Ofensivo',
+            'visibility' => 'private',
+            'beyblades' => [
+                ['line' => 'bx', 'parts' => ['blade' => 'Dran Sword', 'ratchet' => '3-60', 'bit' => 'Flat']],
+                ['line' => 'ux', 'parts' => ['blade' => 'Wizard Rod', 'ratchet' => '5-70', 'bit' => 'Disc Ball']],
+            ],
+        ]);
+
+        $this->get('/decks')->assertInertia(fn ($page) => $page
+            ->component('Decks/Index')
+            ->where('decks.0.combos_count', 2)
+            ->where('decks.0.beyblades.0.line', 'bx')
+            ->where('decks.0.beyblades.0.parts.blade', 'Dran Sword')
+            ->where('decks.0.beyblades.1.line', 'ux')
+            ->where('decks.0.beyblades.1.parts.bit', 'Disc Ball'));
+    }
+
     public function test_a_users_first_deck_is_automatically_marked_as_the_tournament_deck(): void
     {
         $user = User::factory()->create();

@@ -1,5 +1,6 @@
 <script setup>
 import { Head, Link, router } from '@inertiajs/vue3';
+import ComboCard from '../../Components/ComboCard.vue';
 
 defineProps({ decks: { type: Array, default: () => [] } });
 
@@ -17,61 +18,61 @@ function destroy(deck) {
 <template>
     <Head title="Mis decks" />
 
-    <div class="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <h1 class="text-3xl font-black"><span class="bx-gradient-text">Mis decks</span></h1>
-        <Link
-            href="/decks/create"
-            class="rounded-lg bg-gradient-to-r from-bx-cyan to-bx-magenta px-4 py-2 text-center text-sm font-bold text-zinc-950 transition hover:opacity-90"
-        >
-            + Crear deck
-        </Link>
+    <div class="mb-8 flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
+        <h1 class="bx-title">Mis <span class="bx-outline">decks</span></h1>
+        <Link href="/decks/create" class="bx-btn self-start sm:self-auto">+ Crear deck</Link>
     </div>
 
-    <div v-if="decks.length" class="grid gap-4 sm:grid-cols-2">
-        <div
+    <div v-if="decks.length" class="space-y-5">
+        <section
             v-for="deck in decks"
             :key="deck.id"
-            class="rounded-xl border border-white/10 bg-zinc-900/50 p-5"
+            class="p-5 sm:p-7"
+            :class="deck.is_tournament_deck ? 'bx-plate' : 'bx-panel'"
         >
-            <div class="flex items-start justify-between gap-2">
-                <h2 class="text-lg font-bold">{{ deck.name }}</h2>
-                <span
-                    v-if="deck.is_tournament_deck"
-                    class="shrink-0 rounded-full bg-bx-cyan/15 px-2 py-0.5 text-xs font-bold text-bx-cyan"
-                >
-                    ⭐ Torneo
-                </span>
+            <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+                <div class="flex flex-wrap items-center gap-x-4 gap-y-2">
+                    <h2 class="bx-heading text-2xl [overflow-wrap:anywhere]">{{ deck.name }}</h2>
+                    <span v-if="deck.is_tournament_deck" class="bx-tag">⭐ Torneo</span>
+                    <p class="font-semibold" :class="deck.is_tournament_deck ? 'text-bx-plate-text' : 'text-zinc-300'">
+                        {{ deck.visibility === 'public' ? 'Público' : 'Privado' }} · {{ deck.combos_count }} combo(s)
+                    </p>
+                </div>
+                <div class="flex flex-wrap gap-2">
+                    <Link
+                        :href="`/decks/${deck.id}/edit`"
+                        class="bx-btn-ghost"
+                        :class="deck.is_tournament_deck ? 'border-bx-ink! bg-bx-ink' : ''"
+                    >
+                        Editar
+                    </Link>
+                    <button
+                        type="button"
+                        class="bx-btn-ghost"
+                        :class="deck.is_tournament_deck ? 'border-bx-ink! text-bx-ink! hover:bg-white' : ''"
+                        @click="toggleTournament(deck)"
+                    >
+                        {{ deck.is_tournament_deck ? 'Desmarcar de torneo' : 'Marcar como torneo' }}
+                    </button>
+                    <button
+                        type="button"
+                        class="bx-btn-ghost bx-btn-danger border-transparent!"
+                        :class="deck.is_tournament_deck ? 'text-[#a3182a]! hover:border-[#a3182a]!' : 'text-bx-danger!'"
+                        @click="destroy(deck)"
+                    >
+                        Eliminar
+                    </button>
+                </div>
             </div>
-            <p class="mt-1 text-sm text-zinc-400">
-                {{ deck.visibility === 'public' ? 'Público' : 'Privado' }} · {{ deck.combos_count }} combo(s)
-            </p>
-            <div class="mt-4 flex flex-wrap gap-2">
-                <Link
-                    :href="`/decks/${deck.id}/edit`"
-                    class="rounded-lg border border-white/15 px-3 py-1.5 text-sm font-semibold hover:border-bx-cyan hover:text-bx-cyan"
-                >
-                    Editar
-                </Link>
-                <button
-                    type="button"
-                    class="rounded-lg border border-white/15 px-3 py-1.5 text-sm font-semibold hover:border-bx-cyan hover:text-bx-cyan"
-                    @click="toggleTournament(deck)"
-                >
-                    {{ deck.is_tournament_deck ? 'Desmarcar de torneo' : 'Marcar como torneo' }}
-                </button>
-                <button
-                    type="button"
-                    class="rounded-lg border border-bx-magenta/50 px-3 py-1.5 text-sm font-semibold text-bx-magenta hover:bg-bx-magenta/10"
-                    @click="destroy(deck)"
-                >
-                    Eliminar
-                </button>
+
+            <div v-if="deck.beyblades?.length" class="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                <ComboCard v-for="(combo, i) in deck.beyblades" :key="i" :combo="combo" />
             </div>
-        </div>
+        </section>
     </div>
 
-    <div v-else class="rounded-xl border border-dashed border-white/15 p-12 text-center text-zinc-400">
+    <div v-else class="bx-panel p-12 text-center text-zinc-300">
         <p class="mb-4">No tienes decks todavía.</p>
-        <Link href="/decks/create" class="font-bold text-bx-cyan hover:underline">Crear el primero →</Link>
+        <Link href="/decks/create" class="font-bold text-bx-rail hover:underline">Crear el primero →</Link>
     </div>
 </template>

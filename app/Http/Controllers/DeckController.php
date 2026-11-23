@@ -17,6 +17,7 @@ class DeckController extends Controller
     {
         $decks = auth()->user()->decks()
             ->withCount('deckBeyblades')
+            ->with('deckBeyblades.parts')
             ->orderByDesc('is_tournament_deck')
             ->orderBy('name')
             ->get()
@@ -26,6 +27,10 @@ class DeckController extends Controller
                 'visibility' => $deck->visibility,
                 'is_tournament_deck' => $deck->is_tournament_deck,
                 'combos_count' => $deck->deck_beyblades_count,
+                'beyblades' => $deck->deckBeyblades->sortBy('position')->values()->map(fn ($beyblade) => [
+                    'line' => $beyblade->line,
+                    'parts' => $beyblade->partsBySlot(),
+                ]),
             ]);
 
         return Inertia::render('Decks/Index', ['decks' => $decks]);

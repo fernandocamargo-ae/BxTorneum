@@ -22,7 +22,7 @@ const verificationLinkSent = computed(
 </script>
 
 <template>
-    <GuestLayout>
+    <GuestLayout title="Verifica tu email">
         <Head title="Verificación de email" />
 
         <div class="mb-4 text-sm text-zinc-400">
@@ -32,7 +32,7 @@ const verificationLinkSent = computed(
         </div>
 
         <div
-            class="mb-4 text-sm font-medium text-bx-cyan"
+            class="mb-4 text-sm font-medium text-bx-rail"
             v-if="verificationLinkSent"
         >
             Se envió un nuevo enlace de verificación al email que usaste para
@@ -52,7 +52,7 @@ const verificationLinkSent = computed(
                     :href="route('logout')"
                     method="post"
                     as="button"
-                    class="rounded-md text-sm text-zinc-400 underline hover:text-bx-cyan focus:outline-none focus:ring-2 focus:ring-bx-cyan focus:ring-offset-2 focus:ring-offset-zinc-950"
+                    class="text-sm text-zinc-400 underline hover:text-bx-rail focus:outline-none focus:ring-2 focus:ring-bx-rail focus:ring-offset-2 focus:ring-offset-bx-ink"
                     >Cerrar sesión</Link
                 >
             </div>

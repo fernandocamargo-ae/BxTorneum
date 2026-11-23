@@ -29,13 +29,13 @@ function openZoom(event) {
         v-if="url"
         :src="url"
         :alt="nickname"
-        class="shrink-0 rounded-full object-cover ring-1 ring-white/10"
+        class="bx-octagon shrink-0 object-cover"
         :class="[size, zoom ? 'cursor-zoom-in' : '']"
         @click="openZoom"
     />
     <span
         v-else
-        class="flex shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-bx-cyan to-bx-magenta font-bold text-zinc-950"
+        class="bx-octagon flex shrink-0 items-center justify-center bg-bx-plate font-extrabold text-bx-ink"
         :class="[size, text]"
     >
         {{ initial }}
@@ -51,7 +51,7 @@ function openZoom(event) {
                 <img
                     :src="url"
                     :alt="nickname"
-                    class="max-h-[85vh] max-w-[90vw] rounded-2xl object-contain shadow-2xl ring-1 ring-white/20"
+                    class="max-h-[85vh] max-w-[90vw] object-contain shadow-2xl ring-1 ring-white/20"
                 />
                 <figcaption v-if="nickname" class="text-sm font-bold text-zinc-200">{{ nickname }}</figcaption>
             </figure>

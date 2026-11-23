@@ -27,7 +27,7 @@ const submit = () => {
 </script>
 
 <template>
-    <GuestLayout>
+    <GuestLayout title="Nueva contraseña">
         <Head title="Restablecer contraseña" />
 
         <form @submit.prevent="submit">

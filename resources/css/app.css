@@ -1,4 +1,6 @@
 @import 'tailwindcss';
+@import '@fontsource-variable/archivo/wdth.css';
+@import '@fontsource-variable/archivo/wdth-italic.css';
 @plugin '@tailwindcss/forms';
 
 @source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
@@ -8,21 +10,233 @@
 @source '../**/*.vue';
 
 @theme {
-    --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
+    --font-sans: 'Archivo Variable', Arial, ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
         'Segoe UI Symbol', 'Noto Color Emoji';
 
-    --color-bx-cyan: #22d3ee;
-    --color-bx-magenta: #e11d8f;
-    --color-bx-orange: #fb923c;
+    /* Riel del estadio (acento), tinta, plastico del estadio y cobalto de las estelas. */
+    --color-bx-rail: #2bd14f;
+    --color-bx-ink: #0b0c10;
+    --color-bx-panel: #171a23;
+    --color-bx-raised: #232733;
+    --color-bx-line: #3a4152;
+    --color-bx-plate: #dde3f0;
+    --color-bx-plate-deep: #c3ccdf;
+    --color-bx-plate-text: #454e61;
+    --color-bx-cobalt: #14269a;
+    --color-bx-sky: #4fc3f7;
+    --color-bx-danger: #ff8a96;
+    --color-bx-orange: #ff9d45;
 }
 
-@utility bx-gradient-text {
-    background-image: linear-gradient(90deg, var(--color-bx-cyan), var(--color-bx-magenta), var(--color-bx-orange));
-    background-clip: text;
-    -webkit-background-clip: text;
+/* Titulares condensados, como los carteles de torneo. */
+@utility bx-title {
+    font-size: clamp(2.75rem, 8.4vw, 6.5rem);
+    line-height: 0.88;
+    font-weight: 900;
+    font-stretch: 70%;
+    letter-spacing: -0.015em;
+    text-transform: uppercase;
+    overflow-wrap: anywhere;
+}
+
+@utility bx-title-sm {
+    font-size: clamp(2.1rem, 5.4vw, 3.75rem);
+    line-height: 0.92;
+    font-weight: 900;
+    font-stretch: 72%;
+    text-transform: uppercase;
+    overflow-wrap: anywhere;
+}
+
+@utility bx-outline {
     color: transparent;
+    -webkit-text-stroke: 0.022em currentColor;
+    -webkit-text-stroke-color: var(--bx-stroke, #f4f6fb);
 }
 
-@utility bx-glow {
-    box-shadow: 0 0 0 1px rgb(34 211 238 / 0.25), 0 0 24px -6px rgb(225 29 143 / 0.45);
+/* Encabezados anchos e italicos, como el rotulo de producto. */
+@utility bx-heading {
+    font-weight: 900;
+    font-stretch: 116%;
+    font-style: italic;
+    line-height: 1.1;
+}
+
+@utility bx-name {
+    font-weight: 900;
+    font-stretch: 80%;
+    text-transform: uppercase;
+    line-height: 1;
+}
+
+/*
+ * Esquinas cortadas hechas con fondos (no clip-path), para no recortar menus,
+ * listas desplegables ni dialogos que viven dentro del panel.
+ */
+@utility bx-panel {
+    --bx-fill: var(--color-bx-panel);
+    --bx-c: 14px;
+    background-image:
+        linear-gradient(135deg, transparent var(--bx-c), var(--bx-fill) 0),
+        linear-gradient(225deg, transparent var(--bx-c), var(--bx-fill) 0),
+        linear-gradient(315deg, transparent var(--bx-c), var(--bx-fill) 0),
+        linear-gradient(45deg, transparent var(--bx-c), var(--bx-fill) 0);
+    background-position: top left, top right, bottom right, bottom left;
+    background-size: 51% 51%;
+    background-repeat: no-repeat;
+}
+
+@utility bx-plate {
+    --bx-fill: var(--color-bx-plate);
+    --bx-c: 24px;
+    color: var(--color-bx-ink);
+    background-image:
+        linear-gradient(135deg, transparent var(--bx-c), var(--bx-fill) 0),
+        linear-gradient(225deg, transparent var(--bx-c), var(--bx-fill) 0),
+        linear-gradient(315deg, transparent var(--bx-c), var(--bx-fill) 0),
+        linear-gradient(45deg, transparent var(--bx-c), var(--bx-fill) 0);
+    background-position: top left, top right, bottom right, bottom left;
+    background-size: 51% 51%;
+    background-repeat: no-repeat;
+}
+
+/* Botones */
+@utility bx-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 2.75rem;
+    padding: 0.5rem 1.6rem;
+    font-size: 0.9375rem;
+    font-weight: 800;
+    font-stretch: 106%;
+    line-height: 1.15;
+    text-align: center;
+    color: var(--color-bx-ink);
+    background: var(--color-bx-rail);
+    clip-path: polygon(0.75rem 0, 100% 0, calc(100% - 0.75rem) 100%, 0 100%);
+    transition: background-color 0.15s;
+    &:hover:not(:disabled) {
+        background: #5be87a;
+    }
+    &:focus-visible {
+        outline: none;
+        box-shadow: inset 0 0 0 3px #fff;
+    }
+    &:disabled {
+        opacity: 0.45;
+        cursor: not-allowed;
+    }
+}
+
+@utility bx-btn-ghost {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 2.75rem;
+    padding: 0.4rem 1.1rem;
+    font-size: 0.9375rem;
+    font-weight: 700;
+    line-height: 1.15;
+    text-align: center;
+    color: #e9edf6;
+    border: 2px solid var(--color-bx-line);
+    transition: border-color 0.15s, color 0.15s;
+    &:hover:not(:disabled) {
+        border-color: var(--color-bx-rail);
+        color: var(--color-bx-rail);
+    }
+    &:focus-visible {
+        outline: 2px solid var(--color-bx-rail);
+        outline-offset: 2px;
+    }
+    &:disabled {
+        opacity: 0.45;
+        cursor: not-allowed;
+    }
+}
+
+@utility bx-btn-danger {
+    &:hover:not(:disabled) {
+        border-color: var(--color-bx-danger);
+        color: var(--color-bx-danger);
+    }
+}
+
+@utility bx-btn-sm {
+    min-height: 2.25rem;
+    padding: 0.2rem 0.7rem;
+    font-size: 0.8125rem;
+}
+
+/* Campos */
+@utility bx-input {
+    min-height: 2.75rem;
+    padding: 0.5rem 0.75rem;
+    font-size: 1rem;
+    color: #f4f6fb;
+    background-color: var(--color-bx-ink);
+    border: 2px solid var(--color-bx-line);
+    border-radius: 0;
+    outline: none;
+    box-shadow: none;
+    &:focus {
+        border-color: var(--color-bx-rail);
+        box-shadow: none;
+        --tw-ring-shadow: 0 0 #0000;
+    }
+}
+
+/* Etiquetas */
+@utility bx-tag {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.15rem 0.85rem;
+    font-size: 0.8125rem;
+    font-weight: 800;
+    font-style: italic;
+    font-stretch: 108%;
+    line-height: 1.4;
+    white-space: nowrap;
+    color: var(--color-bx-ink);
+    background: var(--color-bx-rail);
+    clip-path: polygon(0.45rem 0, 100% 0, calc(100% - 0.45rem) 100%, 0 100%);
+}
+
+@utility bx-tag-muted {
+    color: #e9edf6;
+    background: var(--color-bx-line);
+}
+
+@utility bx-tag-orange {
+    background: var(--color-bx-orange);
+}
+
+@utility bx-octagon {
+    clip-path: polygon(27% 0, 73% 0, 100% 27%, 100% 73%, 73% 100%, 27% 100%, 0 73%, 0 27%);
+}
+
+/* Riel dentado */
+@utility bx-rail-y {
+    background:
+        linear-gradient(var(--color-bx-rail), var(--color-bx-rail)) center / 10px 100% no-repeat,
+        linear-gradient(var(--color-bx-ink), var(--color-bx-ink)) center / 14px 100% no-repeat,
+        repeating-linear-gradient(180deg, var(--color-bx-ink) 0 5px, transparent 5px 10px);
+}
+
+@utility bx-rail-x {
+    background: repeating-linear-gradient(90deg, var(--color-bx-ink) 0 6px, var(--color-bx-rail) 6px 12px);
+}
+
+@layer base {
+    body {
+        background: var(--color-bx-ink);
+        color: #f4f6fb;
+    }
+
+    a:focus-visible,
+    button:focus-visible {
+        outline: 2px solid var(--color-bx-rail);
+        outline-offset: 2px;
+    }
 }

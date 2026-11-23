@@ -55,20 +55,20 @@ const hasOptionalRatchet = computed(() => isOptional(props.modelValue.line, 'rat
 </script>
 
 <template>
-    <div class="rounded-lg border border-white/10 bg-zinc-900/50 p-4">
+    <div class="bx-panel p-4">
         <div class="mb-3 flex items-center justify-between">
-            <span class="text-xs font-bold uppercase tracking-widest text-bx-cyan">Combo {{ index + 1 }}</span>
+            <span class="bx-heading text-lg">Combo {{ index + 1 }}</span>
             <select
                 :value="modelValue.line"
-                class="rounded-md border border-white/10 bg-zinc-900 px-2 py-1 text-sm text-zinc-100 outline-none focus:border-bx-cyan"
+                class="bx-input"
                 @change="updateLine"
             >
                 <option v-for="line in LINES" :key="line.value" :value="line.value">{{ line.label }}</option>
             </select>
         </div>
 
-        <label v-if="hasOptionalRatchet" class="mb-3 flex items-center gap-2 text-xs text-zinc-400">
-            <input v-model="includeRatchet" type="checkbox" class="accent-bx-cyan" />
+        <label v-if="hasOptionalRatchet" class="mb-3 flex items-center gap-2 text-sm text-zinc-400">
+            <input v-model="includeRatchet" type="checkbox" class="accent-bx-rail" />
             ¿Lleva ratchet?
         </label>
 

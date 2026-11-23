@@ -22,7 +22,7 @@ const submit = () => {
 </script>
 
 <template>
-    <GuestLayout>
+    <GuestLayout title="Crear cuenta">
         <Head title="Registro" />
 
         <form @submit.prevent="submit">
@@ -111,7 +111,7 @@ const submit = () => {
             <div class="mt-4 flex items-center justify-end">
                 <Link
                     :href="route('login')"
-                    class="rounded-md text-sm text-zinc-400 underline hover:text-bx-cyan focus:outline-none focus:ring-2 focus:ring-bx-cyan focus:ring-offset-2 focus:ring-offset-zinc-950"
+                    class="text-sm text-zinc-400 underline hover:text-bx-rail focus:outline-none focus:ring-2 focus:ring-bx-rail focus:ring-offset-2 focus:ring-offset-bx-ink"
                 >
                     ¿Ya tienes cuenta?
                 </Link>

@@ -16,7 +16,7 @@ const submit = () => {
 </script>
 
 <template>
-    <GuestLayout>
+    <GuestLayout title="Recuperar contraseña">
         <Head title="Recuperar contraseña" />
 
         <div class="mb-4 text-sm text-zinc-400">

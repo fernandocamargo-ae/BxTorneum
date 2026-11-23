@@ -36,48 +36,48 @@ function beybladeErrors(index) {
 </script>
 
 <template>
-    <section class="rounded-xl border border-white/10 bg-zinc-900/40 p-5">
+    <section class="bx-panel p-5">
         <div class="mb-4 flex items-center gap-3">
-            <span class="rounded bg-gradient-to-r from-bx-cyan to-bx-magenta px-2 py-0.5 text-xs font-black uppercase text-zinc-950">
+            <span class="bg-gradient-to-r from-bx-rail to-bx-danger px-2 py-0.5 text-sm font-black uppercase text-bx-ink">
                 {{ roleLabel }}
             </span>
         </div>
 
         <div class="mb-5">
-            <label class="mb-1 block text-xs font-semibold uppercase tracking-wide text-zinc-400">
+            <label class="mb-1 block text-sm font-semibold text-zinc-400">
                 Nombre del jugador
-                <span v-if="!nameReadonly" class="text-bx-magenta">*</span>
-                <span v-else class="font-normal normal-case text-zinc-500">· edítalo en "Editar nombres"</span>
+                <span v-if="!nameReadonly" class="text-bx-danger">*</span>
+                <span v-else class="font-normal normal-case text-zinc-400">· edítalo en "Editar nombres"</span>
             </label>
             <input
                 :value="modelValue.name"
                 type="text"
                 :readonly="nameReadonly"
-                class="w-full rounded-md border border-white/10 px-3 py-2 text-sm outline-none"
+                class="bx-input w-full"
                 :class="[
                     nameReadonly
-                        ? 'cursor-not-allowed bg-zinc-900/40 text-zinc-400'
-                        : 'bg-zinc-900 text-zinc-100 focus:border-bx-cyan focus:bx-glow',
-                    { 'border-bx-magenta': errors.name },
+                        ? 'cursor-not-allowed bg-bx-panel text-zinc-400'
+                        : 'bg-bx-panel text-zinc-100 focus:border-bx-rail',
+                    { 'border-bx-danger': errors.name },
                 ]"
                 @input="updateName"
             />
-            <p v-if="errors.name" class="mt-1 text-xs text-bx-magenta">{{ errors.name }}</p>
+            <p v-if="errors.name" class="mt-1 text-sm text-bx-danger">{{ errors.name }}</p>
         </div>
 
-        <div v-if="lockedCombos.length" class="mb-4 grid gap-3 sm:grid-cols-3">
+        <div v-if="lockedCombos.length" class="mb-4 grid grid-cols-1 gap-3 sm:grid-cols-3">
             <div
                 v-for="(combo, i) in lockedCombos"
                 :key="`locked-${i}`"
-                class="rounded-lg border border-bx-cyan/30 bg-zinc-950/60 p-4"
+                class="border border-bx-rail/30 bg-bx-ink p-4"
             >
                 <div class="mb-2 flex items-center justify-between gap-2">
-                    <span class="text-xs font-bold uppercase tracking-widest text-bx-cyan">{{ lineLabel(combo.line) }}</span>
-                    <span class="text-xs font-semibold text-bx-cyan">🔒 Registrado</span>
+                    <span class="text-sm font-bold text-bx-rail">{{ lineLabel(combo.line) }}</span>
+                    <span class="text-sm font-semibold text-bx-rail">🔒 Registrado</span>
                 </div>
                 <dl class="space-y-1 text-sm">
                     <div v-for="(name, slot) in combo.parts" :key="slot" class="flex justify-between gap-2">
-                        <dt class="text-zinc-500">{{ SLOT_LABELS[slot] ?? slot }}</dt>
+                        <dt class="text-zinc-400">{{ SLOT_LABELS[slot] ?? slot }}</dt>
                         <dd class="font-medium text-zinc-200">{{ name }}</dd>
                     </div>
                 </dl>

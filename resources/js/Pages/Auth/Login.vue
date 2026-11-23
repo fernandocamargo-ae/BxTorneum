@@ -30,10 +30,10 @@ const submit = () => {
 </script>
 
 <template>
-    <GuestLayout>
+    <GuestLayout title="Iniciar sesión">
         <Head title="Iniciar sesión" />
 
-        <div v-if="status" class="mb-4 text-sm font-medium text-bx-cyan">
+        <div v-if="status" class="mb-4 text-sm font-medium text-bx-rail">
             {{ status }}
         </div>
 
@@ -80,7 +80,7 @@ const submit = () => {
                 <Link
                     v-if="canResetPassword"
                     :href="route('password.request')"
-                    class="rounded-md text-sm text-zinc-400 underline hover:text-bx-cyan focus:outline-none focus:ring-2 focus:ring-bx-cyan focus:ring-offset-2 focus:ring-offset-zinc-950"
+                    class="text-sm text-zinc-400 underline hover:text-bx-rail focus:outline-none focus:ring-2 focus:ring-bx-rail focus:ring-offset-2 focus:ring-offset-bx-ink"
                 >
                     ¿Olvidaste tu contraseña?
                 </Link>
@@ -96,11 +96,11 @@ const submit = () => {
 
             <div class="mt-4 text-center text-sm text-zinc-400">
                 ¿No tienes cuenta?
-                <Link :href="route('register')" class="text-bx-cyan underline hover:opacity-80">Regístrate</Link>
+                <Link :href="route('register')" class="text-bx-rail underline hover:opacity-80">Regístrate</Link>
             </div>
 
             <div class="mt-2 text-center text-sm text-zinc-400">
-                <Link :href="route('guest.create')" class="text-bx-cyan underline hover:opacity-80">Jugar como invitado</Link>
+                <Link :href="route('guest.create')" class="text-bx-rail underline hover:opacity-80">Jugar como invitado</Link>
             </div>
         </form>
     </GuestLayout>

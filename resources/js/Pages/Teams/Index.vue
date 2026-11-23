@@ -19,18 +19,18 @@ const hasTeam = computed(() => props.my_team_id !== null);
     <Head title="Equipos" />
 
     <div class="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <h1 class="text-3xl font-black"><span class="bx-gradient-text">Equipos</span></h1>
+        <h1 class="bx-title">Equipos</h1>
         <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3">
             <input
                 v-model="query"
                 type="search"
                 placeholder="Buscar equipo…"
-                class="w-full rounded-md border border-white/10 bg-zinc-900 px-3 py-2 text-sm outline-none focus:border-bx-cyan focus:bx-glow sm:w-56"
+                class="bx-input w-full sm:w-56"
             />
             <Link
                 v-if="!hasTeam"
                 href="/teams/create"
-                class="rounded-lg bg-gradient-to-r from-bx-cyan to-bx-magenta px-4 py-2 text-center text-sm font-bold text-zinc-950 transition hover:opacity-90"
+                class="bx-btn"
             >
                 + Registrar equipo
             </Link>
@@ -41,25 +41,25 @@ const hasTeam = computed(() => props.my_team_id !== null);
         Ya perteneces a un equipo. Sal de él para crear o unirte a otro.
     </p>
 
-    <div v-if="filtered.length" class="grid gap-4 sm:grid-cols-2">
+    <div v-if="filtered.length" class="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <Link
             v-for="team in filtered"
             :key="team.id"
             :href="`/teams/${team.id}`"
-            class="group rounded-xl border p-5 transition hover:border-bx-cyan hover:bx-glow"
-            :class="team.id === my_team_id ? 'border-bx-cyan/60 bg-bx-cyan/5' : 'border-white/10 bg-zinc-900/50'"
+            class="bx-panel group p-5 transition hover:[--bx-fill:var(--color-bx-raised)]"
+            :class="team.id === my_team_id ? '[--bx-fill:var(--color-bx-cobalt)]' : ''"
         >
             <div class="flex items-start justify-between gap-2">
                 <div class="flex min-w-0 items-center gap-2">
                     <Avatar :nickname="team.name" :url="team.logo_url" size="h-9 w-9" :zoom="false" />
-                    <h2 class="truncate text-lg font-bold group-hover:text-bx-cyan">
+                    <h2 class="truncate text-lg font-bold group-hover:text-bx-rail">
                         {{ team.name }}
-                        <span v-if="team.id === my_team_id" class="ml-1 text-xs font-semibold text-bx-cyan">(mi equipo)</span>
+                        <span v-if="team.id === my_team_id" class="ml-1 text-sm font-semibold text-bx-rail">(mi equipo)</span>
                     </h2>
                 </div>
                 <span
-                    class="shrink-0 rounded-full px-2 py-0.5 text-xs font-bold"
-                    :class="team.has_room ? 'bg-bx-cyan/15 text-bx-cyan' : 'bg-zinc-700 text-zinc-300'"
+                    class="bx-tag shrink-0"
+                    :class="team.has_room ? 'bg-bx-rail/15 text-bx-rail' : 'bg-bx-line text-zinc-300'"
                 >
                     {{ team.members_count }}/3
                 </span>
@@ -68,8 +68,8 @@ const hasTeam = computed(() => props.my_team_id !== null);
         </Link>
     </div>
 
-    <div v-else class="rounded-xl border border-dashed border-white/15 p-12 text-center text-zinc-400">
+    <div v-else class="bx-panel p-12 text-center text-zinc-400">
         <p class="mb-4">No hay equipos todavía.</p>
-        <Link v-if="!hasTeam" href="/teams/create" class="font-bold text-bx-cyan hover:underline">Registrar el primero →</Link>
+        <Link v-if="!hasTeam" href="/teams/create" class="font-bold text-bx-rail hover:underline">Registrar el primero →</Link>
     </div>
 </template>

@@ -43,7 +43,7 @@ function remove() {
 <template>
     <section>
         <header>
-            <h2 class="text-lg font-medium text-zinc-100">Foto de perfil</h2>
+            <h2 class="bx-heading text-xl">Foto de perfil</h2>
             <p class="mt-1 text-sm text-zinc-400">
                 Sube una imagen (JPG, PNG o WEBP, máximo 2&nbsp;MB). Se mostrará donde aparezcas como jugador.
             </p>
@@ -57,14 +57,14 @@ function remove() {
                     ref="fileInput"
                     type="file"
                     accept="image/jpeg,image/png,image/webp"
-                    class="block w-full text-sm text-zinc-400 file:mr-3 file:rounded-lg file:border-0 file:bg-white/10 file:px-3 file:py-2 file:text-sm file:font-semibold file:text-zinc-200 hover:file:bg-white/20"
+                    class="block w-full text-sm text-zinc-400 file:mr-3 file:border-0 file:bg-white/10 file:px-3 file:py-2 file:text-sm file:font-semibold file:text-zinc-200 hover:file:bg-white/20"
                     @change="pickFile"
                 />
                 <div class="flex flex-wrap gap-2">
                     <button
                         type="button"
                         :disabled="!form.avatar || form.processing"
-                        class="rounded-lg bg-gradient-to-r from-bx-cyan to-bx-magenta px-4 py-2 text-sm font-bold text-zinc-950 transition hover:opacity-90 disabled:opacity-50"
+                        class="bx-btn"
                         @click="submit"
                     >
                         Guardar foto
@@ -72,13 +72,13 @@ function remove() {
                     <button
                         v-if="currentUrl"
                         type="button"
-                        class="rounded-lg border border-white/15 px-4 py-2 text-sm font-semibold text-zinc-300 transition hover:border-bx-magenta hover:text-bx-magenta"
+                        class="bx-btn-ghost bx-btn-danger"
                         @click="remove"
                     >
                         Quitar foto
                     </button>
                 </div>
-                <p v-if="form.errors.avatar" class="text-xs text-bx-magenta">{{ form.errors.avatar }}</p>
+                <p v-if="form.errors.avatar" class="text-sm text-bx-danger">{{ form.errors.avatar }}</p>
             </div>
         </div>
     </section>

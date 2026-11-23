@@ -32,7 +32,7 @@ const statusLabel = {
 <template>
     <Head title="Torneos clandestinos" />
 
-    <h1 class="mb-6 text-3xl font-black"><span class="bx-gradient-text">Torneos</span></h1>
+    <h1 class="bx-title mb-8">Torneos <span class="bx-outline">clandestinos</span></h1>
 
     <TournamentTabs active="clandestinos" />
 
@@ -40,22 +40,22 @@ const statusLabel = {
         <button
             v-if="!showForm"
             type="button"
-            class="rounded-lg border border-dashed border-white/30 px-4 py-2 text-sm font-bold text-zinc-300 transition hover:border-bx-cyan hover:text-bx-cyan"
+            class="bx-btn-ghost border-dashed"
             @click="showForm = true"
         >
             + Crear torneo clandestino
         </button>
 
-        <form v-else class="max-w-sm space-y-4 rounded-xl border border-white/10 bg-zinc-900/50 p-5" @submit.prevent="create">
-            <h2 class="text-sm font-semibold text-zinc-300">Crear torneo clandestino</h2>
+        <form v-else class="max-w-sm space-y-4 bx-panel p-5" @submit.prevent="create">
+            <h2 class="bx-heading text-lg">Crear torneo clandestino</h2>
             <div>
                 <label class="mb-1 block text-sm font-medium text-zinc-300">Nombre</label>
                 <input
                     v-model="form.name"
                     type="text"
-                    class="w-full rounded-md border border-white/10 bg-zinc-900 px-3 py-2 text-sm outline-none focus:border-bx-cyan"
+                    class="bx-input w-full"
                 />
-                <p v-if="form.errors.name" class="mt-1 text-xs text-bx-magenta">{{ form.errors.name }}</p>
+                <p v-if="form.errors.name" class="mt-1 text-sm text-bx-danger">{{ form.errors.name }}</p>
             </div>
             <div>
                 <label class="mb-1 block text-sm font-medium text-zinc-300">Rondas suizas</label>
@@ -63,14 +63,14 @@ const statusLabel = {
                     v-model.number="form.swiss_rounds"
                     type="number"
                     min="1"
-                    class="w-full rounded-md border border-white/10 bg-zinc-900 px-3 py-2 text-sm outline-none focus:border-bx-cyan"
+                    class="bx-input w-full"
                 />
             </div>
             <div>
                 <label class="mb-1 block text-sm font-medium text-zinc-300">Corte a eliminatorias (top N)</label>
                 <select
                     v-model.number="form.cut_size"
-                    class="w-full rounded-md border border-white/10 bg-zinc-900 px-3 py-2 text-sm outline-none focus:border-bx-cyan"
+                    class="bx-input w-full"
                 >
                     <option :value="2">Top 2</option>
                     <option :value="4">Top 4</option>
@@ -82,13 +82,13 @@ const statusLabel = {
                 <button
                     type="submit"
                     :disabled="form.processing"
-                    class="rounded-lg bg-gradient-to-r from-bx-cyan to-bx-magenta px-4 py-2 text-sm font-bold text-zinc-950 transition hover:opacity-90 disabled:opacity-50"
+                    class="bx-btn"
                 >
                     Crear torneo
                 </button>
                 <button
                     type="button"
-                    class="rounded-lg border border-white/15 px-4 py-2 text-sm font-semibold text-zinc-300 hover:border-white/30"
+                    class="bx-btn-ghost"
                     @click="showForm = false"
                 >
                     Cancelar
@@ -97,16 +97,16 @@ const statusLabel = {
         </form>
     </div>
 
-    <div v-if="tournaments.length" class="grid gap-4 sm:grid-cols-2">
+    <div v-if="tournaments.length" class="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <Link
             v-for="tournament in tournaments"
             :key="tournament.id"
             :href="`/tournament/${tournament.id}`"
-            class="group rounded-xl border border-white/10 bg-zinc-900/50 p-5 transition hover:border-bx-cyan hover:bx-glow"
+            class="group bx-panel p-5 transition hover:[--bx-fill:var(--color-bx-raised)]"
         >
             <div class="flex items-center justify-between gap-2">
-                <h2 class="text-lg font-bold group-hover:text-bx-cyan">{{ tournament.name }}</h2>
-                <span class="shrink-0 rounded-full bg-white/10 px-2 py-0.5 text-xs font-bold uppercase tracking-wide text-zinc-300">
+                <h2 class="text-lg font-bold group-hover:text-bx-rail">{{ tournament.name }}</h2>
+                <span class="bx-tag bx-tag-muted shrink-0">
                     {{ statusLabel[tournament.status] ?? tournament.status }}
                 </span>
             </div>
@@ -117,7 +117,7 @@ const statusLabel = {
         </Link>
     </div>
 
-    <div v-else class="rounded-xl border border-dashed border-white/15 p-12 text-center text-zinc-400">
+    <div v-else class="bx-panel p-12 text-center text-zinc-400">
         Todavía no hay torneos clandestinos.
     </div>
 </template>

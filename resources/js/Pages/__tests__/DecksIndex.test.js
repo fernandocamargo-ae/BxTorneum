@@ -26,4 +26,22 @@ describe('Decks/Index', () => {
         await wrapper.findAll('button')[2].trigger('click'); // deck 2's "Marcar como torneo" button
         expect(router.patch).toHaveBeenCalledWith('/decks/2/tournament', { value: true }, { preserveScroll: true });
     });
+
+    it('shows the parts of each combo', async () => {
+        const wrapper = mount(Index, {
+            props: {
+                decks: [{
+                    ...decks[0],
+                    beyblades: [{ line: 'ux', parts: { blade: 'Wizard Rod', ratchet: '5-70', bit: 'Disc Ball' } }],
+                }],
+            },
+        });
+        expect(wrapper.text()).toContain('UX');
+        expect(wrapper.text()).toContain('Wizard Rod');
+        expect(wrapper.text()).toContain('Disc Ball');
+        expect(wrapper.find('img').attributes('src')).toBe('/images/arena/wizard-rod.webp');
+
+        await wrapper.find('img').trigger('error');
+        expect(wrapper.find('img').exists()).toBe(false); // sin foto no queda un icono roto
+    });
 });

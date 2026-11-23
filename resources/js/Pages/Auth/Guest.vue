@@ -16,7 +16,7 @@ const submit = () => {
 </script>
 
 <template>
-    <GuestLayout>
+    <GuestLayout title="Jugar como invitado">
         <Head title="Jugar como invitado" />
 
         <p class="mb-4 text-sm text-zinc-400">
@@ -49,7 +49,7 @@ const submit = () => {
             </div>
 
             <div class="mt-4 text-center text-sm text-zinc-400">
-                <Link :href="route('login')" class="text-bx-cyan underline hover:opacity-80">Volver a inicio de sesión</Link>
+                <Link :href="route('login')" class="text-bx-rail underline hover:opacity-80">Volver a inicio de sesión</Link>
             </div>
         </form>
     </GuestLayout>
