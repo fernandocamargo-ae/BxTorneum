@@ -36,6 +36,10 @@ class AvatarPresets
 
     public static function url(string $path): string
     {
-        return '/images/avatars/'.substr($path, strlen(self::PREFIX)).'.webp';
+        $url = '/images/avatars/'.substr($path, strlen(self::PREFIX)).'.webp';
+        $file = public_path($url);
+
+        // Con la fecha del archivo, el navegador no se queda con la versión vieja si la imagen se corrige.
+        return is_file($file) ? $url.'?v='.filemtime($file) : $url;
     }
 }

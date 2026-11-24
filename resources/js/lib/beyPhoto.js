@@ -1,4 +1,5 @@
 import { NAMES, ROSTER } from './beyRoster';
+import { imageUrl } from './imageUrl';
 import { nameKey } from './nameKey';
 
 // "Brave" => dran-brave: con otro lock chip el bey se ve casi igual, solo cambia el emblema.
@@ -11,8 +12,8 @@ export function beyPhoto(parts = {}) {
     const tries = [parts.blade, parts.main_blade && `${chip}${parts.main_blade}`, parts.metal_blade && `${chip}${parts.metal_blade}`];
     for (const name of tries) {
         const slug = name && NAMES[nameKey(name)];
-        if (slug) return `/images/arena/${slug}.webp`;
+        if (slug) return imageUrl(`arena/${slug}.webp`);
     }
     const slug = BY_LAST_WORD[nameKey(parts.main_blade ?? parts.metal_blade)];
-    return slug ? `/images/arena/${slug}.webp` : null;
+    return slug ? imageUrl(`arena/${slug}.webp`) : null;
 }

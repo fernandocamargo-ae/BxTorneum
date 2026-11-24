@@ -53,7 +53,7 @@ describe('AvatarPicker', () => {
     });
 
     it('marks the avatar in use and lets you choose again after saving', async () => {
-        const wrapper = await open({ currentUrl: '/images/avatars/x_char_robin-kazami.webp' });
+        const wrapper = await open({ currentUrl: '/images/avatars/x_char_robin-kazami.webp?v=123' });
         expect(wrapper.findAll('li button[aria-pressed="true"]').map((b) => b.text())).toEqual(['Robin Kazami']);
 
         await wrapper.find('li button').trigger('click');

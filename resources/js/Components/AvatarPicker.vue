@@ -1,6 +1,7 @@
 <script setup>
 import { router } from '@inertiajs/vue3';
 import { computed, onMounted, ref } from 'vue';
+import { imageUrl } from '../lib/imageUrl';
 import { nameKey } from '../lib/nameKey';
 
 const props = defineProps({
@@ -36,7 +37,8 @@ const shown = computed(() => {
         : avatars.value.filter((avatar) => avatar.gen === generation.value && avatar.kind === kind.value);
 });
 
-const urlOf = (avatar) => `/images/avatars/${avatar.id}.webp`;
+const fileOf = (avatar) => `avatars/${avatar.id}.webp`;
+const isCurrent = (avatar) => props.currentUrl?.split('?')[0] === `/images/${fileOf(avatar)}`;
 
 function choose(avatar) {
     saving.value = avatar.id;
@@ -73,12 +75,12 @@ const tabClass = (active) => [
                 <button
                     type="button"
                     class="flex w-full flex-col items-center gap-1 p-1.5 text-center transition hover:bg-bx-raised disabled:opacity-60"
-                    :class="urlOf(avatar) === currentUrl ? 'bg-bx-raised ring-2 ring-inset ring-bx-rail' : ''"
-                    :aria-pressed="urlOf(avatar) === currentUrl"
+                    :class="isCurrent(avatar) ? 'bg-bx-raised ring-2 ring-inset ring-bx-rail' : ''"
+                    :aria-pressed="isCurrent(avatar)"
                     :disabled="saving !== null"
                     @click="choose(avatar)"
                 >
-                    <img :src="urlOf(avatar)" alt="" width="72" height="72" loading="lazy" class="bx-octagon h-18 w-18 object-cover" />
+                    <img :src="imageUrl(fileOf(avatar))" alt="" width="72" height="72" loading="lazy" class="bx-octagon h-18 w-18 object-cover" />
                     <span class="line-clamp-2 text-[13px] leading-tight text-zinc-200 [overflow-wrap:anywhere]">{{ avatar.name }}</span>
                 </button>
             </li>

@@ -26,9 +26,9 @@ class AvatarPresetTest extends TestCase
 
         $this->choose($user, self::PRESET)->assertRedirect()->assertSessionHas('success', 'Avatar actualizado.');
 
-        $this->assertSame('/images/avatars/metal_char_gingka-hagane.webp', $user->fresh()->avatar_url);
+        $this->assertStringStartsWith('/images/avatars/metal_char_gingka-hagane.webp', $user->fresh()->avatar_url);
         $this->get('/profile')->assertInertia(fn ($page) => $page
-            ->where('auth.user.avatar_url', '/images/avatars/metal_char_gingka-hagane.webp'));
+            ->where('auth.user.avatar_url', $user->fresh()->avatar_url));
     }
 
     public function test_only_avatars_from_the_list_are_accepted(): void
@@ -52,7 +52,7 @@ class AvatarPresetTest extends TestCase
         $this->choose($user, self::PRESET);
 
         Storage::disk('public')->assertMissing($photo);
-        $this->assertSame('/images/avatars/metal_char_gingka-hagane.webp', $user->fresh()->avatar_url);
+        $this->assertStringStartsWith('/images/avatars/metal_char_gingka-hagane.webp', $user->fresh()->avatar_url);
     }
 
     public function test_uploading_a_photo_afterwards_replaces_the_avatar(): void
@@ -84,7 +84,25 @@ class AvatarPresetTest extends TestCase
         $this->choose($user, self::PRESET);
 
         $this->get("/players/{$user->id}")->assertInertia(fn ($page) => $page
-            ->where('player.avatar_url', '/images/avatars/metal_char_gingka-hagane.webp'));
+            ->where('player.avatar_url', $user->fresh()->avatar_url));
+    }
+
+    public function test_the_url_changes_when_the_picture_is_corrected(): void
+    {
+        $file = public_path('images/avatars/prueba_version.webp');
+        @mkdir(dirname($file), recursive: true);
+        try {
+            file_put_contents($file, 'uno');
+            touch($file, 1000);
+            $before = AvatarPresets::url(AvatarPresets::pathFor('prueba_version'));
+            touch($file, 2000);
+            clearstatcache();
+
+            $this->assertSame('/images/avatars/prueba_version.webp?v=1000', $before);
+            $this->assertSame('/images/avatars/prueba_version.webp?v=2000', AvatarPresets::url(AvatarPresets::pathFor('prueba_version')));
+        } finally {
+            unlink($file);
+        }
     }
 
     public function test_guests_must_log_in(): void

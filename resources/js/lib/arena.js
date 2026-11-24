@@ -1,6 +1,7 @@
 // Batalla de beys en canvas sobre la foto del estadio.
 // La geometria (centro, matriz del piso, riel y salidas) se midio en public/images/arena/estadio.webp (1100x1028).
 import { BEYS } from './beyRoster';
+import { imageUrl } from './imageUrl';
 
 const W = 1100, H = 1028;
 const C = { x: 582.6, y: 455.1 };
@@ -55,10 +56,9 @@ function sprites(img) {
 
 export async function startArena(cv, opt) {
   const names = opt.beys, pool = opt.pool || [], R = opt.radius || 0.28, ko = !!opt.ko;
-  const base = opt.path ?? '/images/arena/';
   let stopped = false, frame = 0;
-  const SP = {}, get = async (n) => { SP[n] = sprites(await load(base + n + '.webp')); };
-  const [stadium] = await Promise.all([load(base + 'estadio.webp'), ...names.map(get)]);
+  const SP = {}, get = async (n) => { SP[n] = sprites(await load(imageUrl(`arena/${n}.webp`))); };
+  const [stadium] = await Promise.all([load(imageUrl('arena/estadio.webp')), ...names.map(get)]);
   const rest = (async () => { for (const n of pool) if (!SP[n] && !stopped) { try { await get(n); } catch (_) {} await new Promise((ok) => setTimeout(ok, 60)); } })();
   if (opt.manual) await rest;
   let deck = [];
