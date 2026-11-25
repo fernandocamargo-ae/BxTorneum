@@ -1,0 +1,1 @@
+import{_ as o}from"./_plugin-vue_export-helper-DlAUqK2U.js";import{o as e,c as r,p as s}from"./app-BM4iFJ5y.js";const n={},c={class:"bx-btn"};function a(t,_){return e(),r("button",c,[s(t.$slots,"default")])}const m=o(n,[["render",a]]);export{m as P};

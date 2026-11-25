@@ -299,16 +299,16 @@ class TournamentController extends Controller
     public function history()
     {
         $tournaments = Tournament::where('type', 'official')
-            ->where('format', 'individual')
             ->where('status', 'completed')
-            ->with('champion.user:id,nickname')
+            ->with('champion.user:id,nickname', 'champion.team:id,name')
             ->withCount('entries')
             ->orderByDesc('created_at')
             ->get()
             ->map(fn (Tournament $tournament) => [
                 'id' => $tournament->id,
                 'name' => $tournament->name,
-                'champion_nickname' => $tournament->champion?->user?->nickname,
+                'format' => $tournament->format,
+                'champion_nickname' => $this->entryName($tournament->champion),
                 'entries_count' => $tournament->entries_count,
                 'created_at' => $tournament->created_at->format('d/m/Y'),
             ]);
@@ -320,12 +320,17 @@ class TournamentController extends Controller
     {
         abort_unless($tournament->status === 'completed', 404);
 
-        $entries = $tournament->entries()->with('user:id,nickname')->get();
-        $standings = $this->standingsWithNicknames($tournament, $entries);
+        $entries = $tournament->entries()->with('user:id,nickname,avatar_path', 'team:id,name,logo_path')->get()->keyBy('id');
+
+        $standings = collect(TournamentStandings::forTournament($tournament))->map(fn ($row) => [
+            ...$row,
+            'nickname' => $this->entryName($entries->get($row['entry_id'])) ?? '?',
+            'avatar_url' => $this->entryAvatar($entries->get($row['entry_id'])),
+        ])->values();
 
         $rounds = $tournament->rounds()
             ->orderBy('number')
-            ->with('matches.entryOne.user:id,nickname', 'matches.entryTwo.user:id,nickname')
+            ->with('matches')
             ->get()
             ->map(fn ($round) => [
                 'number' => $round->number,
@@ -333,23 +338,47 @@ class TournamentController extends Controller
                 'matches' => $round->matches->map(fn ($match) => [
                     'id' => $match->id,
                     'entry_one_id' => $match->entry_one_id,
-                    'entry_one_nickname' => $match->entryOne->user->nickname,
+                    'entry_one_nickname' => $this->entryName($entries->get($match->entry_one_id)),
+                    'entry_one_avatar' => $this->entryAvatar($entries->get($match->entry_one_id)),
                     'entry_two_id' => $match->entry_two_id,
-                    'entry_two_nickname' => $match->entryTwo?->user->nickname,
+                    'entry_two_nickname' => $this->entryName($entries->get($match->entry_two_id)),
+                    'entry_two_avatar' => $this->entryAvatar($entries->get($match->entry_two_id)),
                     'winner_entry_id' => $match->winner_entry_id,
                     'is_bye' => $match->is_bye,
                 ])->values(),
             ])->values();
 
+        // La llave solo en torneos por equipos, igual que mientras se juegan.
+        $bracket = $tournament->isTeams()
+            ? $rounds->where('phase', 'elimination')->map(fn ($round) => [
+                'number' => $round['number'],
+                'title' => $this->bracketTitle($round['matches']->count()),
+                'matches' => $round['matches'],
+            ])->values()
+            : [];
+
         return Inertia::render('Tournament/HistoryShow', [
             'tournament' => [
                 'id' => $tournament->id,
                 'name' => $tournament->name,
-                'champion_nickname' => $tournament->champion?->user?->nickname,
+                'format' => $tournament->format,
+                'champion_nickname' => $this->entryName($entries->get($tournament->champion_entry_id)),
             ],
             'standings' => $standings,
             'rounds' => $rounds,
+            'bracket' => $bracket,
         ]);
+    }
+
+    /** An entry is a player in individual tournaments and a team in team tournaments. */
+    private function entryName(?TournamentEntry $entry): ?string
+    {
+        return $entry?->team?->name ?? $entry?->user?->nickname;
+    }
+
+    private function entryAvatar(?TournamentEntry $entry): ?string
+    {
+        return $entry?->team?->logo_url ?? $entry?->user?->avatar_url;
     }
 
     /**

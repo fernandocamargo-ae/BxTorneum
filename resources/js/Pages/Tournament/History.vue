@@ -18,8 +18,11 @@ defineProps({
             :href="`/tournament/history/${tournament.id}`"
             class="group bx-panel p-5 transition hover:[--bx-fill:var(--color-bx-raised)]"
         >
-            <h2 class="text-lg font-bold group-hover:text-bx-rail">{{ tournament.name }}</h2>
-            <p class="mt-1 text-sm text-zinc-400">{{ tournament.created_at }} · {{ tournament.entries_count }} jugador(es)</p>
+            <div class="flex items-start justify-between gap-3">
+                <h2 class="min-w-0 text-lg font-bold [overflow-wrap:anywhere] group-hover:text-bx-rail">{{ tournament.name }}</h2>
+                <span v-if="tournament.format === 'teams'" class="bx-tag shrink-0">Por equipos</span>
+            </div>
+            <p class="mt-1 text-sm text-zinc-400">{{ tournament.created_at }} · {{ tournament.entries_count }} {{ tournament.format === 'teams' ? 'equipo(s)' : 'jugador(es)' }}</p>
             <p class="mt-3 flex flex-wrap gap-x-1.5 text-sm">
                 <span class="text-zinc-400">Campeón:</span>
                 <span class="text-white font-bold">{{ tournament.champion_nickname }}</span>

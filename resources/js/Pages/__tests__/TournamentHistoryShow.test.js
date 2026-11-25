@@ -42,4 +42,20 @@ describe('Tournament/HistoryShow', () => {
 
         expect(wrapper.text()).toContain('vs');
     });
+
+    it('shows the bracket and talks about teams in team tournaments', () => {
+        const wrapper = mount(HistoryShow, {
+            props: {
+                ...baseProps,
+                tournament: { ...baseProps.tournament, format: 'teams' },
+                bracket: [{ number: 2, title: 'Final', matches: [{ id: 11, entry_one_id: 1, entry_one_nickname: 'Bfury Galaxy', entry_two_id: 2, entry_two_nickname: 'Dragones', winner_entry_id: 1, is_bye: false }] }],
+            },
+        });
+
+        expect(wrapper.text()).toContain('Equipo campeón');
+        expect(wrapper.find('th:nth-child(2)').text()).toBe('Equipo');
+        expect(wrapper.text()).toContain('Final');
+        expect(wrapper.text()).toContain('Dragones');
+        expect(wrapper.findAll('button').every((b) => b.text().startsWith('Ronda'))).toBe(true); // solo lectura
+    });
 });

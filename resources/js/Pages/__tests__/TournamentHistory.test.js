@@ -26,4 +26,22 @@ describe('Tournament/History', () => {
         expect(wrapper.text()).toContain('Ganador');
         expect(wrapper.find('a').attributes('href')).toBe('/tournament/history/1');
     });
+
+    it('tells team tournaments apart', () => {
+        const wrapper = mount(History, {
+            props: {
+                tournaments: [
+                    { id: 23, name: 'Copa de Equipos', format: 'teams', champion_nickname: 'Bfury Galaxy', entries_count: 13, created_at: '22/11/2026' },
+                    { id: 22, name: 'Sábado', format: 'individual', champion_nickname: 'Melman', entries_count: 6, created_at: '21/11/2026' },
+                ],
+            },
+        });
+        const [teams, individual] = wrapper.findAll('a').map((link) => link.text());
+
+        expect(teams).toContain('Por equipos');
+        expect(teams).toContain('13 equipo(s)');
+        expect(teams).toContain('Bfury Galaxy');
+        expect(individual).not.toContain('Por equipos');
+        expect(individual).toContain('6 jugador(es)');
+    });
 });

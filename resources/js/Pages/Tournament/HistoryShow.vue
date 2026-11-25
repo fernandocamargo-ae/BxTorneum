@@ -1,12 +1,17 @@
 <script setup>
 import { Head, Link } from '@inertiajs/vue3';
-import { ref } from 'vue';
+import { computed, ref } from 'vue';
+import Avatar from '../../Components/Avatar.vue';
+import Bracket from '../../Components/Bracket.vue';
 
 const props = defineProps({
     tournament: { type: Object, required: true },
     standings: { type: Array, default: () => [] },
     rounds: { type: Array, default: () => [] },
+    bracket: { type: Array, default: () => [] },
 });
+
+const isTeams = computed(() => props.tournament.format === 'teams');
 
 const openRound = ref(null);
 
@@ -27,9 +32,17 @@ function phaseLabel(phase) {
     <h1 class="mb-6 bx-title-sm">{{ tournament.name }}</h1>
 
     <div class="space-y-6">
-        <div class="bx-panel p-6 text-center">
-            <p class="text-sm text-zinc-300">Campeón</p>
-            <p class="text-white text-2xl font-black">{{ tournament.champion_nickname }}</p>
+        <div class="bg-bx-cobalt">
+            <div class="px-6 py-7 text-center">
+                <p class="font-bold text-[#c9d6ff]">{{ isTeams ? 'Equipo campeón' : 'Campeón' }}</p>
+                <p class="bx-title-sm mt-1">{{ tournament.champion_nickname }}</p>
+            </div>
+            <div aria-hidden="true" class="bx-rail-x h-4"></div>
+        </div>
+
+        <div v-if="bracket.length" class="bx-plate px-5 py-6 sm:px-8 sm:py-8">
+            <h3 class="bx-heading mb-5 text-2xl">Eliminación</h3>
+            <Bracket :bracket="bracket" />
         </div>
 
         <div v-if="standings.length" class="bx-panel p-5">
@@ -38,14 +51,19 @@ function phaseLabel(phase) {
                 <thead class="text-sm text-zinc-400">
                     <tr>
                         <th class="pb-2">#</th>
-                        <th class="pb-2">Jugador</th>
+                        <th class="pb-2">{{ isTeams ? 'Equipo' : 'Jugador' }}</th>
                         <th class="pb-2 text-right">V</th>
                     </tr>
                 </thead>
                 <tbody>
                     <tr v-for="(row, i) in standings" :key="row.entry_id" class="border-t border-bx-line">
                         <td class="py-2 font-semibold" :class="i < 3 ? 'text-bx-rail' : 'text-zinc-400'">{{ i + 1 }}</td>
-                        <td class="py-2 font-medium text-zinc-100">{{ row.nickname }}</td>
+                        <td class="py-2">
+                            <div class="flex items-center gap-2">
+                                <Avatar :nickname="row.nickname" :url="row.avatar_url" size="h-7 w-7" text="text-[11px]" />
+                                <span class="font-medium text-zinc-100 [overflow-wrap:anywhere]">{{ row.nickname }}</span>
+                            </div>
+                        </td>
                         <td class="py-2 text-right font-bold text-zinc-100">{{ row.wins }}</td>
                     </tr>
                 </tbody>
