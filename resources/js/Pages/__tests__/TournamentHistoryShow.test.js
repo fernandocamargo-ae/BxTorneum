@@ -43,6 +43,31 @@ describe('Tournament/HistoryShow', () => {
         expect(wrapper.text()).toContain('vs');
     });
 
+    it('shows the logo of each side in the round history', async () => {
+        const wrapper = mount(HistoryShow, {
+            props: {
+                ...baseProps,
+                rounds: [
+                    {
+                        number: 1,
+                        phase: 'swiss',
+                        matches: [
+                            { id: 10, entry_one_id: 1, entry_one_nickname: 'Ganador', entry_one_avatar: '/storage/logos/ganador.png', entry_two_id: 2, entry_two_nickname: 'Subcampeon', entry_two_avatar: '/storage/logos/sub.png', winner_entry_id: 1, is_bye: false },
+                            { id: 11, entry_one_id: 3, entry_one_nickname: 'Solo', entry_one_avatar: null, entry_two_id: null, entry_two_nickname: null, entry_two_avatar: null, winner_entry_id: 3, is_bye: true },
+                        ],
+                    },
+                ],
+            },
+        });
+
+        await wrapper.find('button').trigger('click');
+
+        const logos = wrapper.findAll('img').map((img) => img.attributes('src'));
+        expect(logos).toContain('/storage/logos/ganador.png');
+        expect(logos).toContain('/storage/logos/sub.png');
+        expect(wrapper.text()).toContain('S'); // inicial cuando el equipo no tiene logo
+    });
+
     it('shows the bracket and talks about teams in team tournaments', () => {
         const wrapper = mount(HistoryShow, {
             props: {

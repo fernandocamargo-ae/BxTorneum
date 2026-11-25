@@ -86,12 +86,19 @@ function phaseLabel(phase) {
                         <div v-for="match in round.matches" :key="match.id" class="border border-bx-line p-3 text-sm">
                             <span v-if="match.is_bye" class="flex items-center gap-2">
                                 <span class="bx-tag bx-tag-muted">BYE</span>
+                                <Avatar :nickname="match.entry_one_nickname" :url="match.entry_one_avatar" size="h-7 w-7" text="text-[11px]" />
                                 <span class="font-medium text-zinc-200">{{ match.entry_one_nickname }}</span>
                             </span>
                             <span v-else class="flex flex-wrap items-center gap-2">
-                                <span :class="match.winner_entry_id === match.entry_one_id ? 'font-bold text-bx-rail' : 'text-zinc-200'">{{ match.entry_one_nickname }}</span>
+                                <span class="flex items-center gap-2">
+                                    <Avatar :nickname="match.entry_one_nickname" :url="match.entry_one_avatar" size="h-7 w-7" text="text-[11px]" />
+                                    <span :class="match.winner_entry_id === match.entry_one_id ? 'font-bold text-bx-rail' : 'text-zinc-200'">{{ match.entry_one_nickname }}</span>
+                                </span>
                                 <span class="text-sm text-zinc-400">vs</span>
-                                <span :class="match.winner_entry_id === match.entry_two_id ? 'font-bold text-bx-rail' : 'text-zinc-200'">{{ match.entry_two_nickname }}</span>
+                                <span class="flex items-center gap-2">
+                                    <Avatar :nickname="match.entry_two_nickname" :url="match.entry_two_avatar" size="h-7 w-7" text="text-[11px]" />
+                                    <span :class="match.winner_entry_id === match.entry_two_id ? 'font-bold text-bx-rail' : 'text-zinc-200'">{{ match.entry_two_nickname }}</span>
+                                </span>
                             </span>
                         </div>
                     </div>

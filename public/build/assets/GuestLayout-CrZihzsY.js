@@ -1,1 +1,0 @@
-import{o as e,c as s,t as o,e as c,b as l,p as n}from"./app-BM4iFJ5y.js";const r={class:"mx-auto max-w-md"},i={key:0,class:"bx-title-sm mb-5"},m={class:"bx-panel p-6 sm:p-8"},_={__name:"GuestLayout",props:{title:{type:String,default:""}},setup(t){return(a,d)=>(e(),s("div",r,[t.title?(e(),s("h1",i,o(t.title),1)):c("",!0),l("div",m,[n(a.$slots,"default")])]))}};export{_};
